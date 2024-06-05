@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.DTO;
 
 import codigocreativo.uy.servidorapp.entidades.Equipo;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -174,7 +175,7 @@ public class EquipoDto implements Serializable {
         this.idModelo = idModelo;
         return this;
     }
-
+    @JsonbTransient
     public Set<EquiposUbicacioneDto> getEquiposUbicaciones() {
         return equiposUbicaciones;
     }
