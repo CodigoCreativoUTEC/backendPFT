@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.DTO;
 
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.util.Set;
  * DTO for {@link Usuario}
  */
 public class UsuarioDto implements Serializable {
+
     private Set<UsuariosTelefonoDto> usuariosTelefonos = new LinkedHashSet<>();
     private Long id;
     private String cedula;

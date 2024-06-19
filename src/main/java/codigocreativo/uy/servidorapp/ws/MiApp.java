@@ -14,6 +14,7 @@ public class MiApp extends Application {
         resources.add(CORSFilter.class);
         //resources.add(ProductoResource.class);
         resources.add(EquipoResource.class);
+        resources.add(UsuarioResource.class);
         return resources;
     }
 

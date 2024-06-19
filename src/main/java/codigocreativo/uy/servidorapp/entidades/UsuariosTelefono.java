@@ -3,7 +3,7 @@ package codigocreativo.uy.servidorapp.entidades;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "USUARIOS_TELEFONOS", schema = "PROYECTO")
+@Table(name = "USUARIOS_TELEFONOS")
 public class UsuariosTelefono {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

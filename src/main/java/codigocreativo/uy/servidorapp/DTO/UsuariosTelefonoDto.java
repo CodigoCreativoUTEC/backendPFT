@@ -1,5 +1,7 @@
 package codigocreativo.uy.servidorapp.DTO;
 
+import jakarta.json.bind.annotation.JsonbTransient;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -9,6 +11,7 @@ import java.util.Objects;
 public class UsuariosTelefonoDto implements Serializable {
     private Long id;
     private String numero;
+    @JsonbTransient //Para evitar referencias circulares (esta anonotación evita que se serialice en JSON)
     private UsuarioDto idUsuario;
 
     public UsuariosTelefonoDto() {
