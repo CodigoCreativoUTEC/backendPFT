@@ -54,6 +54,7 @@ public class EquipoResource {
         return this.er.obtenerEquipo(id);
     }
 
+    //nuevo endpoint
     @GET
     @Path("ListarEquiposFiltrados")
     public List<EquipoDto> obtenerEquiposFiltrados(@QueryParam("filtro")  String filtro, @QueryParam("valor") String valor){
