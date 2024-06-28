@@ -31,8 +31,8 @@ public class EquipoResource {
         return Response.status(200).build();
     }
 
-    @DELETE
-    @Path("")
+    @PUT
+    @Path("/Inactivar")
     public Response eliminarEquipo(BajaEquipoDto equipo){
         this.er.eliminarEquipo(equipo);
         return Response.status(200).build();
@@ -54,11 +54,9 @@ public class EquipoResource {
         return this.er.obtenerEquipo(id);
     }
 
-    //nuevo endpoint
     @GET
     @Path("ListarEquiposFiltrados")
     public List<EquipoDto> obtenerEquiposFiltrados(@QueryParam("filtro")  String filtro, @QueryParam("valor") String valor){
         return this.er.obtenerEquiposFiltrado(filtro,valor);
     }
-
 }
