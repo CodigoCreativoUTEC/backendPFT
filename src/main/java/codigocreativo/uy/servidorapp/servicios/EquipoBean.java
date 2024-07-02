@@ -23,6 +23,7 @@ public class EquipoBean implements EquipoRemote {
     @Inject
     BajaEquipoMapper bajaEquipoMapper;
 
+    //se cambia em.persist() por em.merge()
     @Override
     public void crearEquipo(EquipoDto equipo) {
         em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
@@ -35,6 +36,7 @@ public class EquipoBean implements EquipoRemote {
         em.flush();
     }
 
+    //se cambia em.persist() por em.merge()
     @Override
     public void eliminarEquipo(BajaEquipoDto bajaEquipo) {
         em.merge(bajaEquipoMapper.toEntity(bajaEquipo, new CycleAvoidingMappingContext()));

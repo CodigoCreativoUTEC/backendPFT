@@ -22,9 +22,10 @@ public class UsuarioBean implements UsuarioRemote {
     @Inject
     UsuarioMapper usuarioMapper;
 
+    //se cambia em.persist() por em.merge()
     @Override
     public void crearUsuario(UsuarioDto u) {
-        em.persist(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
+        em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
     }
 
     @Override
