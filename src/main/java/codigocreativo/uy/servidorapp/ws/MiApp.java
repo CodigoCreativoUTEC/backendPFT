@@ -1,6 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.CORSFilter;
+import codigocreativo.uy.servidorapp.JWT.JacksonConfig;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
@@ -12,6 +13,7 @@ public class MiApp extends Application {
      public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(CORSFilter.class);
+        resources.add(JacksonConfig.class);
         //resources.add(ProductoResource.class);
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);

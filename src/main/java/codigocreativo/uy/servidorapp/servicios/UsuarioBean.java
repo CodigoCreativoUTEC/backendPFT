@@ -92,4 +92,16 @@ public class UsuarioBean implements UsuarioRemote {
             return null;
         }
     }
+
+    @Override
+    public UsuarioDto findUserByEmail(String email) {
+    try {
+        Usuario usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
+                            .setParameter("email", email)
+                            .getSingleResult();
+        return usuarioMapper.toDto(usuario, new CycleAvoidingMappingContext());
+    } catch (NoResultException e) {
+        return null;
+    }
+}
 }

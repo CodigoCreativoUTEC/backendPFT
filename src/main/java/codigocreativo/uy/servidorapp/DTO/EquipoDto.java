@@ -97,7 +97,7 @@ public class EquipoDto implements Serializable {
         this.imagen = imagen;
         return this;
     }
-
+    @JsonbTransient
     public LocalDate getFechaAdquisicion() {
         return fechaAdquisicion;
     }

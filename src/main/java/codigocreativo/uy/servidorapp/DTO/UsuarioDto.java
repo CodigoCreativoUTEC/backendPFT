@@ -145,6 +145,11 @@ public class UsuarioDto implements Serializable {
         return Objects.hash(id, cedula, email, contrasenia, fechaNacimiento, estado, nombre, apellido, nombreUsuario);
     }
 
+    @Override
+    public String toString() {
+        return nombre + " " + apellido;
+    }
+
     public void setIdInstitucion(InstitucionDto idInstitucion) {
         this.idInstitucion = idInstitucion;
     }
