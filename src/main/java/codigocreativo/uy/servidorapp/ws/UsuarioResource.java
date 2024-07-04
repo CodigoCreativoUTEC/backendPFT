@@ -3,11 +3,16 @@ package codigocreativo.uy.servidorapp.ws;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -21,6 +26,19 @@ public class UsuarioResource {
     @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
+        // Crear y configurar ObjectMapper
+/*
+    try {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        String usuarioJson = objectMapper.writeValueAsString(usuario);
+        System.out.println("Payload recibido: " + usuarioJson);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return Response.status(Response.Status.BAD_REQUEST).entity("Error al procesar el payload").build();
+    }*/
+
+        // Aquí continúa tu lógica para crear el usuario...
         this.er.crearUsuario(usuario);
         return Response.status(201).build();
     }
@@ -88,9 +106,10 @@ public class UsuarioResource {
         }
 
         String token = jwtService.generateToken(user.getEmail());
-        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo);
+        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
         return Response.ok(loginResponse).build();
     }
+
 
     public static class LoginRequest {
         private String usuario;
@@ -163,12 +182,16 @@ public class UsuarioResource {
     public static class GoogleLoginResponse {
         private String token;
         private boolean userNeedsAdditionalInfo;
+        private UsuarioDto user; // Añade este campo
 
-        public GoogleLoginResponse(String token, boolean userNeedsAdditionalInfo) {
+        // Constructor
+        public GoogleLoginResponse(String token, boolean userNeedsAdditionalInfo, UsuarioDto user) {
             this.token = token;
             this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
+            this.user = user;
         }
 
+        // Getters y setters
         public String getToken() {
             return token;
         }
@@ -183,6 +206,14 @@ public class UsuarioResource {
 
         public void setUserNeedsAdditionalInfo(boolean userNeedsAdditionalInfo) {
             this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
+        }
+
+        public UsuarioDto getUser() {
+            return user;
+        }
+
+        public void setUser(UsuarioDto user) {
+            this.user = user;
         }
     }
 }
