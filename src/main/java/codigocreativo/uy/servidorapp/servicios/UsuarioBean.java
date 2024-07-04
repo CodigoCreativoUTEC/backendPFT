@@ -24,6 +24,7 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public void crearUsuario(UsuarioDto u) {
+        u.setEstado(Estados.INACTIVO);
         em.persist(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
     }
 
