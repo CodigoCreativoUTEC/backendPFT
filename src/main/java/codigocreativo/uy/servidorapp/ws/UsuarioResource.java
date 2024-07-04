@@ -1,20 +1,15 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import codigocreativo.uy.servidorapp.DTO.EquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
-
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
