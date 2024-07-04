@@ -1,6 +1,8 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.DTO.EquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,19 +28,6 @@ public class UsuarioResource {
     @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
-        // Crear y configurar ObjectMapper
-/*
-    try {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        String usuarioJson = objectMapper.writeValueAsString(usuario);
-        System.out.println("Payload recibido: " + usuarioJson);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return Response.status(Response.Status.BAD_REQUEST).entity("Error al procesar el payload").build();
-    }*/
-
-        // Aquí continúa tu lógica para crear el usuario...
         this.er.crearUsuario(usuario);
         return Response.status(201).build();
     }
@@ -52,6 +41,31 @@ public class UsuarioResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
+    }
+
+    @PUT
+    @Path("Inactivar")
+    public Response inactivarUsuario(UsuarioDto usuario){
+        this.er.eliminarUsuario(usuario);
+        return Response.status(200).build();
+    }
+
+    @GET
+    @Path("/BuscarUsuarioPorCI")
+    public UsuarioDto buscarEquipo(@QueryParam("ci") String ci){
+        return this.er.obtenerUsuarioPorCI(ci);
+    }
+
+    @GET
+    @Path("/BuscarUsuarioPorId")
+    public UsuarioDto buscarEquipo(@QueryParam("id") Long id){
+        return this.er.obtenerUsuario(id);
+    }
+
+    @GET
+    @Path("/ObtenerUsuarioPorEstado")
+    public List<UsuarioDto> obtenerUsuarioPorEstado(@QueryParam("estado") Estados estado){
+        return this.er.obtenerUsuariosPorEstado(estado);
     }
 
     @GET

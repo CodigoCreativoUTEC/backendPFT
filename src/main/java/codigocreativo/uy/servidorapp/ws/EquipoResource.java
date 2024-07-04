@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
 import codigocreativo.uy.servidorapp.servicios.EquipoRemote;
 import jakarta.ejb.EJB;
@@ -30,6 +31,13 @@ public class EquipoResource {
         return Response.status(200).build();
     }
 
+    @PUT
+    @Path("/Inactivar")
+    public Response eliminarEquipo(BajaEquipoDto equipo){
+        this.er.eliminarEquipo(equipo);
+        return Response.status(200).build();
+    }
+
     //TODO: Muestra Error al intentar obtener todos los equipos.
     // RESTEASY008205: JSON Binding serialization error jakarta.json.bind.JsonbException:
     // Unable to serialize property 'equiposUbicaciones' from codigocreativo.uy.servidorapp.DTO.EquipoDto
@@ -40,4 +48,15 @@ public class EquipoResource {
         return this.er.listarEquipos();
     }
 
+    @GET
+    @Path("/BuscarEquipo")
+    public EquipoDto buscarEquipo(@QueryParam("id") Long id){
+        return this.er.obtenerEquipo(id);
+    }
+
+    @GET
+    @Path("ListarEquiposFiltrados")
+    public List<EquipoDto> obtenerEquiposFiltrados(@QueryParam("filtro")  String filtro, @QueryParam("valor") String valor){
+        return this.er.obtenerEquiposFiltrado(filtro,valor);
+    }
 }
