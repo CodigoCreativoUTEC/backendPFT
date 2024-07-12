@@ -84,40 +84,47 @@ public class UsuarioResource {
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
         if (loginRequest == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Login request is null").build();
+            System.out.println("Request null");
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
         }
         UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
+
         if (user != null) {
             String token = jwtService.generateToken(user.getEmail());
+            user = user.setContrasenia(null);
             LoginResponse loginResponse = new LoginResponse(token, user);
+            System.out.println("Ingreso correcto");
+            System.out.println(Response.ok(loginResponse).build());
             return Response.ok(loginResponse).build();
         } else {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
+            System.out.println("login unautorized invalid credentials");
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
         }
     }
 
     @POST
-    @Path("/google-login")
-    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        if (googleLoginRequest == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Login request is null").build();
-        }
-
-        UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
-        boolean userNeedsAdditionalInfo = false;
-
-        if (user == null) {
-            user = new UsuarioDto();
-            user.setEmail(googleLoginRequest.getEmail());
-            user.setNombre(googleLoginRequest.getName());
-            userNeedsAdditionalInfo = true;
-            // No se crea el usuario aquí, se redirige al formulario de registro para completar los datos
-        }
-
-        String token = jwtService.generateToken(user.getEmail());
-        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
-        return Response.ok(loginResponse).build();
+@Path("/google-login")
+public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
+    if (googleLoginRequest == null) {
+        return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
     }
+
+    UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
+    boolean userNeedsAdditionalInfo = false;
+
+    if (user == null) {
+        user = new UsuarioDto();
+        user.setEmail(googleLoginRequest.getEmail());
+        user.setNombre(googleLoginRequest.getName());
+        userNeedsAdditionalInfo = true;
+    } else if (!user.getEstado().equals(Estados.ACTIVO)) {
+        return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
+    }
+    user = user.setContrasenia(null);
+    String token = jwtService.generateToken(user.getEmail());
+    GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
+    return Response.ok(loginResponse).build();
+}
 
 
     public static class LoginRequest {
