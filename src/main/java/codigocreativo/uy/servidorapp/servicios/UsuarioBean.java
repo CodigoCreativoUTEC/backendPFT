@@ -24,7 +24,7 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public void crearUsuario(UsuarioDto u) {
-        u.setEstado(Estados.INACTIVO);
+        u.setEstado(Estados.SIN_VALIDAR);
         em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
     }
 

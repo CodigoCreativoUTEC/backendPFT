@@ -12,7 +12,7 @@ import java.util.Objects;
 public class UsuariosTelefonoDto implements Serializable {
     private Long id;
     private String numero;
-    @JsonbTransient //Para evitar referencias circulares (esta anonotación evita que se serialice en JSON)
+    //@JsonbTransient //Para evitar referencias circulares (esta anonotación evita que se serialice en JSON)
     @JsonBackReference
     private UsuarioDto idUsuario;
 

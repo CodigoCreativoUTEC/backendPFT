@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.DTO;
 
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import java.util.Set;
  * DTO for {@link Usuario}
  */
 public class UsuarioDto implements Serializable {
-
+    @JsonManagedReference
     private Set<UsuariosTelefonoDto> usuariosTelefonos = new LinkedHashSet<>();
     private Long id;
     private String cedula;
