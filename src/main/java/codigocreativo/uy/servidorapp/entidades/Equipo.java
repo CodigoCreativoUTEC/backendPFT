@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.entidades;
 
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -66,6 +67,18 @@ public class Equipo implements Serializable {
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "ID_UBICACION", nullable = false)
     private Ubicacion idUbicacion;
+
+    @Size(max = 20)
+    @Column(name = "GARANTIA", length = 20)
+    private String garantia;
+
+    public String getGarantia() {
+        return garantia;
+    }
+
+    public void setGarantia(String garantia) {
+        this.garantia = garantia;
+    }
 
     public Ubicacion getIdUbicacion() {
         return idUbicacion;

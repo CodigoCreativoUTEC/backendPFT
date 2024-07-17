@@ -62,6 +62,6 @@ public class EquipoBean implements EquipoRemote {
 
     @Override
     public List<EquipoDto> listarEquipos() {
-        return equipoMapper.toDto(em.createQuery("SELECT equipo FROM Equipo equipo WHERE equipo.estado = 'ACTIVO'", Equipo.class).getResultList(), new CycleAvoidingMappingContext());
+        return equipoMapper.toDto(em.createQuery("SELECT equipo FROM Equipo equipo", Equipo.class).getResultList(), new CycleAvoidingMappingContext());
     }
 }

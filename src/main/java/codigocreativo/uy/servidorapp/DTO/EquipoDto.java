@@ -17,6 +17,7 @@ public class EquipoDto implements Serializable {
     private Long id;
     private String idInterno;
     private String nroSerie;
+    private String garantia;
     private TiposEquipoDto idTipo;
     private ProveedoresEquipoDto idProveedor;
     private PaisDto idPais;
@@ -32,7 +33,7 @@ public class EquipoDto implements Serializable {
     }
 
     public EquipoDto(Long id, String idInterno, String nroSerie,
-                     TiposEquipoDto idTipo,
+                     String garantia, TiposEquipoDto idTipo,
                      ProveedoresEquipoDto idProveedor,
                      PaisDto idPais,
                      ModelosEquipoDto idModelo,
@@ -51,6 +52,7 @@ public class EquipoDto implements Serializable {
         this.idModelo = idModelo;
         this.equiposUbicaciones = equiposUbicaciones;
         this.idUbicacion = idUbicacion;
+        this.garantia = garantia;
     }
 
     public Long getId() {
@@ -191,6 +193,15 @@ public class EquipoDto implements Serializable {
 
     public EquipoDto setIdUbicacion(UbicacionDto idUbicacion) {
         this.idUbicacion = idUbicacion;
+        return this;
+    }
+
+    public String getGarantia() {
+        return garantia;
+    }
+
+    public EquipoDto setGarantia(String garantia) {
+        this.garantia = garantia;
         return this;
     }
 }
