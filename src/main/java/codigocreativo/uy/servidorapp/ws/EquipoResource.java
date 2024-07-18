@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.servicios.BajaEquipoRemote;
 import codigocreativo.uy.servidorapp.servicios.EquipoRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -16,6 +17,9 @@ import java.util.List;
 public class EquipoResource {
     @EJB
     private EquipoRemote er;
+
+    @EJB
+    private BajaEquipoRemote ber;
 
     @POST
     @Path("")
@@ -38,10 +42,6 @@ public class EquipoResource {
         return Response.status(200).build();
     }
 
-    //TODO: Muestra Error al intentar obtener todos los equipos.
-    // RESTEASY008205: JSON Binding serialization error jakarta.json.bind.JsonbException:
-    // Unable to serialize property 'equiposUbicaciones' from codigocreativo.uy.servidorapp.DTO.EquipoDto
-
     @GET
     @Path("/ListarTodosLosEquipos")
     public List<EquipoDto> obtenerTodosLosEquipos(){
@@ -58,5 +58,15 @@ public class EquipoResource {
     @Path("ListarEquiposFiltrados")
     public List<EquipoDto> obtenerEquiposFiltrados(@QueryParam("filtro")  String filtro, @QueryParam("valor") String valor){
         return this.er.obtenerEquiposFiltrado(filtro,valor);
+    }
+
+    @GET
+    @Path("/ListarBajaEquipos")
+    public List<BajaEquipoDto> obtenerBajasEquipos() {return this.ber.obtenerBajasEquipos();}
+
+    @GET
+    @Path("/VerEquipoInactivo")
+    public BajaEquipoDto obtenerBaja(@QueryParam("id") Long id) {
+        return this.ber.obtenerBajaEquipo(id);
     }
 }
