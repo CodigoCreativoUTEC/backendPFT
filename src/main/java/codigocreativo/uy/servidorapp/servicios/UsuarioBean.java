@@ -85,7 +85,7 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public UsuarioDto login(String usuario, String password) {
         try {
-            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.nombreUsuario = :usuario AND u.contrasenia = :password", Usuario.class)
+            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario AND u.contrasenia = :password", Usuario.class)
                     .setParameter("usuario", usuario)
                     .setParameter("password", password)
                     .getSingleResult(), new CycleAvoidingMappingContext());
