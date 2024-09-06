@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.DTO;
 
 import codigocreativo.uy.servidorapp.entidades.Equipo;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.io.Serializable;
@@ -26,6 +27,7 @@ public class EquipoDto implements Serializable {
     private UbicacionDto idUbicacion;
     private String nombre;
     private String imagen;
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate fechaAdquisicion;
     private Estados estado;
 
