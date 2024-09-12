@@ -1,10 +1,10 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.BajaUbicacionDto;
-import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
-import codigocreativo.uy.servidorapp.DTOMappers.BajaUbicacionMapper;
-import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.DTOMappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
+import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
+import codigocreativo.uy.servidorapp.dtomappers.BajaUbicacionMapper;
+import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.BajaUbicacion;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
@@ -19,7 +19,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
-import java.io.Serializable;
 import java.util.List;
 
 @TransactionManagement(TransactionManagementType.BEAN)

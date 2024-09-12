@@ -1,8 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.BajaUbicacionDto;
-import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
-import codigocreativo.uy.servidorapp.entidades.BajaUbicacion;
+import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
+import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Remote;
 import jakarta.transaction.Transactional;

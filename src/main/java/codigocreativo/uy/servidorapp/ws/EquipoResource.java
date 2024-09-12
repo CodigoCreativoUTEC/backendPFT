@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
-import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
+import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import codigocreativo.uy.servidorapp.servicios.BajaEquipoRemote;
 import codigocreativo.uy.servidorapp.servicios.EquipoRemote;
 import jakarta.ejb.EJB;

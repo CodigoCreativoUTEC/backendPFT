@@ -1,8 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.MarcasModeloDto;
-import codigocreativo.uy.servidorapp.DTOMappers.MarcasModeloMapper;
-import codigocreativo.uy.servidorapp.entidades.Equipo;
+import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
+import codigocreativo.uy.servidorapp.dtomappers.MarcasModeloMapper;
 import codigocreativo.uy.servidorapp.entidades.MarcasModelo;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;

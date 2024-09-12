@@ -1,3 +1,4 @@
+// src/main/java/codigocreativo/uy/servidorapp/JWT/JwtTokenFilter.java
 package codigocreativo.uy.servidorapp.JWT;
 
 import java.io.IOException;
@@ -19,20 +20,14 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        System.out.println("Ejecutando JwtTokenFilter...");
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-
         String path = requestContext.getUriInfo().getPath();
-        System.out.println("obtener path "+path);
 
-        // Permitir acceso sin token JWT a endpoints específicos
         if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") || path.startsWith("/usuarios/crear")) {
-            return;  // Permitir acceso sin token JWT
+            return;
         }
 
-
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            System.out.println("No se encontró encabezado de autorización o no comienza con 'Bearer'");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
@@ -40,25 +35,28 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         String token = authorizationHeader.substring("Bearer".length()).trim();
 
         try {
-            if (!isTokenValid(token)) {
-                System.out.println("Token inválido");
-                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-            }
-        } catch (Exception e) {
-            System.out.println("Error al validar el token: " + e.getMessage());
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-        }
-    }
-
-    private boolean isTokenValid(String token) {
-        try {
             Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)
                 .parseClaimsJws(token)
                 .getBody();
-            return true; // Si el token es válido, retorna true
+
+            String email = claims.getSubject();
+            String role = claims.get("role", String.class);
+
+            if (email == null || role == null || !isAuthorized(email, role, path)) {
+                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+            }
         } catch (Exception e) {
-            return false; // Si el token no es válido, retorna false
+            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
+    }
+
+    private boolean isAuthorized(String email, String role, String path) {
+        // Implementar lógica de verificación de roles y permisos
+        if (role.equals("ADMIN") && path.startsWith("/admin")) {
+            return true;
+        }
+        // Agregar más lógica según sea necesario
+        return false;
     }
 }

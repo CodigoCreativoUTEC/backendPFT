@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
-import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.DTOMappers.UsuarioMapper;
+import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
+import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtomappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
@@ -11,8 +11,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
-import javax.swing.*;
-import java.sql.ResultSet;
 import java.util.List;
 @Stateless
 public class UsuarioBean implements UsuarioRemote {
@@ -80,7 +78,7 @@ public class UsuarioBean implements UsuarioRemote {
         return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.estado = :estado", Usuario.class)
                 .setParameter("estado", estado)
                 .getResultList(), new CycleAvoidingMappingContext());
-        }
+    }
 
     @Override
     public UsuarioDto login(String usuario, String password) {
@@ -96,13 +94,24 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public UsuarioDto findUserByEmail(String email) {
-    try {
-        Usuario usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
-                            .setParameter("email", email)
-                            .getSingleResult();
-        return usuarioMapper.toDto(usuario, new CycleAvoidingMappingContext());
-    } catch (NoResultException e) {
-        return null;
+        try {
+            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult(), new CycleAvoidingMappingContext());
+        } catch (NoResultException e) {
+            return null;
+        }
     }
-}
+
+    @Override
+    public boolean hasPermission(String email, String requiredRole) {
+        try {
+            UsuarioDto usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", UsuarioDto.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+            return usuario.getIdPerfil().equals(requiredRole);
+        } catch (NoResultException e) {
+            return false;
+        }
+    }
 }

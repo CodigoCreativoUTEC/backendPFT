@@ -1,17 +1,15 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.PerfilDto;
-import codigocreativo.uy.servidorapp.DTOMappers.PerfilMapper;
+import codigocreativo.uy.servidorapp.dtos.PerfilDto;
+import codigocreativo.uy.servidorapp.dtomappers.PerfilMapper;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Stateless
 public class PerfilBean implements PerfilRemote {
