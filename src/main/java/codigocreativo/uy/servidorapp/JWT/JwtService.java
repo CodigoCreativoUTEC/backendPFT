@@ -11,7 +11,7 @@ import java.util.Date;
 @Stateless
 public class JwtService {
 
-    private final String secret = "b0bc1f9b2228b2094f3ba7bdb1b6a58059af6cdaf143127181bd0a17e6d312e2";
+    private final String secret = "b0bc1f9b2228b2094f3ba7bdb1b6a58059af6cdaf143127181bd0a17e6d312e2"; // TODO: Cambiar por una variable de entorno
 
     public String generateToken(String email) {
         return Jwts.builder()
@@ -38,4 +38,14 @@ public class JwtService {
                 .getBody();
         return claims.getSubject();
     }
+
+    public String getRoleFromToken(String token) {
+    Claims claims = Jwts.parser()
+        .setSigningKey(secret)
+        .parseClaimsJws(token)
+        .getBody();
+
+    return claims.get("role", String.class);
+}
+
 }
