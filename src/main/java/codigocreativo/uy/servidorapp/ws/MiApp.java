@@ -16,7 +16,7 @@ public class MiApp extends Application {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
-        resources.add(JwtTokenFilter.class); // Asegúrate de que el filtro esté registrado
+        resources.add(JwtTokenFilter.class);
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);
         return resources;

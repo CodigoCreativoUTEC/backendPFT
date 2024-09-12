@@ -39,7 +39,7 @@ public class UsuarioResource {
     }
 
     @PUT
-    @Path("Inactivar")
+    @Path("/Inactivar")
     public Response inactivarUsuario(UsuarioDto usuario){
         this.er.eliminarUsuario(usuario);
         return Response.status(200).build();
@@ -103,28 +103,28 @@ public class UsuarioResource {
     }
 
     @POST
-@Path("/google-login")
-public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-    if (googleLoginRequest == null) {
-        return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-    }
+    @Path("/google-login")
+    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
+        if (googleLoginRequest == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
+        }
 
-    UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
-    boolean userNeedsAdditionalInfo = false;
+        UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
+        boolean userNeedsAdditionalInfo = false;
 
-    if (user == null) {
-        user = new UsuarioDto();
-        user.setEmail(googleLoginRequest.getEmail());
-        user.setNombre(googleLoginRequest.getName());
-        userNeedsAdditionalInfo = true;
-    } else if (!user.getEstado().equals(Estados.ACTIVO)) {
-        return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
+        if (user == null) {
+            user = new UsuarioDto();
+            user.setEmail(googleLoginRequest.getEmail());
+            user.setNombre(googleLoginRequest.getName());
+            userNeedsAdditionalInfo = true;
+        } else if (!user.getEstado().equals(Estados.ACTIVO)) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
+        }
+        user = user.setContrasenia(null);
+        String token = jwtService.generateToken(user.getEmail());
+        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
+        return Response.ok(loginResponse).build();
     }
-    user = user.setContrasenia(null);
-    String token = jwtService.generateToken(user.getEmail());
-    GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
-    return Response.ok(loginResponse).build();
-}
 
 
     public static class LoginRequest {

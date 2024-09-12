@@ -4,7 +4,6 @@ import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.dtomappers.BajaEquipoMapper;
 import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.BajaEquipo;
-import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
