@@ -3,6 +3,7 @@ package codigocreativo.uy.servidorapp.servicios;
 import codigocreativo.uy.servidorapp.dtos.ProveedoresEquipoDto;
 import codigocreativo.uy.servidorapp.dtomappers.ProveedoresEquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.ProveedoresEquipo;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -19,9 +20,8 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
 
     @Override
     public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo) {
-        //agregamos dto
+        proveedoresEquipo.setEstado(Estados.ACTIVO);
         ProveedoresEquipo proveedoresEquipoEntity = proveedoresEquipoMapper.toEntity(proveedoresEquipo);
-        //persistimos
         em.persist(proveedoresEquipoEntity);
         em.flush();
     }
