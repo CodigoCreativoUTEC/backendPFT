@@ -21,6 +21,7 @@ public class MiApp extends Application {
         resources.add(UsuarioResource.class);
         resources.add(EquipoResource.class);
         resources.add(ProveedoresResource.class);
+        resources.add(MarcaResource.class);
         return resources;
     }
 }

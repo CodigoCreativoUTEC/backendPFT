@@ -9,4 +9,5 @@ public interface MarcasModeloRemote {
     public void modificarMarcasModelo(MarcasModeloDto marcasModelo);
     public MarcasModeloDto obtenerMarca(Long id);
     public List<MarcasModeloDto> obtenerMarcasLista();
+    public void eliminarMarca(Long id);
 }
