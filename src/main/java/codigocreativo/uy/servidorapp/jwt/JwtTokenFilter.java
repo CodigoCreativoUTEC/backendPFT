@@ -48,7 +48,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         System.out.println("Token: " + token);
 
         try {
-            byte[] keyBytes = hexStringToByteArray(SECRET_KEY);
             Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
             Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -91,28 +90,23 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         boolean todosLosPermisos = perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO) || perfil.equals(INGENIERO_BIOMEDICO) || perfil.equals(TECNICO);
 
         // Endpoints referentes a Usuarios
-        if (path.startsWith("/usuarios/ListarTodosLosUsuarios") || path.startsWith("/usuarios/modificar") || path.startsWith("/usuarios/Inactivar")) {
+        if (    path.startsWith("/usuarios/ListarTodosLosUsuarios") ||
+                path.startsWith("/usuarios/modificar") ||
+                path.startsWith("/usuarios/BuscarUsuarioPorId") ||
+                path.startsWith("/usuarios/Inactivar")) {
             return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
         }
 
         // Endpoints referentes a Equipos
-        if (path.startsWith("/equipos/CrearEquipo") ||
+        if (    path.startsWith("/equipos/CrearEquipo") ||
                 path.startsWith("/equipos/Inactivar") ||
                 path.startsWith("/equipos/ModificarEquipo") ||
-                path.startsWith("/equipos/ListarTodosLosEquipos"))
+                path.startsWith("/equipos/ListarTodosLosEquipos") ||
+                path.startsWith("/equipos/BuscarEquipo") ||
+                path.startsWith("/equipos/ListarBajaEquipos") ||
+                path.startsWith("/equipos/VerEquipoInactivo"))
             return todosLosPermisos;
 
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
-    }
-
-    // Método para convertir una cadena hexadecimal a un arreglo de bytes
-    private static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                                 + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
     }
 }
