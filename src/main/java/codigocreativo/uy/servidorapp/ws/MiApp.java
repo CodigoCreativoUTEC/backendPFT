@@ -17,8 +17,10 @@ public class MiApp extends Application {
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
         resources.add(JwtTokenFilter.class);
-        resources.add(EquipoResource.class);
+
         resources.add(UsuarioResource.class);
+        resources.add(EquipoResource.class);
+        resources.add(ProveedoresResource.class);
         return resources;
     }
 }

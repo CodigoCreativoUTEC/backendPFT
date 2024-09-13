@@ -1,5 +1,7 @@
 package codigocreativo.uy.servidorapp.dtos;
 
+import codigocreativo.uy.servidorapp.enumerados.Estados;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -9,13 +11,15 @@ import java.util.Objects;
 public class ProveedoresEquipoDto implements Serializable {
     private Long id;
     private String nombre;
+    private Estados estado;
 
     public ProveedoresEquipoDto() {
     }
 
-    public ProveedoresEquipoDto(Long id, String nombre) {
+    public ProveedoresEquipoDto(Long id, String nombre, Estados estado) {
         this.id = id;
         this.nombre = nombre;
+        this.estado = estado;
     }
 
     public Long getId() {
@@ -36,6 +40,15 @@ public class ProveedoresEquipoDto implements Serializable {
         return this;
     }
 
+    public Estados getEstado() {
+        return estado;
+    }
+
+    public ProveedoresEquipoDto setEstado(Estados estado) {
+        this.estado = estado;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -47,7 +60,7 @@ public class ProveedoresEquipoDto implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nombre);
+        return Objects.hash(id, nombre, estado);
     }
 
     @Override

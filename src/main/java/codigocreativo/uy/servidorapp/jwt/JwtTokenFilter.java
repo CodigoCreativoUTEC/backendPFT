@@ -50,10 +50,10 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         try {
             Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
             Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
 
             String email = claims.get("email", String.class);
             String perfil = claims.get("perfil", String.class);
@@ -82,8 +82,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     // Función para identificar los endpoints públicos
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/usuarios/login") ||
-               path.startsWith("/usuarios/google-login") ||
-               path.startsWith("/usuarios/crear");
+                path.startsWith("/usuarios/google-login") ||
+                path.startsWith("/usuarios/crear");
     }
 
     private boolean hasPermission(String perfil, String path) {
@@ -106,6 +106,13 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 path.startsWith("/equipos/ListarBajaEquipos") ||
                 path.startsWith("/equipos/VerEquipoInactivo"))
             return todosLosPermisos;
+
+        // Endpoints referentes a Proveedores
+        if (    path.startsWith("/proveedores/crear") ||
+                path.startsWith("/proveedores/modificar") ||
+                path.startsWith("/proveedores/inactivar") ||
+                path.startsWith("/proveedores/listarTodos"))
+            return perfil.equals(AUX_ADMINISTRATIVO);
 
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }

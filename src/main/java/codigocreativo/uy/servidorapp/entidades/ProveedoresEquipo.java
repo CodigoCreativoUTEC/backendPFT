@@ -15,6 +15,9 @@ public class ProveedoresEquipo implements Serializable {
     @Column(name = "NOMBRE", nullable = false, length = 30)
     private String nombre;
 
+    @Column(name = "ESTADO", nullable = false, length = 20)
+    private String estado;
+
     public Long getId() {
         return id;
     }
@@ -29,6 +32,14 @@ public class ProveedoresEquipo implements Serializable {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     @Override

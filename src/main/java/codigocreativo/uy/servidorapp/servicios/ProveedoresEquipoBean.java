@@ -18,7 +18,7 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
     private ProveedoresEquipoMapper proveedoresEquipoMapper;
 
     @Override
-    public void CrearProveedoresEquipo(ProveedoresEquipoDto proveedoresEquipo) {
+    public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo) {
         //agregamos dto
         ProveedoresEquipo proveedoresEquipoEntity = proveedoresEquipoMapper.toEntity(proveedoresEquipo);
         //persistimos
@@ -26,22 +26,31 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
         em.flush();
     }
 
-    /*@Override
-    public void modificarProveedoresEquipo(ProveedoresEquipo proveedoresEquipo) {
-        em.merge(proveedoresEquipo);
+    @Override
+    public void modificarProveedor(ProveedoresEquipoDto proveedoresEquipo) {
+        ProveedoresEquipo proveedoresEquipoEntity = proveedoresEquipoMapper.toEntity(proveedoresEquipo);
+        em.merge(proveedoresEquipoEntity);
         em.flush();
     }
 
     @Override
-    public void obtenerProveedoresEquipo(Long id) {
+    public void obtenerProveedor(Long id) {
         em.find(ProveedoresEquipo.class, id);
-    }*/
+    }
 
 
     @Override
-    public List<ProveedoresEquipoDto> obtenerProveedoresEquipo() {
+    public List<ProveedoresEquipoDto> obtenerProveedores() {
         List<ProveedoresEquipo> proveedoresEquipo = em.createQuery("SELECT p FROM ProveedoresEquipo p", ProveedoresEquipo.class).getResultList();
-        return proveedoresEquipoMapper.toDto(proveedoresEquipo);
+        return proveedoresEquipoMapper.toDto(proveedoresEquipo);// ("UPDATE Equipo equipo SET equipo.estado = 'INACTIVO' WHERE equipo.id = :id")
+    }
+
+    @Override
+    public void eliminarProveedor(Long id) {
+        em.createQuery("UPDATE ProveedoresEquipo p SET p.estado = 'INACTIVO' WHERE p.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        em.flush();
     }
 }
 

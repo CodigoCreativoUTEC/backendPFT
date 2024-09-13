@@ -8,8 +8,9 @@ import java.util.List;
 @Remote
 public interface ProveedoresEquipoRemote {
 
-    public void CrearProveedoresEquipo(ProveedoresEquipoDto proveedoresEquipo);
-    /*public void modificarProveedoresEquipo(ProveedoresEquipo proveedoresEquipo);
-    public void obtenerProveedoresEquipo(Long id);*/
-    public List<ProveedoresEquipoDto> obtenerProveedoresEquipo();
+    public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo);
+    public void modificarProveedor(ProveedoresEquipoDto proveedoresEquipo);
+    public void obtenerProveedor(Long id);
+    public List<ProveedoresEquipoDto> obtenerProveedores();
+    public void eliminarProveedor(Long id);
 }
