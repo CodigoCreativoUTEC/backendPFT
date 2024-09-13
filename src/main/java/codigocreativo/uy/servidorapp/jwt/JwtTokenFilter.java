@@ -29,8 +29,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         String path = requestContext.getUriInfo().getPath();
-        System.out.println(SECRET_KEY);
-        System.out.println(path);
 
         // Permitir acceso sin autenticación a ciertos endpoints
         if (isPublicEndpoint(path)) {
@@ -39,13 +37,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         // Verificar la presencia y validez del token
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            System.out.println("No hay token");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
-        System.out.println("Token: " + token);
 
         try {
             Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
@@ -57,10 +53,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
             String email = claims.get("email", String.class);
             String perfil = claims.get("perfil", String.class);
-            System.out.println("email:" + email);
 
             if (email == null || perfil == null || email.isEmpty() || perfil.isEmpty()) {
-                System.out.println("No hay email o perfil");
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
                 return;
             }
@@ -74,7 +68,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             }
 
         } catch (Exception e) {
-            System.out.println("Error al parsear token" + e.getMessage());
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }

@@ -7,9 +7,9 @@ import java.util.List;
 
 @Remote
 public interface ModelosEquipoRemote {
-    public void crearModelos(ModelosEquipoDto modelosEquipo);
-    public void modificarModelos(ModelosEquipoDto modelosEquipo);
-    public ModelosEquipoDto obtenerModelos(Long id);
-    public List<ModelosEquipoDto> listarModelos();
-    public void eliminarModelos(Long id);
+    void crearModelos(ModelosEquipoDto modelosEquipo);
+    void modificarModelos(ModelosEquipoDto modelosEquipo);
+    ModelosEquipoDto obtenerModelos(Long id);
+    List<ModelosEquipoDto> listarModelos();
+    void eliminarModelos(Long id);
 }
