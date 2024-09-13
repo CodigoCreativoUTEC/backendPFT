@@ -2,7 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
-import codigocreativo.uy.servidorapp.JWT.JwtService;
+import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
 
 import io.jsonwebtoken.Claims;
@@ -44,7 +44,7 @@ public class UsuarioResource {
     @PUT
     @Path("/Inactivar")
     public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-        // Verificar que el token JWT esté presente
+        // Verificar que el token jwt esté presente
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("Falta el token de autorización").build();
         }

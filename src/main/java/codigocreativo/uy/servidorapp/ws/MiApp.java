@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.CORSFilter;
-import codigocreativo.uy.servidorapp.JWT.JacksonConfig;
-import codigocreativo.uy.servidorapp.JWT.JwtTokenFilter;
+import codigocreativo.uy.servidorapp.jwt.JacksonConfig;
+import codigocreativo.uy.servidorapp.jwt.JwtTokenFilter;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 

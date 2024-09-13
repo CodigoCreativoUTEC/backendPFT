@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.JWT;
+package codigocreativo.uy.servidorapp.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

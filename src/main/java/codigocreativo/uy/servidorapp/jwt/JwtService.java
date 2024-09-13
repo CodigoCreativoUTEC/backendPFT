@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.JWT;
+package codigocreativo.uy.servidorapp.jwt;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.ejb.Stateless;
