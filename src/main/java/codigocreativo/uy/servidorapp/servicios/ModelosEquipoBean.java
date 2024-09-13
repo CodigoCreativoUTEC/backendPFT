@@ -14,31 +14,40 @@ import java.util.List;
 public class ModelosEquipoBean implements ModelosEquipoRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
+    private final ModelosEquipoMapper modelosEquipoMapper;
 
     @Inject
-    private ModelosEquipoMapper modelosEquipoMapper;
+    public ModelosEquipoBean(ModelosEquipoMapper modelosEquipoMapper) {
+        this.modelosEquipoMapper = modelosEquipoMapper;
+    }
 
     @Override
-    public void crearModelosEquipo(ModelosEquipoDto modelosEquipo) {
+    public void crearModelos(ModelosEquipoDto modelosEquipo) {
         em.persist(modelosEquipoMapper.toEntity(modelosEquipo));
         em.flush();
     }
 
     @Override
-    public void modificarModelosEquipo(ModelosEquipoDto modelosEquipo) {
+    public void modificarModelos(ModelosEquipoDto modelosEquipo) {
         em.merge(modelosEquipoMapper.toEntity(modelosEquipo));
         em.flush();
     }
 
     @Override
-    public ModelosEquipoDto obtenerModelosEquipo(Long id) {
+    public ModelosEquipoDto obtenerModelos(Long id) {
         return modelosEquipoMapper.toDto(em.find(ModelosEquipo.class, id));
     }
 
-
     @Override
-    public List<ModelosEquipoDto> listarModelosEquipo() {
+    public List<ModelosEquipoDto> listarModelos() {
         return modelosEquipoMapper.toDto(em.createQuery("SELECT modelosEquipo FROM ModelosEquipo modelosEquipo", ModelosEquipo.class).getResultList());
     }
-}
 
+    @Override
+    public void eliminarModelos(Long id) {
+        em.createQuery("UPDATE ModelosEquipo modelosEquipo SET modelosEquipo.estado = 'INACTIVO' WHERE modelosEquipo.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        em.flush();
+    }
+}

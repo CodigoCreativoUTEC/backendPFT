@@ -123,6 +123,14 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 path.startsWith("/marca/buscarPorId"))
             return perfil.equals(AUX_ADMINISTRATIVO);
 
+        // Endpoints referentes a Modelos
+        if (    path.startsWith("/modelo/crear") ||
+                path.startsWith("/modelo/modificar") ||
+                path.startsWith("/modelo/inactivar") ||
+                path.startsWith("/modelo/listarTodos") ||
+                path.startsWith("/modelo/buscarPorId"))
+            return perfil.equals(AUX_ADMINISTRATIVO);
+
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }
 }
