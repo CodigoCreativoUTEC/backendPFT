@@ -1,8 +1,7 @@
 package codigocreativo.uy.servidorapp.jwt;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.stream.Stream;
+import java.util.Base64;
 
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
@@ -30,6 +29,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         String path = requestContext.getUriInfo().getPath();
+        System.out.println(SECRET_KEY);
+        System.out.println(path);
 
         // Permitir acceso sin autenticación a ciertos endpoints
         if (isPublicEndpoint(path)) {
@@ -38,14 +39,17 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         // Verificar la presencia y validez del token
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            System.out.println("No hay token");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
+        System.out.println("Token: " + token);
 
         try {
-            Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+            byte[] keyBytes = hexStringToByteArray(SECRET_KEY);
+            Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
             Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -54,8 +58,10 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
             String email = claims.get("email", String.class);
             String perfil = claims.get("perfil", String.class);
+            System.out.println("email:" + email);
 
             if (email == null || perfil == null || email.isEmpty() || perfil.isEmpty()) {
+                System.out.println("No hay email o perfil");
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
                 return;
             }
@@ -69,6 +75,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             }
 
         } catch (Exception e) {
+            System.out.println("Error al parsear token" + e.getMessage());
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
@@ -80,24 +87,32 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                path.startsWith("/usuarios/crear");
     }
 
-
     private boolean hasPermission(String perfil, String path) {
-
         boolean todosLosPermisos = perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO) || perfil.equals(INGENIERO_BIOMEDICO) || perfil.equals(TECNICO);
 
         // Endpoints referentes a Usuarios
-        if (Stream.of("/usuarios/ListarTodosLosUsuarios",
-                "/usuarios/modificar",
-                "/usuarios/Inactivar").anyMatch(path::startsWith))
+        if (path.startsWith("/usuarios/ListarTodosLosUsuarios") || path.startsWith("/usuarios/modificar") || path.startsWith("/usuarios/Inactivar")) {
             return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
+        }
 
         // Endpoints referentes a Equipos
         if (path.startsWith("/equipos/CrearEquipo") ||
                 path.startsWith("/equipos/Inactivar") ||
-                path.startsWith("/equipos/MoficarEquipo") ||
+                path.startsWith("/equipos/ModificarEquipo") ||
                 path.startsWith("/equipos/ListarTodosLosEquipos"))
             return todosLosPermisos;
 
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
+    }
+
+    // Método para convertir una cadena hexadecimal a un arreglo de bytes
+    private static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                                 + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 }

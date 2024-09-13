@@ -42,44 +42,38 @@ public class UsuarioResource {
     //TODO: Se debe crear un enpoint que verifique mi propio usuario y permita modificar sus propios datos
 
     @PUT
-    @Path("/Inactivar")
-    public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-        // Verificar que el token jwt esté presente
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Falta el token de autorización").build();
-        }
-
-        String token = authorizationHeader.substring("Bearer".length()).trim();
-        Claims claims = jwtService.parseToken(token);  // Debes tener un método para parsear el token
-        String emailSolicitante = claims.getSubject(); // El email del usuario que hace la solicitud
-        String perfilSolicitante = claims.get("perfil", String.class);
-
-        // Verificar si el usuario que intenta inactivar es administrador
-        if (!perfilSolicitante.equals("Administrador")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para inactivar usuarios").build();
-        }
-
-        // Obtener el usuario a inactivar
-        UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
-
-        if (usuarioAInactivar == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Usuario no encontrado").build();
-        }
-
-        // Verificar que no intente inactivarse a sí mismo
-        if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No puedes inactivar tu propia cuenta").build();
-        }
-
-        // Verificar si el usuario a inactivar es otro administrador
-        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No puedes inactivar a otro administrador").build();
-        }
-
-        // Inactivar el usuario si cumple las condiciones
-        this.er.eliminarUsuario(usuarioAInactivar);
-        return Response.status(200).build();
+@Path("/Inactivar")
+public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"Falta el token de autorización\"}").build();
     }
+
+    String token = authorizationHeader.substring("Bearer".length()).trim();
+    Claims claims = jwtService.parseToken(token);
+    String emailSolicitante = claims.getSubject();
+    String perfilSolicitante = claims.get("perfil", String.class);
+
+    if (!perfilSolicitante.equals("Administrador")) {
+        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No tienes permisos para inactivar usuarios\"}").build();
+    }
+
+    UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
+
+    if (usuarioAInactivar == null) {
+        return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
+    }
+
+    if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
+        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
+    }
+
+    if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
+        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
+    }
+
+    this.er.eliminarUsuario(usuarioAInactivar);
+    return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
+}
 
 
     @GET
