@@ -22,14 +22,14 @@ public class EquipoResource {
     private BajaEquipoRemote ber;
 
     @POST
-    @Path("")
+    @Path("/CrearEquipo")
     public Response crearEquipo(EquipoDto equipo) {
         this.er.crearEquipo(equipo);
         return Response.status(201).build();
     }
 
     @PUT
-    @Path("")
+    @Path("/ModificarEquipo")
     public Response modificarProducto(EquipoDto equipo){
         this.er.modificarEquipo(equipo);
         return Response.status(200).build();

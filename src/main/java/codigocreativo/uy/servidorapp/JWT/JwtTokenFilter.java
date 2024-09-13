@@ -1,14 +1,12 @@
 package codigocreativo.uy.servidorapp.JWT;
 
 import java.io.IOException;
-
-import codigocreativo.uy.servidorapp.responses.ErrorResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import io.jsonwebtoken.Claims;
@@ -23,16 +21,17 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private static final String INGENIERO_BIOMEDICO = "Ingeniero biomédico";
     private static final String TECNICO = "Tecnico";
 
-
     private static final String SECRET_KEY = "b0bc1f9b2228b2094f3ba7bdb1b6a58059af6cdaf143127181bd0a17e6d312e2";
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         String path = requestContext.getUriInfo().getPath();
+        String method = requestContext.getMethod();  // Obtener el tipo de método (GET, POST, PUT, DELETE)
+        MultivaluedMap<String, String> queryParams = requestContext.getUriInfo().getQueryParameters();  // Obtener los query params
 
         // Permitir acceso sin autenticación a ciertos endpoints
-        if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") || path.startsWith("/usuarios/crear")) {
+        if (isPublicEndpoint(path)) {
             return;
         }
 
@@ -43,21 +42,17 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         }
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
-        System.out.println("Token: " + authorizationHeader);
 
         try {
             Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
-                    .parseClaimsJws(token)
-                    .getBody();
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
 
             String email = claims.get("email", String.class);
             String perfil = claims.get("perfil", String.class);
-            System.out.println("Perfil: " + perfil);
-            System.out.println("Email: " + email);
 
             if (email == null || perfil == null || email.isEmpty() || perfil.isEmpty()) {
-                System.out.println("Email o perfil vacíos");
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
                 return;
             }
@@ -66,22 +61,65 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             requestContext.setProperty("email", email);
             requestContext.setProperty("perfil", perfil);
 
-            verificarPermiso(requestContext, "/usuarios/ListarTodosLosUsuarios", perfil, ADMINISTRADOR, "No tienes permisos para listar usuarios");
-            verificarPermiso(requestContext, "/usuarios/ListarTodosLosUsuarios", perfil, AUX_ADMINISTRATIVO, "No tienes permisos para listar usuarios");
-            verificarPermiso(requestContext, "/usuarios/modificar", perfil, ADMINISTRADOR, "No tienes permisos para modificar usuarios");
-            verificarPermiso(requestContext, "/usuarios/modificar", perfil, AUX_ADMINISTRATIVO, "No tienes permisos para modificar usuarios");
-            verificarPermiso(requestContext, "/usuarios/eliminar", perfil, ADMINISTRADOR, "No tienes permisos para eliminar usuarios");
+            // Verificar permisos basados en el perfil, método HTTP, y query params
+            if (!hasPermission(perfil, path, method, queryParams)) {
+                requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"No tiene permisos para realizar esta acción\"}").build());
+            }
 
         } catch (Exception e) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
 
-    private void verificarPermiso(ContainerRequestContext requestContext, String path, String perfil, String requiredRole, String errorMessage) throws IOException {
-        if (path.startsWith(path) && !requiredRole.equals(perfil)) {
-            ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-            String jsonError = new ObjectMapper().writeValueAsString(errorResponse);
-            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(jsonError).type("application/json").build());
+    // Función para identificar los endpoints públicos
+    private boolean isPublicEndpoint(String path) {
+        return path.startsWith("/usuarios/login") ||
+               path.startsWith("/usuarios/google-login") ||
+               path.startsWith("/usuarios/crear");
+    }
+
+    // Función genérica para verificar permisos según el perfil, endpoint, método HTTP y query params
+    private boolean hasPermission(String perfil, String path, String method, MultivaluedMap<String, String> queryParams) {
+        // Verificar permisos según el método HTTP (GET, POST, PUT, DELETE)
+
+        boolean todosLosPermisos = perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO) || perfil.equals(INGENIERO_BIOMEDICO) || perfil.equals(TECNICO);
+
+        // Endpoints referentes a Usuarios
+        if (path.startsWith("/usuarios/ListarTodosLosUsuarios") && method.equals("GET")) {
+                return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
+            }
+
+        if (path.startsWith("/usuarios/modificar") && method.equals("PUT")) {
+                return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
+            }
+
+        if (path.startsWith("/usuarios/Inactivar") && method.equals("PUT")) {
+                return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
+            }
+
+        // Endpoints referentes a Equipos
+        if (path.startsWith("/equipos/CrearEquipo") && method.equals("POST")) {
+                return todosLosPermisos;
+            }
+
+        if (path.startsWith("/equipos/Inactivar") && method.equals("PUT")) {
+                return todosLosPermisos;
+            }
+
+        if (path.startsWith("/equipos/MoficarEquipo") && method.equals("PUT")) {
+                return todosLosPermisos;
+            }
+
+        if (path.startsWith("/equipos/ListarTodosLosEquipos") && method.equals("GET")) {
+                return todosLosPermisos;
+            }
+
+        // Agrega más condiciones según los endpoints y roles necesarios
+        // Verificar parámetros de la consulta (query params)
+        if (queryParams.containsKey("estado") && queryParams.getFirst("estado").equals("inactivo")) {
+            return perfil.equals(ADMINISTRADOR);  // Solo ADMINISTRADOR puede gestionar inactivos, por ejemplo
         }
+
+        return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }
 }
