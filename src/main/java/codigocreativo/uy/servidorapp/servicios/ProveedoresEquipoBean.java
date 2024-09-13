@@ -38,8 +38,9 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
     }
 
     @Override
-    public void obtenerProveedor(Long id) {
-        em.find(ProveedoresEquipo.class, id);
+    public ProveedoresEquipoDto obtenerProveedor(Long id) {
+        ProveedoresEquipo proveedoresEquipo = em.find(ProveedoresEquipo.class, id);
+        return proveedoresEquipoMapper.toDto(proveedoresEquipo);
     }
 
 

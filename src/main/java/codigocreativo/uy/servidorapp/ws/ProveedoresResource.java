@@ -44,4 +44,10 @@ public class ProveedoresResource {
         return this.er.obtenerProveedores();
     }
 
+    @GET
+    @Path("/buscarPorId")
+    public ProveedoresEquipoDto buscarPorId(@QueryParam("id") Long id){
+        return this.er.obtenerProveedor(id);
+    }
+
 }

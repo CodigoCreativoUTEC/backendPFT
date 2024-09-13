@@ -111,6 +111,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         if (    path.startsWith("/proveedores/crear") ||
                 path.startsWith("/proveedores/modificar") ||
                 path.startsWith("/proveedores/inactivar") ||
+                path.startsWith("/proveedores/buscarPorId") ||
                 path.startsWith("/proveedores/listarTodos"))
             return perfil.equals(AUX_ADMINISTRATIVO);
 
