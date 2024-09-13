@@ -15,8 +15,12 @@ import java.util.List;
 public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final ProveedoresEquipoMapper proveedoresEquipoMapper;
+
     @Inject
-    private ProveedoresEquipoMapper proveedoresEquipoMapper;
+    public ProveedoresEquipoBean(ProveedoresEquipoMapper proveedoresEquipoMapper) {
+        this.proveedoresEquipoMapper = proveedoresEquipoMapper;
+    }
 
     @Override
     public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo) {
