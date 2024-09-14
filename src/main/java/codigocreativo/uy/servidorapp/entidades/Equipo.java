@@ -120,14 +120,6 @@ public class Equipo implements Serializable {
         this.idInterno = idInterno;
     }
 
-  /* public Ubicacion getIdUbicacion() {
-        return idUbicacion;
-    }
-
-   public void setIdUbicacion(Ubicacion idUbicacion) {
-        this.idUbicacion = idUbicacion;
-    }*/
-
     public String getNroSerie() {
         return nroSerie;
     }

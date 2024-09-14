@@ -1,7 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
-import codigocreativo.uy.servidorapp.entidades.Usuario;
+import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Remote;
 
@@ -20,4 +19,6 @@ public interface UsuarioRemote {
     public UsuarioDto login(String usuario, String password);
     public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado);
     public UsuarioDto findUserByEmail(String email);
+
+    boolean hasPermission(String email, String requiredRole);
 }

@@ -1,9 +1,9 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.ProveedoresEquipoDto;
-import codigocreativo.uy.servidorapp.DTOMappers.ProveedoresEquipoMapper;
-import codigocreativo.uy.servidorapp.entidades.Pais;
+import codigocreativo.uy.servidorapp.dtos.ProveedoresEquipoDto;
+import codigocreativo.uy.servidorapp.dtomappers.ProveedoresEquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.ProveedoresEquipo;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -15,34 +15,47 @@ import java.util.List;
 public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final ProveedoresEquipoMapper proveedoresEquipoMapper;
+
     @Inject
-    private ProveedoresEquipoMapper proveedoresEquipoMapper;
+    public ProveedoresEquipoBean(ProveedoresEquipoMapper proveedoresEquipoMapper) {
+        this.proveedoresEquipoMapper = proveedoresEquipoMapper;
+    }
 
     @Override
-    public void CrearProveedoresEquipo(ProveedoresEquipoDto proveedoresEquipo) {
-        //agregamos dto
+    public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo) {
+        proveedoresEquipo.setEstado(Estados.ACTIVO);
         ProveedoresEquipo proveedoresEquipoEntity = proveedoresEquipoMapper.toEntity(proveedoresEquipo);
-        //persistimos
         em.persist(proveedoresEquipoEntity);
         em.flush();
     }
 
-    /*@Override
-    public void modificarProveedoresEquipo(ProveedoresEquipo proveedoresEquipo) {
-        em.merge(proveedoresEquipo);
+    @Override
+    public void modificarProveedor(ProveedoresEquipoDto proveedoresEquipo) {
+        ProveedoresEquipo proveedoresEquipoEntity = proveedoresEquipoMapper.toEntity(proveedoresEquipo);
+        em.merge(proveedoresEquipoEntity);
         em.flush();
     }
 
     @Override
-    public void obtenerProveedoresEquipo(Long id) {
-        em.find(ProveedoresEquipo.class, id);
-    }*/
+    public ProveedoresEquipoDto obtenerProveedor(Long id) {
+        ProveedoresEquipo proveedoresEquipo = em.find(ProveedoresEquipo.class, id);
+        return proveedoresEquipoMapper.toDto(proveedoresEquipo);
+    }
 
 
     @Override
-    public List<ProveedoresEquipoDto> obtenerProveedoresEquipo() {
+    public List<ProveedoresEquipoDto> obtenerProveedores() {
         List<ProveedoresEquipo> proveedoresEquipo = em.createQuery("SELECT p FROM ProveedoresEquipo p", ProveedoresEquipo.class).getResultList();
-        return proveedoresEquipoMapper.toDto(proveedoresEquipo);
+        return proveedoresEquipoMapper.toDto(proveedoresEquipo);// ("UPDATE Equipo equipo SET equipo.estado = 'INACTIVO' WHERE equipo.id = :id")
+    }
+
+    @Override
+    public void eliminarProveedor(Long id) {
+        em.createQuery("UPDATE ProveedoresEquipo p SET p.estado = 'INACTIVO' WHERE p.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        em.flush();
     }
 }
 

@@ -1,7 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
-import codigocreativo.uy.servidorapp.entidades.BajaEquipo;
+import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
 import jakarta.ejb.Remote;
 
 import java.util.List;

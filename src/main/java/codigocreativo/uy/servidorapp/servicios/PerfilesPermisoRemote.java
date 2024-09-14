@@ -1,8 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.PerfilesPermisoDto;
-import codigocreativo.uy.servidorapp.entidades.Perfil;
-import codigocreativo.uy.servidorapp.entidades.PerfilesPermiso;
+import codigocreativo.uy.servidorapp.dtos.PerfilesPermisoDto;
 import jakarta.ejb.Remote;
 
 import java.util.List;

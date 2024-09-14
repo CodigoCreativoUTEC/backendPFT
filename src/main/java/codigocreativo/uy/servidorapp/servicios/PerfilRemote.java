@@ -1,14 +1,10 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.PerfilDto;
-import codigocreativo.uy.servidorapp.entidades.Perfil;
-import codigocreativo.uy.servidorapp.entidades.Permiso;
+import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Remote;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Remote
 public interface PerfilRemote {

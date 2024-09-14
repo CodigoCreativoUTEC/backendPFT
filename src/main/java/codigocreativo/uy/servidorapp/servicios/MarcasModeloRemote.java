@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.servicios;
-import codigocreativo.uy.servidorapp.DTO.MarcasModeloDto;
-import codigocreativo.uy.servidorapp.entidades.MarcasModelo;
+import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
 import jakarta.ejb.Remote;
 
 import java.util.List;
@@ -10,4 +9,5 @@ public interface MarcasModeloRemote {
     public void modificarMarcasModelo(MarcasModeloDto marcasModelo);
     public MarcasModeloDto obtenerMarca(Long id);
     public List<MarcasModeloDto> obtenerMarcasLista();
+    public void eliminarMarca(Long id);
 }

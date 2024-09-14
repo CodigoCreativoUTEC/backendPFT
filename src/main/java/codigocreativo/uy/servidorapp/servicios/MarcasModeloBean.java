@@ -1,8 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.MarcasModeloDto;
-import codigocreativo.uy.servidorapp.DTOMappers.MarcasModeloMapper;
-import codigocreativo.uy.servidorapp.entidades.Equipo;
+import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
+import codigocreativo.uy.servidorapp.dtomappers.MarcasModeloMapper;
 import codigocreativo.uy.servidorapp.entidades.MarcasModelo;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -14,9 +13,12 @@ import java.util.List;
 public class MarcasModeloBean implements MarcasModeloRemote{
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final MarcasModeloMapper marcasModeloMapper;
 
     @Inject
-    private MarcasModeloMapper marcasModeloMapper;
+    public MarcasModeloBean(MarcasModeloMapper marcasModeloMapper) {
+        this.marcasModeloMapper = marcasModeloMapper;
+    }
 
     @Override
     public void crearMarcasModelo(MarcasModeloDto marcasModelo) {
@@ -39,6 +41,14 @@ public class MarcasModeloBean implements MarcasModeloRemote{
     @Override
     public List<MarcasModeloDto> obtenerMarcasLista() {
         return marcasModeloMapper.toDto(em.createQuery("SELECT marcasModelo FROM MarcasModelo marcasModelo", MarcasModelo.class).getResultList());
+    }
+
+    @Override
+    public void eliminarMarca(Long id) {
+        em.createQuery("UPDATE MarcasModelo marcasModelo SET marcasModelo.estado = 'INACTIVO' WHERE marcasModelo.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        em.flush();
     }
 }
 

@@ -1,15 +1,14 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.IntervencionDto;
-import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.DTOMappers.IntervencionMapper;
+import codigocreativo.uy.servidorapp.dtos.IntervencionDto;
+import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtomappers.IntervencionMapper;
 import codigocreativo.uy.servidorapp.entidades.*;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.mapstruct.Context;
 
 import java.util.List;
 

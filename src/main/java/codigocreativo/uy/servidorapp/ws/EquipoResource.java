@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
-import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
+import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import codigocreativo.uy.servidorapp.servicios.BajaEquipoRemote;
 import codigocreativo.uy.servidorapp.servicios.EquipoRemote;
 import jakarta.ejb.EJB;
@@ -22,14 +22,14 @@ public class EquipoResource {
     private BajaEquipoRemote ber;
 
     @POST
-    @Path("")
+    @Path("/CrearEquipo")
     public Response crearEquipo(EquipoDto equipo) {
         this.er.crearEquipo(equipo);
         return Response.status(201).build();
     }
 
     @PUT
-    @Path("")
+    @Path("/ModificarEquipo")
     public Response modificarProducto(EquipoDto equipo){
         this.er.modificarEquipo(equipo);
         return Response.status(200).build();

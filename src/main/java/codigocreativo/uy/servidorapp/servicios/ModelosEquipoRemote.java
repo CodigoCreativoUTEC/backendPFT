@@ -1,13 +1,15 @@
 package codigocreativo.uy.servidorapp.servicios;
-import codigocreativo.uy.servidorapp.DTO.ModelosEquipoDto;
-import codigocreativo.uy.servidorapp.entidades.ModelosEquipo;
+
+import codigocreativo.uy.servidorapp.dtos.ModelosEquipoDto;
 import jakarta.ejb.Remote;
 
 import java.util.List;
+
 @Remote
 public interface ModelosEquipoRemote {
-    public void crearModelosEquipo(ModelosEquipoDto modelosEquipo);
-    public void modificarModelosEquipo(ModelosEquipoDto modelosEquipo);
-    public ModelosEquipoDto obtenerModelosEquipo(Long id);
-    public List<ModelosEquipoDto> listarModelosEquipo();
+    void crearModelos(ModelosEquipoDto modelosEquipo);
+    void modificarModelos(ModelosEquipoDto modelosEquipo);
+    ModelosEquipoDto obtenerModelos(Long id);
+    List<ModelosEquipoDto> listarModelos();
+    void eliminarModelos(Long id);
 }

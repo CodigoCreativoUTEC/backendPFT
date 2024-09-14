@@ -1,15 +1,13 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
-import codigocreativo.uy.servidorapp.DTOMappers.BajaEquipoMapper;
-import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
+import codigocreativo.uy.servidorapp.dtomappers.BajaEquipoMapper;
+import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.BajaEquipo;
-import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.mapstruct.Context;
 
 import java.util.List;
 @Stateless
@@ -17,25 +15,12 @@ public class BajaEquipoBean implements BajaEquipoRemote {
     @PersistenceContext (unitName = "default")
     private EntityManager em;
 
+    private final BajaEquipoMapper bajaEquipoMapper;
+
     @Inject
-    BajaEquipoMapper bajaEquipoMapper;
-
-
-    /**
-     * Crea una baja de equipo.
-     * También toma el estado de la baja de equipo y la aplica al equipo (también puede reactivar un equipo).
-     * @param bajaEquipo Recibe un objeto de tipo BajaEquipoDto
-     */
-    /*@Override
-    public void crearBajaEquipo(BajaEquipoDto bajaEquipo) {
-        em.persist(bajaEquipoMapper.toEntity(bajaEquipo));
-        Estados estadoEn = bajaEquipo.getEstado();
-
-        em.createQuery("UPDATE Equipo equipo SET equipo.estado = :estadoEnum WHERE equipo.id = :id")
-                .setParameter("id", bajaEquipo.getIdEquipo().getId())
-                .setParameter("estadoEnum", estadoEn)
-                .executeUpdate();
-    }*/
+    public BajaEquipoBean(BajaEquipoMapper bajaEquipoMapper) {
+        this.bajaEquipoMapper = bajaEquipoMapper;
+    }
 
     @Override
     public void crearBajaEquipo(BajaEquipoDto bajaEquipo) {
@@ -44,8 +29,6 @@ public class BajaEquipoBean implements BajaEquipoRemote {
             entity = em.merge(entity);
         }
         em.persist(entity);
-        Estados estadoEn = bajaEquipo.getEstado();
-
     }
 
 

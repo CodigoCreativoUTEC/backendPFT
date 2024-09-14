@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.PermisoDto;
-import codigocreativo.uy.servidorapp.DTOMappers.PermisoMapper;
+import codigocreativo.uy.servidorapp.dtos.PermisoDto;
+import codigocreativo.uy.servidorapp.dtomappers.PermisoMapper;
 import codigocreativo.uy.servidorapp.entidades.Permiso;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;

@@ -1,10 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.DTO.AuditoriaDto;
-import codigocreativo.uy.servidorapp.DTOMappers.AuditoriaMapper;
+import codigocreativo.uy.servidorapp.dtos.AuditoriaDto;
+import codigocreativo.uy.servidorapp.dtomappers.AuditoriaMapper;
 import codigocreativo.uy.servidorapp.entidades.Auditoria;
-import codigocreativo.uy.servidorapp.entidades.Intervencion;
-import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -19,8 +17,12 @@ public class AuditoriaBean implements AuditoriaRemote{
     @PersistenceContext (unitName = "default")
     private EntityManager em;
 
+    private final AuditoriaMapper auditoriaMapper;
+
     @Inject
-    AuditoriaMapper auditoriaMapper;
+    public AuditoriaBean(AuditoriaMapper auditoriaMapper) {
+        this.auditoriaMapper = auditoriaMapper;
+    }
 
     @Override
     public void crearRegistro(AuditoriaDto a){
