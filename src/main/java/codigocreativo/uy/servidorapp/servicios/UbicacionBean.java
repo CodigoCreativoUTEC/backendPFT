@@ -52,7 +52,6 @@ public class UbicacionBean implements UbicacionRemote {
                     .setParameter("id", id)
                     .executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ServiciosException(e.getMessage());
         }
     }
@@ -88,7 +87,6 @@ public class UbicacionBean implements UbicacionRemote {
             em.merge(ubicacion);
             em.flush();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ServiciosException(e.getMessage());
         }
     }

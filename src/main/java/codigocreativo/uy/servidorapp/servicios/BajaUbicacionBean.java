@@ -44,7 +44,6 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
             em.persist(bajaUbicacionMapper.toEntity(bajaUbicacion, new CycleAvoidingMappingContext()));
             // Dar de baja lógica a la ubicación
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ServiciosException(e.getMessage());
         }
     }
@@ -77,7 +76,6 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
             em.merge(ubicacion);
             em.flush();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ServiciosException(e.getMessage());
         }
     }
