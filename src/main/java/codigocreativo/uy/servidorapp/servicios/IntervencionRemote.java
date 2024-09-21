@@ -4,7 +4,10 @@ import codigocreativo.uy.servidorapp.dtos.IntervencionDto;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Remote;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
 @Remote
 public interface IntervencionRemote {
     // CRUD para intervenciones
@@ -12,4 +15,6 @@ public interface IntervencionRemote {
     public void actualizar(IntervencionDto intervencion) throws ServiciosException;
     public List<IntervencionDto> obtenerTodas() throws ServiciosException;
 
+    List<IntervencionDto> obtenerPorRangoDeFecha(LocalDateTime fechaDesde, LocalDateTime fechaHasta, Long idEquipo) throws ServiciosException;
+    Map<String, Long> obtenerCantidadPorTipo(LocalDateTime fechaDesde, LocalDateTime fechaHasta, Long idTipo) throws ServiciosException;
 }

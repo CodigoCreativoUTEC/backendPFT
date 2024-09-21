@@ -25,6 +25,7 @@ public class MiApp extends Application {
         resources.add(ModeloResource.class);
         resources.add(PaisesResource.class);
         resources.add(TipoEquipoResource.class);
+        resources.add(IntervencionesResource.class);
         return resources;
     }
 }
