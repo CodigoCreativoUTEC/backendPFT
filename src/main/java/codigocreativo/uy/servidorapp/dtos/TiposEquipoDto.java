@@ -1,5 +1,7 @@
 package codigocreativo.uy.servidorapp.dtos;
 
+import codigocreativo.uy.servidorapp.enumerados.Estados;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -9,13 +11,15 @@ import java.util.Objects;
 public class TiposEquipoDto implements Serializable {
     private Long id;
     private String nombreTipo;
+    private Estados estado;
 
     public TiposEquipoDto() {
     }
 
-    public TiposEquipoDto(Long id, String nombreTipo) {
+    public TiposEquipoDto(Long id, String nombreTipo, Estados estado) {
         this.id = id;
         this.nombreTipo = nombreTipo;
+        this.estado = estado;
     }
 
     public Long getId() {
@@ -33,6 +37,15 @@ public class TiposEquipoDto implements Serializable {
 
     public TiposEquipoDto setNombreTipo(String nombreTipo) {
         this.nombreTipo = nombreTipo;
+        return this;
+    }
+
+    public Estados getEstado() {
+        return estado;
+    }
+
+    public TiposEquipoDto setEstado(Estados estado) {
+        this.estado = estado;
         return this;
     }
 

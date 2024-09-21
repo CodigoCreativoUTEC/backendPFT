@@ -15,6 +15,9 @@ public class TiposEquipo implements Serializable {
     @Column(name = "NOMBRE_TIPO", nullable = false, length = 30)
     private String nombreTipo;
 
+    @Column(name = "ESTADO", nullable = false)
+    private String estado;
+
     public Long getId() {
         return id;
     }
@@ -29,6 +32,14 @@ public class TiposEquipo implements Serializable {
 
     public void setNombreTipo(String nombreTipo) {
         this.nombreTipo = nombreTipo;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     @Override

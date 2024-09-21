@@ -33,6 +33,20 @@ public class TiposEquipoBean implements TiposEquipoRemote{
     }
 
     @Override
+    public void eliminarTiposEquipo(Long id) {
+        //solo cambia a estado INACTIVO
+        TiposEquipo tiposEquipoEntity = em.find(TiposEquipo.class, id);
+        tiposEquipoEntity.setEstado("INACTIVO");
+        em.merge(tiposEquipoEntity);
+    }
+
+    @Override
+    public TiposEquipoDto obtenerPorId(Long id) {
+        TiposEquipo tiposEquipoEntity = em.find(TiposEquipo.class, id);
+        return tiposEquipoMapper.toDto(tiposEquipoEntity);
+    }
+
+    @Override
     public List<TiposEquipoDto> listarTiposEquipo() {
         List<TiposEquipo> tiposEquipos = em.createQuery("SELECT t FROM TiposEquipo t", TiposEquipo.class).getResultList();
         return tiposEquipoMapper.toDto(tiposEquipos);

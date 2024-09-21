@@ -9,5 +9,7 @@ import java.util.List;
 public interface TiposEquipoRemote {
     public void crearTiposEquipo(TiposEquipoDto tiposEquipo);
     public void modificarTiposEquipo(TiposEquipoDto tiposEquipo);
+    public void eliminarTiposEquipo(Long id);
+    public TiposEquipoDto obtenerPorId(Long id);
     public List<TiposEquipoDto> listarTiposEquipo();
 }

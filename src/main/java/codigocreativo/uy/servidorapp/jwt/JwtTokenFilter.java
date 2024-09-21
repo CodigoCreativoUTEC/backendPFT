@@ -131,6 +131,14 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 path.startsWith("/paises/listarTodos"))
             return perfil.equals(AUX_ADMINISTRATIVO);
 
+        // Endpoints referentes a Tipos de Equipos
+        if (    path.startsWith("/tipoEquipos/crear") ||
+                path.startsWith("/tipoEquipos/modificar") ||
+                path.startsWith("/tipoEquipos/inactivar") ||
+                path.startsWith("/tipoEquipos/listarTodos") ||
+                path.startsWith("/tipoEquipos/buscarPorId"))
+            return perfil.equals(AUX_ADMINISTRATIVO);
+
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }
 }
