@@ -18,6 +18,13 @@ public class ProveedoresEquipo implements Serializable {
     @Column(name = "ESTADO", nullable = false, length = 20)
     private String estado;
 
+    //Agregar referencia con pais
+    @ManyToOne
+    @JoinColumn(name = "ID_PAIS", nullable = false)
+    private Pais pais;
+
+
+
     public Long getId() {
         return id;
     }
@@ -40,6 +47,14 @@ public class ProveedoresEquipo implements Serializable {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public Pais getPais() {
+    	return pais;
+    }
+
+    public void setPais(Pais pais) {
+    	this.pais = pais;
     }
 
     @Override

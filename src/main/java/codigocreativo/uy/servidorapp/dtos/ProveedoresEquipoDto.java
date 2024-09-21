@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.dtos;
 
+import codigocreativo.uy.servidorapp.entidades.Pais;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 
 import java.io.Serializable;
@@ -12,14 +13,16 @@ public class ProveedoresEquipoDto implements Serializable {
     private Long id;
     private String nombre;
     private Estados estado;
+    private Pais pais;
 
     public ProveedoresEquipoDto() {
     }
 
-    public ProveedoresEquipoDto(Long id, String nombre, Estados estado) {
+    public ProveedoresEquipoDto(Long id, String nombre, Estados estado, Pais pais) {
         this.id = id;
         this.nombre = nombre;
         this.estado = estado;
+        this.pais = pais;
     }
 
     public Long getId() {
@@ -49,6 +52,15 @@ public class ProveedoresEquipoDto implements Serializable {
         return this;
     }
 
+    public Pais getPais() {
+        return pais;
+    }
+
+    public ProveedoresEquipoDto setPais(Pais pais) {
+        this.pais = pais;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,7 +72,7 @@ public class ProveedoresEquipoDto implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nombre, estado);
+        return Objects.hash(id, nombre, estado, pais);
     }
 
     @Override

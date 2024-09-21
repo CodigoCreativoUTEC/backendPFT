@@ -42,38 +42,38 @@ public class UsuarioResource {
     //TODO: Se debe crear un enpoint que verifique mi propio usuario y permita modificar sus propios datos
 
     @PUT
-@Path("/Inactivar")
-public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-        return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"Falta el token de autorización\"}").build();
+    @Path("/Inactivar")
+    public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"Falta el token de autorización\"}").build();
+        }
+
+        String token = authorizationHeader.substring("Bearer".length()).trim();
+        Claims claims = jwtService.parseToken(token);
+        String emailSolicitante = claims.getSubject();
+        String perfilSolicitante = claims.get("perfil", String.class);
+
+        if (!perfilSolicitante.equals("Administrador")) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No tienes permisos para inactivar usuarios\"}").build();
+        }
+
+        UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
+
+        if (usuarioAInactivar == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
+        }
+
+        if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
+        }
+
+        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
+        }
+
+        this.er.eliminarUsuario(usuarioAInactivar);
+        return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
     }
-
-    String token = authorizationHeader.substring("Bearer".length()).trim();
-    Claims claims = jwtService.parseToken(token);
-    String emailSolicitante = claims.getSubject();
-    String perfilSolicitante = claims.get("perfil", String.class);
-
-    if (!perfilSolicitante.equals("Administrador")) {
-        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No tienes permisos para inactivar usuarios\"}").build();
-    }
-
-    UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
-
-    if (usuarioAInactivar == null) {
-        return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
-    }
-
-    if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
-        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
-    }
-
-    if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
-        return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
-    }
-
-    this.er.eliminarUsuario(usuarioAInactivar);
-    return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
-}
 
 
     @GET
@@ -152,11 +152,17 @@ public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization
         } else if (!user.getEstado().equals(Estados.ACTIVO)) {
             return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
         }
+
+        // Verificación de idPerfil antes de acceder a getNombrePerfil()
+        String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
+
         user = user.setContrasenia(null);
-        String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+        String token = jwtService.generateToken(user.getEmail(), perfilNombre);
+
         GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
         return Response.ok(loginResponse).build();
     }
+
 
 
     public static class LoginRequest {
