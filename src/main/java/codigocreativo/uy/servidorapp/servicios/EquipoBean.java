@@ -12,9 +12,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Stateless
 public class EquipoBean implements EquipoRemote {
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext(unitName = "default")
     private EntityManager em;
 
     @Inject
@@ -23,7 +26,6 @@ public class EquipoBean implements EquipoRemote {
     @Inject
     BajaEquipoMapper bajaEquipoMapper;
 
-    //se cambia em.persist() por em.merge()
     @Override
     public void crearEquipo(EquipoDto equipo) {
         em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
@@ -36,7 +38,6 @@ public class EquipoBean implements EquipoRemote {
         em.flush();
     }
 
-    //se cambia em.persist() por em.merge()
     @Override
     public void eliminarEquipo(BajaEquipoDto bajaEquipo) {
         em.merge(bajaEquipoMapper.toEntity(bajaEquipo, new CycleAvoidingMappingContext()));
@@ -47,18 +48,22 @@ public class EquipoBean implements EquipoRemote {
     }
 
     @Override
-    public List<EquipoDto> obtenerEquiposFiltrado(String filtro, String valor) {
-        return equipoMapper.toDto(em.createQuery("SELECT e FROM Equipo e WHERE e." + filtro + " = :valor", Equipo.class)
-                .setParameter("valor", valor)
-                .getResultList(), new CycleAvoidingMappingContext());
+    public List<EquipoDto> obtenerEquiposFiltrado(Map<String, String> filtros) {
+        String queryStr = "SELECT e FROM Equipo e WHERE 1=1";
+        for (String key : filtros.keySet()) {
+            queryStr += " AND e." + key + " = :" + key;
+        }
+        var query = em.createQuery(queryStr, Equipo.class);
+        for (Map.Entry<String, String> entry : filtros.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+        return equipoMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
     }
 
     @Override
     public EquipoDto obtenerEquipo(Long id) {
         return equipoMapper.toDto(em.find(Equipo.class, id), new CycleAvoidingMappingContext());
     }
-
-
 
     @Override
     public List<EquipoDto> listarEquipos() {

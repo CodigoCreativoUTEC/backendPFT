@@ -5,6 +5,7 @@ import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import jakarta.ejb.Remote;
 
 import java.util.List;
+import java.util.Map;
 
 @Remote
 public interface EquipoRemote {
@@ -12,7 +13,7 @@ public interface EquipoRemote {
     public void modificarEquipo(EquipoDto equipo);
     public void eliminarEquipo(BajaEquipoDto bajaEquipo);
 
-    List<EquipoDto> obtenerEquiposFiltrado(String filtro, String valor);
+    List<EquipoDto> obtenerEquiposFiltrado(Map<String, String> filtros);
 
     public EquipoDto obtenerEquipo(Long id);
     public List<EquipoDto> listarEquipos();

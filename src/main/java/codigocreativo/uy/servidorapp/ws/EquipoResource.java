@@ -9,7 +9,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/equipos")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -55,9 +57,29 @@ public class EquipoResource {
     }
 
     @GET
-    @Path("ListarEquiposFiltrados")
-    public List<EquipoDto> obtenerEquiposFiltrados(@QueryParam("filtro")  String filtro, @QueryParam("valor") String valor){
-        return this.er.obtenerEquiposFiltrado(filtro,valor);
+    @Path("/filtrar")
+    public List<EquipoDto> filtrar(@QueryParam("nombre") String nombre,
+                                   @QueryParam("tipo") String tipo,
+                                   @QueryParam("marca") String marca,
+                                   @QueryParam("modelo") String modelo,
+                                   @QueryParam("numeroSerie") String numeroSerie,
+                                   @QueryParam("paisOrigen") String paisOrigen,
+                                   @QueryParam("proveedor") String proveedor,
+                                   @QueryParam("fechaAdquisicion") String fechaAdquisicion,
+                                   @QueryParam("identificacionInterna") String identificacionInterna,
+                                   @QueryParam("ubicacion") String ubicacion) {
+        Map<String, String> filtros = new HashMap<>();
+        if (nombre != null) filtros.put("nombre", nombre);
+        if (tipo != null) filtros.put("tipo", tipo);
+        if (marca != null) filtros.put("marca", marca);
+        if (modelo != null) filtros.put("modelo", modelo);
+        if (numeroSerie != null) filtros.put("numeroSerie", numeroSerie);
+        if (paisOrigen != null) filtros.put("paisOrigen", paisOrigen);
+        if (proveedor != null) filtros.put("proveedor", proveedor);
+        if (fechaAdquisicion != null) filtros.put("fechaAdquisicion", fechaAdquisicion);
+        if (identificacionInterna != null) filtros.put("identificacionInterna", identificacionInterna);
+        if (ubicacion != null) filtros.put("ubicacion", ubicacion);
+        return this.er.obtenerEquiposFiltrado(filtros);
     }
 
     @GET
