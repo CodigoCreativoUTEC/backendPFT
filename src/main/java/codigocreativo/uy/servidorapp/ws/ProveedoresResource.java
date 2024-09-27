@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
-
 import codigocreativo.uy.servidorapp.dtos.ProveedoresEquipoDto;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.servicios.ProveedoresEquipoRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-//TODO: Falta agregar filtros del listado
+
 @Path("/proveedores")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -50,4 +50,9 @@ public class ProveedoresResource {
         return this.er.obtenerProveedor(id);
     }
 
+    @GET
+    @Path("/buscar")
+    public List<ProveedoresEquipoDto> buscarProveedores(@QueryParam("nombre") String nombre, @QueryParam("estado") Estados estado) {
+        return this.er.buscarProveedores(nombre, estado);
+    }
 }

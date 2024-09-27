@@ -20,7 +20,7 @@ public class TipoIntervencioneBean implements TipoIntervencioneRemote {
 
     @Override
     public List<TiposIntervencioneDto> obtenerTiposIntervenciones() {
-        List<TiposIntervencione> tiposIntervenciones = em.createQuery("SELECT t FROM TiposIntervencione t", TiposIntervencione.class).getResultList();
+        List<TiposIntervencione> tiposIntervenciones = em.createQuery("SELECT t FROM TiposIntervencione t WHERE t.estado = 'ACTIVO'", TiposIntervencione.class).getResultList();
         return tiposIntervencioneMapper.toDto(tiposIntervenciones);
     }
 
@@ -44,7 +44,9 @@ public class TipoIntervencioneBean implements TipoIntervencioneRemote {
 
     @Override
     public void eliminarTipoIntervencion(Long id) {
-        TiposIntervencione tipoIntervencion = em.find(TiposIntervencione.class, id);
-        em.remove(tipoIntervencion);
+        //no puede borrar solo poner como estado inactivo
+        em.createQuery("UPDATE TiposIntervencione t SET t.estado = 'INACTIVO' WHERE t.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
     }
 }

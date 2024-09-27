@@ -1,16 +1,17 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.ProveedoresEquipoDto;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Remote;
 
 import java.util.List;
 
 @Remote
 public interface ProveedoresEquipoRemote {
-
-    public void crearProveedor(ProveedoresEquipoDto proveedoresEquipo);
-    public void modificarProveedor(ProveedoresEquipoDto proveedoresEquipo);
-    public ProveedoresEquipoDto obtenerProveedor(Long id);
-    public List<ProveedoresEquipoDto> obtenerProveedores();
-    public void eliminarProveedor(Long id);
+    void crearProveedor(ProveedoresEquipoDto proveedoresEquipo);
+    void modificarProveedor(ProveedoresEquipoDto proveedoresEquipo);
+    ProveedoresEquipoDto obtenerProveedor(Long id);
+    List<ProveedoresEquipoDto> obtenerProveedores();
+    void eliminarProveedor(Long id);
+    List<ProveedoresEquipoDto> buscarProveedores(String nombre, Estados estado);
 }

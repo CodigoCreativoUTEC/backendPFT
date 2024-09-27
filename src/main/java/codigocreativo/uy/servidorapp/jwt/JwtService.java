@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.jwt;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.ejb.Stateless;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -19,7 +18,7 @@ public class JwtService {
                 .claim("perfil", nombrePerfil)
                 .claim("email", email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000))// 30 dias de expiracion
+                .setExpiration(new Date(System.currentTimeMillis() + 400 * 60 * 1000))// 5 min de expiracion
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
@@ -32,5 +31,3 @@ public class JwtService {
 }
 
 }
-
-//Hola yo de despues, tenes q hacer el war y subirlo, saludos tu yo del pasado

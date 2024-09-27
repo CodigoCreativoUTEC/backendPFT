@@ -1,6 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.ModelosEquipoDto;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.servicios.ModelosEquipoRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -20,6 +21,7 @@ public class ModeloResource {
     @POST
     @Path("/crear")
     public Response crearModelo(ModelosEquipoDto p) {
+        p.setEstado(Estados.ACTIVO);
         this.er.crearModelos(p);
         return Response.status(201).build();
     }

@@ -44,9 +44,6 @@ public class UsuarioResource {
     @PUT
     @Path("/Inactivar")
     public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"Falta el token de autorización\"}").build();
-        }
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
         Claims claims = jwtService.parseToken(token);
@@ -163,7 +160,22 @@ public class UsuarioResource {
         return Response.ok(loginResponse).build();
     }
 
+    @POST
+    @Path("/renovar-token")
+    public Response renovarToken(@HeaderParam("Authorization") String authorizationHeader) {
 
+        String token = authorizationHeader.substring("Bearer".length()).trim();
+        Claims claims = jwtService.parseToken(token);
+
+        // Obtener el email y perfil del token antiguo
+        String email = claims.get("email", String.class);
+        String perfil = claims.get("perfil", String.class);
+
+        // Generar un nuevo token
+        String nuevoToken = jwtService.generateToken(email, perfil);
+
+        return Response.ok("{\"token\": \"" + nuevoToken + "\"}").build();
+    }
 
     public static class LoginRequest {
         private String usuario;

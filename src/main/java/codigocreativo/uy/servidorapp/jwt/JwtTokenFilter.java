@@ -90,6 +90,12 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
         }
 
+        // enpoint renovador de token
+
+        if (path.startsWith("/usuarios/renovar-token")) {
+            return todosLosPermisos;
+        }
+
         // Endpoints referentes a Equipos
         if (    path.startsWith("/equipos/CrearEquipo") ||
                 path.startsWith("/equipos/Inactivar") ||
@@ -143,9 +149,35 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         if (    path.startsWith("/intervencion/crear") ||
                 path.startsWith("/intervencion/modificar") ||
                 path.startsWith("/intervencion/listar") ||
+                path.startsWith("/intervencion/buscarPorId") ||
                 path.startsWith("/intervencion/reportePorFechas") ||
                 path.startsWith("/intervencion/reportePorTipo"))
             return todosLosPermisos;
+
+        // Enpoints referentes a Perfiles
+        if (    path.startsWith("/perfiles/crear") ||
+                path.startsWith("/perfiles/modificar") ||
+                path.startsWith("/perfiles/inactivar") ||
+                path.startsWith("/perfiles/") ||
+                path.startsWith("/perfiles/listar") ||
+                path.startsWith("/perfiles/buscarPorNombre") ||
+                path.startsWith("/perfiles/buscarPorEstado"))
+            return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
+
+        // Enpoints referentes a Tipo de Intervenciones
+        if (    path.startsWith("/tipoIntervenciones/crear") ||
+                path.startsWith("/tipoIntervenciones/modificar") ||
+                path.startsWith("/tipoIntervenciones/inactivar") ||
+                path.startsWith("/tipoIntervenciones/listarTodos") ||
+                path.startsWith("/tipoIntervenciones/buscarPorId"))
+            return perfil.equals(AUX_ADMINISTRATIVO);
+
+        // Endpoints referentes a Funcionalidades
+        if (    path.startsWith("/funcionalidades/crear") ||
+                path.startsWith("/funcionalidades/modificar") ||
+                path.startsWith("/funcionalidades/inactivar") ||
+                path.startsWith("/funcionalidades/listar"))
+            return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
 
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }

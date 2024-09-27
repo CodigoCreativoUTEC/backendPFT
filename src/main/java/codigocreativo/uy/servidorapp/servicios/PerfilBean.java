@@ -21,6 +21,7 @@ public class PerfilBean implements PerfilRemote {
 
     @Override
     public void crearPerfil(PerfilDto p) {
+        p.setEstado(Estados.ACTIVO);
         em.persist(perfilMapper.toEntity(p));
         em.flush();
     }
@@ -45,19 +46,25 @@ public class PerfilBean implements PerfilRemote {
 
     @Override
     public List<PerfilDto> obtenerPerfiles() {
-        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p", Perfil.class).getResultList());
+        // Asegúrate de usar el método correcto para mapear una lista
+        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p", Perfil.class).getResultList());
     }
 
     @Override
     public List<PerfilDto> listarPerfilesPorNombre(String nombre) {
-        //busca los perfiles por nombre
-        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil LIKE :nombre", Perfil.class).setParameter("nombre", "%" + nombre + "%").getResultList());
+        // Asegúrate de mapear correctamente una lista de resultados
+        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil LIKE :nombre", Perfil.class)
+                .setParameter("nombre", "%" + nombre + "%")
+                .getResultList());
     }
 
     @Override
     public List<PerfilDto> listarPerfilesPorEstado(Estados estado) {
-        //busca los perfiles por estado
-        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class).setParameter("estado", estado).getResultList());
+        // Asegúrate de mapear correctamente una lista de resultados
+        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class)
+                .setParameter("estado", estado)
+                .getResultList());
     }
+
 
 }

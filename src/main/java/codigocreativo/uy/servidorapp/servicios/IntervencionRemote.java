@@ -14,6 +14,8 @@ public interface IntervencionRemote {
     public void crear(IntervencionDto intervencion) throws ServiciosException;
     public void actualizar(IntervencionDto intervencion) throws ServiciosException;
     public List<IntervencionDto> obtenerTodas() throws ServiciosException;
+    //obtener intervencion por id
+    public IntervencionDto buscarId(Long id) throws ServiciosException;
 
     List<IntervencionDto> obtenerPorRangoDeFecha(LocalDateTime fechaDesde, LocalDateTime fechaHasta, Long idEquipo) throws ServiciosException;
     Map<String, Long> obtenerCantidadPorTipo(LocalDateTime fechaDesde, LocalDateTime fechaHasta, Long idTipo) throws ServiciosException;

@@ -3,6 +3,7 @@ package codigocreativo.uy.servidorapp.servicios;
 import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
 import codigocreativo.uy.servidorapp.dtomappers.MarcasModeloMapper;
 import codigocreativo.uy.servidorapp.entidades.MarcasModelo;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -22,6 +23,7 @@ public class MarcasModeloBean implements MarcasModeloRemote{
 
     @Override
     public void crearMarcasModelo(MarcasModeloDto marcasModelo) {
+        marcasModelo.setEstado(Estados.ACTIVO);
         em.persist(marcasModeloMapper.toEntity(marcasModelo));
         em.flush();
     }

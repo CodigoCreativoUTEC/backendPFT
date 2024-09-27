@@ -42,11 +42,11 @@ public class IntervencionesResource {
         return this.er.obtenerTodas();
     }
 
-    /*@GET
+    @GET
     @Path("/buscarPorId")
-    public IntervencionDto buscarPorId(@QueryParam("id") Long id){
+    public IntervencionDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
         return this.er.buscarId(id);
-    }*/
+    }
 
     @GET
     @Path("/reportePorFechas")

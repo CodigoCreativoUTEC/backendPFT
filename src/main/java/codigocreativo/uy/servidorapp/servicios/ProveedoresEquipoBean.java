@@ -12,8 +12,8 @@ import jakarta.persistence.PersistenceContext;
 import java.util.List;
 
 @Stateless
-public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
-    @PersistenceContext (unitName = "default")
+public class ProveedoresEquipoBean implements ProveedoresEquipoRemote {
+    @PersistenceContext(unitName = "default")
     private EntityManager em;
     private final ProveedoresEquipoMapper proveedoresEquipoMapper;
 
@@ -43,11 +43,10 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
         return proveedoresEquipoMapper.toDto(proveedoresEquipo);
     }
 
-
     @Override
     public List<ProveedoresEquipoDto> obtenerProveedores() {
-        List<ProveedoresEquipo> proveedoresEquipo = em.createQuery("SELECT p FROM ProveedoresEquipo p", ProveedoresEquipo.class).getResultList();
-        return proveedoresEquipoMapper.toDto(proveedoresEquipo);// ("UPDATE Equipo equipo SET equipo.estado = 'INACTIVO' WHERE equipo.id = :id")
+        List<ProveedoresEquipo> proveedoresEquipo = em.createQuery("SELECT p FROM ProveedoresEquipo p WHERE p.estado = 'ACTIVO' ", ProveedoresEquipo.class).getResultList();
+        return proveedoresEquipoMapper.toDto(proveedoresEquipo);
     }
 
     @Override
@@ -57,5 +56,23 @@ public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
                 .executeUpdate();
         em.flush();
     }
-}
 
+    @Override
+    public List<ProveedoresEquipoDto> buscarProveedores(String nombre, Estados estado) {
+        String query = "SELECT p FROM ProveedoresEquipo p WHERE 1=1";
+        if (nombre != null && !nombre.isEmpty()) {
+            query += " AND LOWER(p.nombre) LIKE :nombre";
+        }
+        if (estado != null) {
+            query += " AND UPPER(p.estado) = :estado";
+        }
+        var q = em.createQuery(query, ProveedoresEquipo.class);
+        if (nombre != null && !nombre.isEmpty()) {
+            q.setParameter("nombre", "%" + nombre.toLowerCase() + "%");
+        }
+        if (estado != null) {
+            q.setParameter("estado", estado.name().toUpperCase());
+        }
+        return proveedoresEquipoMapper.toDto(q.getResultList());
+    }
+}

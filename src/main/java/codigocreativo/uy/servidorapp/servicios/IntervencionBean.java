@@ -53,6 +53,12 @@ public class IntervencionBean implements IntervencionRemote {
     }
 
     @Override
+    public IntervencionDto buscarId(Long id) throws ServiciosException {
+        Intervencion intervencion = em.find(Intervencion.class, id);
+        return intervencionMapper.toDto(intervencion, new CycleAvoidingMappingContext());
+    }
+
+    @Override
     public List<IntervencionDto> obtenerPorRangoDeFecha(LocalDateTime fechaDesde, LocalDateTime fechaHasta, Long idEquipo) throws ServiciosException {
         String queryStr = "SELECT i FROM Intervencion i WHERE i.fechaHora BETWEEN :fechaDesde AND :fechaHasta";
         if (idEquipo != null) {
