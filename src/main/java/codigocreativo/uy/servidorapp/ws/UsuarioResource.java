@@ -12,6 +12,7 @@ import com.google.auth.oauth2.IdToken;
 
 import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
+import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -122,7 +123,10 @@ public class UsuarioResource {
             System.out.println("Request null");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
         }
-        UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
+        System.out.println(loginRequest.toString());
+        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.password);
+        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.getPassword());
+        UsuarioDto user = this.er.login(loginRequest.email, loginRequest.getPassword());
 
         if (user != null) {
             String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
@@ -138,34 +142,10 @@ public class UsuarioResource {
         }
     }
 
-    /*@POST
-    @Path("/google-login")
-    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        if (googleLoginRequest == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-        }
 
-        UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
-        boolean userNeedsAdditionalInfo = false;
 
-        if (user == null) {
-            user = new UsuarioDto();
-            user.setEmail(googleLoginRequest.getEmail());
-            user.setNombre(googleLoginRequest.getName());
-            userNeedsAdditionalInfo = true;
-        } else if (!user.getEstado().equals(Estados.ACTIVO)) {
-            return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
-        }
 
-        // Verificación de idPerfil antes de acceder a getNombrePerfil()
-        String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
 
-        user = user.setContrasenia(null);
-        String token = jwtService.generateToken(user.getEmail(), perfilNombre);
-
-        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
-        return Response.ok(loginResponse).build();
-    }*/
     @POST
     @Path("/google-login")
     public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
@@ -243,25 +223,29 @@ public class UsuarioResource {
     }
 
     public static class LoginRequest {
-        private String usuario;
-        private String password;
+    @JsonbProperty("email")
+    private String email;
 
-        public String getUsuario() {
-            return usuario;
-        }
+    @JsonbProperty("password")
+    private String password;
 
-        public void setUsuario(String usuario) {
-            this.usuario = usuario;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
+    public String getEmail() {
+        return email;
     }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
 
     public static class LoginResponse {
         private String token;
