@@ -4,12 +4,19 @@ import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.auth.oauth2.TokenVerifier;
+import com.google.auth.oauth2.TokenVerifier.VerificationException;
+import com.google.auth.oauth2.IdToken;
 
 import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import java.util.Collections;
 import java.util.List;
 
 @Path("/usuarios")
@@ -131,7 +138,7 @@ public class UsuarioResource {
         }
     }
 
-    @POST
+    /*@POST
     @Path("/google-login")
     public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
         if (googleLoginRequest == null) {
@@ -158,6 +165,64 @@ public class UsuarioResource {
 
         GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
         return Response.ok(loginResponse).build();
+    }*/
+    @POST
+    @Path("/google-login")
+    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
+        System.out.println(googleLoginRequest.toString());
+        if (googleLoginRequest.getIdToken() == null) {
+            System.out.println("Token de Google nulo");
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
+        }
+
+        try {
+            // Validar el idToken con Google
+            String idTokenString = googleLoginRequest.getIdToken();
+            TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
+                    .setAudience("103181333646-gp6uip6g6k1rg6p52tsidphj3gt22qut.apps.googleusercontent.com")
+                    .build();
+
+            JsonWebSignature idToken = tokenVerifier.verify(idTokenString);
+            if (idToken == null) {
+                System.out.println("Token de Google inválido");
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
+            }
+
+            JsonWebToken.Payload payload = idToken.getPayload();
+            String email = (String) payload.get("email");
+            String name = (String) payload.get("name");
+
+            // Verificar si el usuario ya existe en el sistema
+            UsuarioDto user = er.findUserByEmail(email);
+            boolean userNeedsAdditionalInfo = false;
+
+            if (user == null) {
+                // El usuario no existe, pedir más información para completar el registro
+                user = new UsuarioDto();
+                user.setEmail(email);
+                user.setNombre(name);
+                userNeedsAdditionalInfo = true;
+            } else if (!user.getEstado().equals(Estados.ACTIVO)) {
+                // Si el usuario no está activo, devolver un error
+                System.out.println("Cuenta inactiva, por favor contacte al administrador");
+                return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
+            }
+
+            // Generar un JWT para este usuario si ya existe
+            String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
+            String token = jwtService.generateToken(user.getEmail(), perfilNombre);  // Incluir ID
+
+            // Enviar la respuesta al cliente con el token y la indicación de si necesita completar más información
+            GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
+            return Response.ok(loginResponse).build();
+
+        } catch (VerificationException e) {
+            System.out.println("Token de Google inválido");
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
+        } catch (Exception e) {
+            System.out.println("Error al procesar el token de Google");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
+        }
     }
 
     @POST
@@ -225,25 +290,18 @@ public class UsuarioResource {
     }
 
     public static class GoogleLoginRequest {
-        private String email;
-        private String name;
+        private String idToken;
 
-        public String getEmail() {
-            return email;
+        // Getters y setters
+        public String getIdToken() {
+            return idToken;
         }
 
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
+        public void setIdToken(String idToken) {
+            this.idToken = idToken;
         }
     }
+
 
     public static class GoogleLoginResponse {
         private String token;

@@ -13,14 +13,19 @@ public class JwtService {
     private final String secret = System.getenv("SECRET_KEY");
 
     public String generateToken(String email, String nombrePerfil) {
-        return Jwts.builder()
+        try {
+            return Jwts.builder()
                 .setSubject(email)
                 .claim("perfil", nombrePerfil)
                 .claim("email", email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 400 * 60 * 1000))// 5 min de expiracion
+                .setExpiration(new Date(System.currentTimeMillis() + 400 * 60 * 1000)) // 5 min de expiracion
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
+        } catch (Exception e) {
+            System.out.println("Error al generar el token: " + e.getMessage());
+            return null;  // Retornar null si ocurre algún error
+        }
     }
 
     public Claims parseToken(String token) {
