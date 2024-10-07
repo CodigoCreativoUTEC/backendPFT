@@ -142,10 +142,6 @@ public class UsuarioResource {
         }
     }
 
-
-
-
-
     @POST
     @Path("/google-login")
     public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
@@ -154,7 +150,6 @@ public class UsuarioResource {
             System.out.println("Token de Google nulo");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
         }
-
         try {
             // Validar el idToken con Google
             String idTokenString = googleLoginRequest.getIdToken();
