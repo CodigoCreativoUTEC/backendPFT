@@ -17,8 +17,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,7 +51,7 @@ public class UsuarioResource {
     //TODO: Se debe crear un enpoint que verifique mi propio usuario y permita modificar sus propios datos
 
     @PUT
-    @Path("/Inactivar")
+    @Path("/inactivar")
     public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
@@ -59,9 +60,10 @@ public class UsuarioResource {
         String perfilSolicitante = claims.get("perfil", String.class);
 
         if (!perfilSolicitante.equals("Administrador")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No tienes permisos para inactivar usuarios\"}").build();
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
         }
-
+        System.out.println("Email solicitante: " + emailSolicitante);
+        System.out.println("Cedula perfil a borrar: " + usuario.getCedula());
         UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
 
         if (usuarioAInactivar == null) {
@@ -80,16 +82,37 @@ public class UsuarioResource {
         return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
     }
 
+    @GET
+    @Path("/usuarios/filtrar")
+    public List<UsuarioDto> filtrarUsuarios(@QueryParam("nombre") String nombre,
+                                            @QueryParam("apellido") String apellido,
+                                            @QueryParam("nombreUsuario") String nombreUsuario,
+                                            @QueryParam("email") String email,
+                                            @QueryParam("perfil") String tipoUsuario,
+                                            @QueryParam("estado") String estado) {
+
+        Map<String, String> filtros = new HashMap<>();
+        if (nombre != null) filtros.put("nombre", nombre);
+        if (apellido != null) filtros.put("apellido", apellido);
+        if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
+        if (email != null) filtros.put("email", email);
+        if (tipoUsuario != null) filtros.put("tipoUsuario", tipoUsuario);
+        if (estado != null) filtros.put("estado", estado);
+
+        return this.er.obtenerUsuariosFiltrado(filtros);
+    }
+
+
 
     @GET
     @Path("/BuscarUsuarioPorCI")
-    public UsuarioDto buscarEquipo(@QueryParam("ci") String ci){
+    public UsuarioDto buscarUsuario(@QueryParam("ci") String ci){
         return this.er.obtenerUsuarioPorCI(ci);
     }
 
     @GET
-    @Path("/BuscarUsuarioPorId")
-    public UsuarioDto buscarEquipo(@QueryParam("id") Long id){
+    @Path("/seleccionar")
+    public UsuarioDto buscarUsuario(@QueryParam("id") Long id){
         return this.er.obtenerUsuario(id);
     }
 
@@ -100,7 +123,7 @@ public class UsuarioResource {
     }
 
     @GET
-    @Path("/ListarTodosLosUsuarios")
+    @Path("/listar")
     public List<UsuarioDto> obtenerTodosLosUsuarios() {
         return this.er.obtenerUsuarios();
     }
@@ -218,28 +241,28 @@ public class UsuarioResource {
     }
 
     public static class LoginRequest {
-    @JsonbProperty("email")
-    private String email;
+        @JsonbProperty("email")
+        private String email;
 
-    @JsonbProperty("password")
-    private String password;
+        @JsonbProperty("password")
+        private String password;
 
-    public String getEmail() {
-        return email;
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
     }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-}
 
 
     public static class LoginResponse {

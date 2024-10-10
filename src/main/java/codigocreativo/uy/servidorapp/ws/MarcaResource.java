@@ -38,13 +38,13 @@ public class MarcaResource {
     }
 
     @GET
-    @Path("/listarTodas")
+    @Path("/listar")
     public List<MarcasModeloDto> listarTodas(){
         return this.er.obtenerMarcasLista();
     }
 
     @GET
-    @Path("/buscarPorId")
+    @Path("/seleccionar")
     public MarcasModeloDto buscarPorId(@QueryParam("id") Long id){
         return this.er.obtenerMarca(id);
     }

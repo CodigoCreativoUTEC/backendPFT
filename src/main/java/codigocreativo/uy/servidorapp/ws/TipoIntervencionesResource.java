@@ -39,13 +39,13 @@ public class TipoIntervencionesResource {
     }
 
     @GET
-    @Path("/listarTodos")
+    @Path("/listar")
     public List<TiposIntervencioneDto> listarTodos() throws ServiciosException {
         return this.er.obtenerTiposIntervenciones();
     }
 
     @GET
-    @Path("/buscarPorId")
+    @Path("/seleccionar")
     public TiposIntervencioneDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
         return this.er.obtenerTipoIntervencion(id);
     }

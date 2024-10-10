@@ -24,34 +24,34 @@ public class EquipoResource {
     private BajaEquipoRemote ber;
 
     @POST
-    @Path("/CrearEquipo")
+    @Path("/crear")
     public Response crearEquipo(EquipoDto equipo) {
         this.er.crearEquipo(equipo);
         return Response.status(201).build();
     }
 
     @PUT
-    @Path("/ModificarEquipo")
+    @Path("/modificar")
     public Response modificarProducto(EquipoDto equipo){
         this.er.modificarEquipo(equipo);
         return Response.status(200).build();
     }
 
     @PUT
-    @Path("/Inactivar")
+    @Path("/inactivar")
     public Response eliminarEquipo(BajaEquipoDto equipo){
         this.er.eliminarEquipo(equipo);
         return Response.status(200).build();
     }
 
     @GET
-    @Path("/ListarTodosLosEquipos")
+    @Path("/listar")
     public List<EquipoDto> obtenerTodosLosEquipos(){
         return this.er.listarEquipos();
     }
 
     @GET
-    @Path("/BuscarEquipo")
+    @Path("/seleccionar")
     public EquipoDto buscarEquipo(@QueryParam("id") Long id){
         return this.er.obtenerEquipo(id);
     }
@@ -79,11 +79,13 @@ public class EquipoResource {
         if (fechaAdquisicion != null) filtros.put("fechaAdquisicion", fechaAdquisicion);
         if (identificacionInterna != null) filtros.put("identificacionInterna", identificacionInterna);
         if (ubicacion != null) filtros.put("ubicacion", ubicacion);
+
         return this.er.obtenerEquiposFiltrado(filtros);
     }
 
+
     @GET
-    @Path("/ListarBajaEquipos")
+    @Path("/listarBajas")
     public List<BajaEquipoDto> obtenerBajasEquipos() {return this.ber.obtenerBajasEquipos();}
 
     @GET

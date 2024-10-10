@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 //TODO: Falta agregar filtros del listado
-@Path("/intervencion")
+@Path("/intervenciones")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class IntervencionesResource {
@@ -43,7 +43,7 @@ public class IntervencionesResource {
     }
 
     @GET
-    @Path("/buscarPorId")
+    @Path("/seleccionar")
     public IntervencionDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
         return this.er.buscarId(id);
     }

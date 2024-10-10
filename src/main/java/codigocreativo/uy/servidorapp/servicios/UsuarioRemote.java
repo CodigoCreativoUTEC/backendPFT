@@ -2,23 +2,24 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
-import jakarta.ejb.Remote;
 
 import java.util.List;
+import java.util.Map;
 
-@Remote
 public interface UsuarioRemote {
-    public void crearUsuario(UsuarioDto u);
-    public void modificarUsuario(UsuarioDto u);
-    public void eliminarUsuario(UsuarioDto u);
-    public UsuarioDto obtenerUsuario(Long id);
-    public UsuarioDto obtenerUsuarioDto(Long id);
-    public UsuarioDto obtenerUsuarioPorCI(String ci);
-    public List<UsuarioDto> obtenerUsuarios();
-    public List<UsuarioDto> obtenerUsuariosFiltrado(String filtro, Object valor);
-    public UsuarioDto login(String usuario, String password);
-    public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado);
-    public UsuarioDto findUserByEmail(String email);
+    void crearUsuario(UsuarioDto u);
+    void modificarUsuario(UsuarioDto u);
+    void eliminarUsuario(UsuarioDto u);
+    UsuarioDto obtenerUsuario(Long id);
+    UsuarioDto obtenerUsuarioDto(Long id);
+    UsuarioDto obtenerUsuarioPorCI(String ci);
+    List<UsuarioDto> obtenerUsuarios();
+    List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros); // Nuevo método
 
+    List<UsuarioDto> obtenerUsuariosFiltrados(String filtro, Object valor);
+
+    List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado);
+    UsuarioDto login(String usuario, String password);
+    UsuarioDto findUserByEmail(String email);
     boolean hasPermission(String email, String requiredRole);
 }

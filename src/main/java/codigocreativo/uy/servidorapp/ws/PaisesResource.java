@@ -34,7 +34,7 @@ public class PaisesResource {
         return Response.status(200).build();
     }
 
-/*    @DELETE
+/*  @DELETE
     @Path("/inactivar")
     public Response eliminarPais(@QueryParam("id") Long id){
         this.er.(id);
@@ -42,7 +42,7 @@ public class PaisesResource {
     }*/
 
     @GET
-    @Path("/listarTodos")
+    @Path("/listar")
     public List<PaisDto> listarProveedores(){
         return this.er.obtenerpais();
     }

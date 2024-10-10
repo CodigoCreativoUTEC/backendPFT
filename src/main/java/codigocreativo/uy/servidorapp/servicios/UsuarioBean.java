@@ -12,6 +12,8 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
+import java.util.Map;
+
 @Stateless
 public class UsuarioBean implements UsuarioRemote {
     @PersistenceContext (unitName = "default")
@@ -65,7 +67,7 @@ public class UsuarioBean implements UsuarioRemote {
     }
 
     @Override
-    public List<UsuarioDto> obtenerUsuariosFiltrado(String filtro, Object valor) {
+    public List<UsuarioDto> obtenerUsuariosFiltrados(String filtro, Object valor) {
         System.out.println("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor");
         System.out.println("valor: " + valor);
         return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor", Usuario.class)
@@ -114,4 +116,46 @@ public class UsuarioBean implements UsuarioRemote {
             return false;
         }
     }
+
+    @Override
+public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
+    StringBuilder queryStr = new StringBuilder("SELECT u FROM Usuario u WHERE 1=1");
+
+    // Añadir condiciones de filtrado
+    if (filtros.containsKey("nombre")) {
+        queryStr.append(" AND LOWER(u.nombre) LIKE LOWER(:nombre)");
+    }
+    if (filtros.containsKey("apellido")) {
+        queryStr.append(" AND LOWER(u.apellido) LIKE LOWER(:apellido)");
+    }
+    if (filtros.containsKey("nombreUsuario")) {
+        queryStr.append(" AND LOWER(u.nombreUsuario) LIKE LOWER(:nombreUsuario)");
+    }
+    if (filtros.containsKey("email")) {
+        queryStr.append(" AND LOWER(u.email) LIKE LOWER(:email)");
+    }
+    if (filtros.containsKey("tipoUsuario")) {
+        queryStr.append(" AND LOWER(u.idPerfil.nombrePerfil) LIKE LOWER(:tipoUsuario)");
+    }
+    if (filtros.containsKey("estado")) {
+        queryStr.append(" AND u.estado = :estado");
+    }
+
+    var query = em.createQuery(queryStr.toString(), Usuario.class);
+
+    // Establecer parámetros de la consulta
+    filtros.forEach((key, value) -> {
+        if (!value.isEmpty()) {
+            if (key.equals("estado")) {
+                query.setParameter(key, Estados.valueOf(value));  // Si es el estado, usamos el enum
+            } else {
+                query.setParameter(key, "%" + value + "%");
+            }
+        }
+    });
+
+    System.out.println("Consulta generada: " + queryStr.toString()); // Depuración
+    return usuarioMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
+}
+
 }

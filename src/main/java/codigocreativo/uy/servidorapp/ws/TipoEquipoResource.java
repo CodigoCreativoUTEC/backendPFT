@@ -41,13 +41,13 @@ public class TipoEquipoResource {
     }
 
     @GET
-    @Path("/listarTodos")
+    @Path("/listar")
     public List<TiposEquipoDto> listar(){
         return this.er.listarTiposEquipo();
     }
 
     @GET
-    @Path("/buscarPorId")
+    @Path("/seleccionar")
     public TiposEquipoDto buscarPorId(@QueryParam("id") Long id){
         return this.er.obtenerPorId(id);
     }

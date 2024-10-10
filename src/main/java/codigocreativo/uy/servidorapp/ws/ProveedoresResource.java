@@ -39,13 +39,13 @@ public class ProveedoresResource {
     }
 
     @GET
-    @Path("/listarTodos")
+    @Path("/listar")
     public List<ProveedoresEquipoDto> listarProveedores(){
         return this.er.obtenerProveedores();
     }
 
     @GET
-    @Path("/buscarPorId")
+    @Path("/seleccionar")
     public ProveedoresEquipoDto buscarPorId(@QueryParam("id") Long id){
         return this.er.obtenerProveedor(id);
     }

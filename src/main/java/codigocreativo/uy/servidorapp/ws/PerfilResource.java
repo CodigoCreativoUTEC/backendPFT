@@ -46,8 +46,8 @@ public class PerfilResource {
     }
 
     @GET
-    @Path("/{id}")
-    public Response obtenerPerfil(@PathParam("id") Long id) {
+    @Path("/seleccionar")
+    public Response obtenerPerfil(@QueryParam("id") Long id) {
         PerfilDto perfil = perfilRemote.obtenerPerfil(id);
         if (perfil != null) {
             return Response.ok(perfil).build();
