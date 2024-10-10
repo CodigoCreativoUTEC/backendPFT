@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.dtomappers.FuncionalidadMapper;
+import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
@@ -13,7 +13,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
@@ -27,10 +26,8 @@ public class FuncionalidadBean implements FuncionalidadRemote {
 
     @Override
     public List<FuncionalidadDto> obtenerTodas() {
-        return funcionalidadMapper.toDto(
-                em.createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class).getResultList(),
-                new CycleAvoidingMappingContext()
-        );
+        List<Funcionalidad> funcionalidades = em.createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class).getResultList();
+        return funcionalidadMapper.toDto(funcionalidades, new CycleAvoidingMappingContext());
     }
 
     @Override
@@ -42,30 +39,15 @@ public class FuncionalidadBean implements FuncionalidadRemote {
     }
 
     @Override
-public FuncionalidadDto actualizar(FuncionalidadDto funcionalidadDto) {
-    Funcionalidad funcionalidad = funcionalidadMapper.toEntity(funcionalidadDto, new CycleAvoidingMappingContext());
+    public FuncionalidadDto actualizar(FuncionalidadDto funcionalidadDto) {
+        Funcionalidad funcionalidad = funcionalidadMapper.toEntity(funcionalidadDto, new CycleAvoidingMappingContext());
 
-    // Limpiar las relaciones existentes
-    funcionalidad.getFuncionalidadesPerfiles().clear();
+        // Guardar los cambios
+        funcionalidad = em.merge(funcionalidad);
+        em.flush();
 
-    // Asignar las nuevas relaciones
-    for (PerfilDto perfilDto : funcionalidadDto.getPerfiles()) {
-        Perfil perfil = em.find(Perfil.class, perfilDto.getId());
-        if (perfil != null) {
-            FuncionalidadesPerfilesId id = new FuncionalidadesPerfilesId(funcionalidad.getId(), perfil.getId());
-            FuncionalidadesPerfiles funcionalidadesPerfiles = new FuncionalidadesPerfiles(id, funcionalidad, perfil);
-            funcionalidad.getFuncionalidadesPerfiles().add(funcionalidadesPerfiles);
-        }
+        return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
     }
-
-    // Guardar los cambios
-    funcionalidad = em.merge(funcionalidad);
-    em.flush();
-
-    return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
-}
-
-
 
 
     @Override

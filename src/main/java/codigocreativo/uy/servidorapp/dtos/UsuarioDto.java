@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.dtos;
 
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.util.Set;
 /**
  * DTO for {@link Usuario}
  */
+@JsonIgnoreProperties({"usuarios"})
 public class UsuarioDto implements Serializable {
     @JsonManagedReference
     private Set<UsuariosTelefonoDto> usuariosTelefonos = new LinkedHashSet<>();

@@ -1,45 +1,68 @@
 package codigocreativo.uy.servidorapp.dtos;
 
-import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
+import jakarta.validation.constraints.Size;
+
 import java.io.Serializable;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
+/**
+ * DTO for {@link Funcionalidad}
+ */
 public class FuncionalidadDto implements Serializable {
-    private Long id;
-    private String nombreFuncionalidad;
-    private Estados estado;  // Usamos el enum directamente
-    private List<PerfilDto> perfiles;
+    private final Long id;
+    @Size(max = 255)
+    private final String nombreFuncionalidad;
+    @Size(max = 255)
+    private final String estado;
+    private final Set<PerfilDto> perfiles;
 
-    // Getters y Setters
-    public Long getId() {
-        return id;
+    public FuncionalidadDto(Long id, String nombreFuncionalidad, String estado, Set<PerfilDto> perfiles) {
+        this.id = id;
+        this.nombreFuncionalidad = nombreFuncionalidad;
+        this.estado = estado;
+        this.perfiles = perfiles;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Long getId() {
+        return id;
     }
 
     public String getNombreFuncionalidad() {
         return nombreFuncionalidad;
     }
 
-    public void setNombreFuncionalidad(String nombreFuncionalidad) {
-        this.nombreFuncionalidad = nombreFuncionalidad;
-    }
-
-    public Estados getEstado() {
+    public String getEstado() {
         return estado;
     }
 
-    public void setEstado(Estados estado) {
-        this.estado = estado;
-    }
-
-    public List<PerfilDto> getPerfiles() {
+    public Set<PerfilDto> getPerfiles() {
         return perfiles;
     }
 
-    public void setPerfiles(List<PerfilDto> perfiles) {
-        this.perfiles = perfiles;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FuncionalidadDto entity = (FuncionalidadDto) o;
+        return Objects.equals(this.id, entity.id) &&
+                Objects.equals(this.nombreFuncionalidad, entity.nombreFuncionalidad) &&
+                Objects.equals(this.estado, entity.estado) &&
+                Objects.equals(this.perfiles, entity.perfiles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, nombreFuncionalidad, estado, perfiles);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+                "id = " + id + ", " +
+                "nombreFuncionalidad = " + nombreFuncionalidad + ", " +
+                "estado = " + estado + ", " +
+                "perfiles = " + perfiles + ")";
     }
 }

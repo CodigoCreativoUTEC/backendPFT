@@ -1,34 +1,27 @@
 package codigocreativo.uy.servidorapp.entidades;
 
 import jakarta.persistence.*;
-import java.io.Serializable;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "FUNCIONALIDADES_PERFILES")
-public class FuncionalidadesPerfiles implements Serializable {
-
+public class FuncionalidadesPerfiles {
     @EmbeddedId
     private FuncionalidadesPerfilesId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idFuncionalidad")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "ID_FUNCIONALIDAD", nullable = false)
-    private Funcionalidad funcionalidad;
+    private Funcionalidad idFuncionalidad;
 
-    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idPerfil")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "ID_PERFIL", nullable = false)
-    private Perfil perfil;
+    private Perfil idPerfil;
 
-    public FuncionalidadesPerfiles() {}
-
-    public FuncionalidadesPerfiles(FuncionalidadesPerfilesId id, Funcionalidad funcionalidad, Perfil perfil) {
-        this.id = id;
-        this.funcionalidad = funcionalidad;
-        this.perfil = perfil;
-    }
-
-    // Getters y Setters
     public FuncionalidadesPerfilesId getId() {
         return id;
     }
@@ -37,19 +30,20 @@ public class FuncionalidadesPerfiles implements Serializable {
         this.id = id;
     }
 
-    public Funcionalidad getFuncionalidad() {
-        return funcionalidad;
+    public Funcionalidad getIdFuncionalidad() {
+        return idFuncionalidad;
     }
 
-    public void setFuncionalidad(Funcionalidad funcionalidad) {
-        this.funcionalidad = funcionalidad;
+    public void setIdFuncionalidad(Funcionalidad idFuncionalidad) {
+        this.idFuncionalidad = idFuncionalidad;
     }
 
-    public Perfil getPerfil() {
-        return perfil;
+    public Perfil getIdPerfil() {
+        return idPerfil;
     }
 
-    public void setPerfil(Perfil perfil) {
-        this.perfil = perfil;
+    public void setIdPerfil(Perfil idPerfil) {
+        this.idPerfil = idPerfil;
     }
+
 }
