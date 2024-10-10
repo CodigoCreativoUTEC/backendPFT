@@ -1,26 +1,24 @@
 package codigocreativo.uy.servidorapp.entidades;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
+import org.hibernate.Hibernate;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class FuncionalidadesPerfilesId implements Serializable {
-
-    @Column(name = "ID_FUNCIONALIDAD")
+    private static final long serialVersionUID = 1532915017361734107L;
+    @Column(name = "id_funcionalidad")
     private Long idFuncionalidad;
 
-    @Column(name = "ID_PERFIL")
+    @NotNull
+    @Column(name = "ID_PERFIL", nullable = false)
     private Long idPerfil;
 
-    public FuncionalidadesPerfilesId() {}
-
-    public FuncionalidadesPerfilesId(Long idFuncionalidad, Long idPerfil) {
-        this.idFuncionalidad = idFuncionalidad;
-        this.idPerfil = idPerfil;
-    }
-
-    // Getters y Setters
     public Long getIdFuncionalidad() {
         return idFuncionalidad;
     }
@@ -40,14 +38,15 @@ public class FuncionalidadesPerfilesId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FuncionalidadesPerfilesId that = (FuncionalidadesPerfilesId) o;
-        return Objects.equals(idFuncionalidad, that.idFuncionalidad) &&
-               Objects.equals(idPerfil, that.idPerfil);
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        FuncionalidadesPerfilesId entity = (FuncionalidadesPerfilesId) o;
+        return Objects.equals(this.idPerfil, entity.idPerfil) &&
+                Objects.equals(this.idFuncionalidad, entity.idFuncionalidad);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idFuncionalidad, idPerfil);
+        return Objects.hash(idPerfil, idFuncionalidad);
     }
+
 }

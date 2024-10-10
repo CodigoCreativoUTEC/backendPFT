@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
+import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.dtomappers.PerfilMapper;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
@@ -19,51 +20,51 @@ public class PerfilBean implements PerfilRemote {
     @Inject
     private PerfilMapper perfilMapper;
 
+
+
     @Override
     public void crearPerfil(PerfilDto p) {
-        p.setEstado(Estados.ACTIVO);
-        em.persist(perfilMapper.toEntity(p));
+        Perfil entity = perfilMapper.toEntity(p, new CycleAvoidingMappingContext());
+        entity.setEstado(Estados.ACTIVO);
+        em.persist(entity);
         em.flush();
     }
 
     @Override
     public void modificarPerfil(PerfilDto p) {
-        em.merge(perfilMapper.toEntity(p));
+        em.merge(perfilMapper.toEntity(p, new CycleAvoidingMappingContext()));
         em.flush();
     }
 
     @Override
     public void eliminarPerfil(PerfilDto p) {
-        Perfil entity = perfilMapper.toEntity(p);
+        Perfil entity = perfilMapper.toEntity(p, new CycleAvoidingMappingContext());
         entity.setEstado(Estados.INACTIVO);
         em.merge(entity);
     }
 
     @Override
     public PerfilDto obtenerPerfil(Long id) {
-        return perfilMapper.toDto(em.find(Perfil.class, id));
+        return perfilMapper.toDto(em.find(Perfil.class, id), new CycleAvoidingMappingContext());
     }
 
     @Override
     public List<PerfilDto> obtenerPerfiles() {
-        // Asegúrate de usar el método correcto para mapear una lista
-        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p", Perfil.class).getResultList());
+        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p", Perfil.class).getResultList(), new CycleAvoidingMappingContext());
     }
 
     @Override
     public List<PerfilDto> listarPerfilesPorNombre(String nombre) {
-        // Asegúrate de mapear correctamente una lista de resultados
-        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil LIKE :nombre", Perfil.class)
-                .setParameter("nombre", "%" + nombre + "%")
-                .getResultList());
+        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil = :nombre", Perfil.class)
+                .setParameter("nombre", nombre)
+                .getResultList(), new CycleAvoidingMappingContext());
     }
 
     @Override
     public List<PerfilDto> listarPerfilesPorEstado(Estados estado) {
-        // Asegúrate de mapear correctamente una lista de resultados
-        return perfilMapper.toDtoList(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class)
+        return perfilMapper.toDto(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class)
                 .setParameter("estado", estado)
-                .getResultList());
+                .getResultList(), new CycleAvoidingMappingContext());
     }
 
 

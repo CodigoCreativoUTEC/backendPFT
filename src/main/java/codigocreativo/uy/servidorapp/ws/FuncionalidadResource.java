@@ -28,22 +28,25 @@ public class FuncionalidadResource {
 
     @PUT
     @Path("/modificar")
-    public Response modificar(FuncionalidadDto funcionalidadDto){
+    public Response modificar(FuncionalidadDto funcionalidadDto) {
         funcionalidadRemote.actualizar(funcionalidadDto);
 
         System.out.println("Modificado");
         System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
         System.out.println("Estado: " + funcionalidadDto.getEstado());
-        System.out.println("Perfiles recibidos:");
 
+        System.out.println("Perfiles recibidos:");
         for (PerfilDto perfil : funcionalidadDto.getPerfiles()) {
             System.out.println("Perfil ID: " + perfil.getId() + ", Nombre: " + perfil.getNombrePerfil());
         }
+
         return Response.status(200).build();
     }
+
+
     @DELETE
     @Path("/inactivar")
-    public Response eliminar(@QueryParam("id") Long id)  {
+    public Response eliminar(@QueryParam("id") Long id) {
         funcionalidadRemote.eliminar(id);
         return Response.status(200).build();
     }
