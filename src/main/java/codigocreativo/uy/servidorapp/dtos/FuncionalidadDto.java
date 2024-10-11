@@ -1,6 +1,8 @@
 package codigocreativo.uy.servidorapp.dtos;
 
+import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
@@ -10,6 +12,7 @@ import java.util.Set;
 /**
  * DTO for {@link Funcionalidad}
  */
+@JsonIgnoreProperties({"perfiles"})
 public class FuncionalidadDto implements Serializable {
     private final Long id;
     @Size(max = 255)

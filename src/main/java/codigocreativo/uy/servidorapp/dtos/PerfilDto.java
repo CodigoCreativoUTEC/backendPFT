@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * DTO for {@link codigocreativo.uy.servidorapp.entidades.Perfil}
  */
-@JsonIgnoreProperties({"usuarios"})
+    @JsonIgnoreProperties({"usuarios", "permisos"})
 public class PerfilDto implements Serializable {
     private final Long id;
     private final String nombrePerfil;
