@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -83,7 +84,7 @@ public class UsuarioResource {
     }
 
     @GET
-    @Path("/usuarios/filtrar")
+    @Path("/filtrar")
     public List<UsuarioDto> filtrarUsuarios(@QueryParam("nombre") String nombre,
                                             @QueryParam("apellido") String apellido,
                                             @QueryParam("nombreUsuario") String nombreUsuario,
@@ -96,8 +97,20 @@ public class UsuarioResource {
         if (apellido != null) filtros.put("apellido", apellido);
         if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
         if (email != null) filtros.put("email", email);
-        if (tipoUsuario != null) filtros.put("tipoUsuario", tipoUsuario);
-        if (estado != null) filtros.put("estado", estado);
+
+        // Si no se envía el filtro de estado, por defecto se buscan usuarios activos
+        if (estado == null || estado.isEmpty()) {
+            filtros.put("estado", "ACTIVO");
+        } else if (!estado.equals("default")) {
+            // Si el estado es "default", no agregamos ningún filtro de estado
+            filtros.put("estado", estado);
+        }
+        // Lógica para el filtro de perfil (tipo de usuario)
+        if (tipoUsuario == null || tipoUsuario.isEmpty()) {
+            // Si no se envía perfil, no aplicamos filtro de perfil
+        } else if (!tipoUsuario.equals("default")) {
+            filtros.put("tipoUsuario", tipoUsuario);
+        }
 
         return this.er.obtenerUsuariosFiltrado(filtros);
     }
