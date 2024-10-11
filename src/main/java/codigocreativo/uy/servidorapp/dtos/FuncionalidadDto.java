@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.dtos;
 
-import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
-
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
@@ -18,7 +18,12 @@ public class FuncionalidadDto implements Serializable {
     private final String estado;
     private final Set<PerfilDto> perfiles;
 
-    public FuncionalidadDto(Long id, String nombreFuncionalidad, String estado, Set<PerfilDto> perfiles) {
+    @JsonCreator
+    public FuncionalidadDto(
+        @JsonProperty("id") Long id,
+        @JsonProperty("nombreFuncionalidad") String nombreFuncionalidad,
+        @JsonProperty("estado") String estado,
+        @JsonProperty("perfiles") Set<PerfilDto> perfiles) {
         this.id = id;
         this.nombreFuncionalidad = nombreFuncionalidad;
         this.estado = estado;
