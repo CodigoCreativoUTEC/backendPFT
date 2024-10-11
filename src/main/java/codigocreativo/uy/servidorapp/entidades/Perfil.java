@@ -37,6 +37,9 @@ public class Perfil implements Serializable {
     private Set<Usuario> usuarios = new LinkedHashSet<>();
 
     public Set<Usuario> getUsuarios() {
+        if (usuarios == null) {
+            usuarios = new LinkedHashSet<>();
+        }
         return usuarios;
     }
 

@@ -1,6 +1,8 @@
 package codigocreativo.uy.servidorapp.dtos;
 
+import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;

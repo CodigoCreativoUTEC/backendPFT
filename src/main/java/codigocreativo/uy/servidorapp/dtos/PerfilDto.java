@@ -10,14 +10,14 @@ import java.util.Set;
 /**
  * DTO for {@link codigocreativo.uy.servidorapp.entidades.Perfil}
  */
-@JsonIgnoreProperties({"usuarios"})
+    @JsonIgnoreProperties({"usuarios", "permisos", "funcionalidades"})
 public class PerfilDto implements Serializable {
-    private final Long id;
-    private final String nombrePerfil;
-    private final Estados estado;
-    private final Set<FuncionalidadDto> funcionalidades;
-    private final Set<PermisoDto> permisos;
-    private final Set<UsuarioDto> usuarios;
+    private Long id;
+    private String nombrePerfil;
+    private Estados estado;
+    private Set<FuncionalidadDto> funcionalidades;
+    private Set<PermisoDto> permisos;
+    private Set<UsuarioDto> usuarios;
 
     public PerfilDto(Long id, String nombrePerfil, Estados estado, Set<FuncionalidadDto> funcionalidades, Set<PermisoDto> permisos, Set<UsuarioDto> usuarios) {
         this.id = id;
@@ -27,6 +27,7 @@ public class PerfilDto implements Serializable {
         this.permisos = permisos;
         this.usuarios = usuarios;
     }
+    public PerfilDto(){}
 
     public Long getId() {
         return id;
