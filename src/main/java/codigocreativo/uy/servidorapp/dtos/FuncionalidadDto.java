@@ -12,6 +12,7 @@ import java.util.Set;
 /**
  * DTO for {@link Funcionalidad}
  */
+@JsonIgnoreProperties({"perfiles"})
 public class FuncionalidadDto implements Serializable {
     private final Long id;
     @Size(max = 255)
