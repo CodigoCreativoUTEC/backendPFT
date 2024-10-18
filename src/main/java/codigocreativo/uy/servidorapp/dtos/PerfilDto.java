@@ -8,6 +8,16 @@ public class PerfilDto implements Serializable {
     private String nombrePerfil;
     private Estados estado;  // Usamos el enum directamente
 
+    public PerfilDto(Long id, String nombrePerfil, Estados estado) {
+        this.id = id;
+        this.nombrePerfil = nombrePerfil;
+        this.estado = estado;
+    }
+
+    public PerfilDto() {
+
+    }
+
     // Getters y Setters
     public Long getId() {
         return id;

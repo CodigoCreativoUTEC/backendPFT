@@ -8,6 +8,7 @@ import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfilesId;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -35,37 +36,50 @@ public class FuncionalidadBean implements FuncionalidadRemote {
 
     @Override
     public FuncionalidadDto crear(FuncionalidadDto funcionalidadDto) {
+        if (funcionalidadDto.getPerfiles() == null) {
+            funcionalidadDto.setPerfiles(new ArrayList<>()); // Inicializar lista vacía si no hay perfiles
+        }
+
         Funcionalidad funcionalidad = funcionalidadMapper.toEntity(funcionalidadDto, new CycleAvoidingMappingContext());
-        em.persist(funcionalidad);
-        em.flush();
+        em.persist(funcionalidad);  // Usamos EntityManager para guardar
+        em.flush();  // Aseguramos que se guarde la información en la base de datos
         return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
     }
 
     @Override
-public FuncionalidadDto actualizar(FuncionalidadDto funcionalidadDto) {
-    Funcionalidad funcionalidad = funcionalidadMapper.toEntity(funcionalidadDto, new CycleAvoidingMappingContext());
+    public FuncionalidadDto actualizar(FuncionalidadDto funcionalidadDto) {
+        Funcionalidad funcionalidad = funcionalidadMapper.toEntity(funcionalidadDto, new CycleAvoidingMappingContext());
 
-    // Limpiar las relaciones existentes
-    funcionalidad.getFuncionalidadesPerfiles().clear();
-
-    // Asignar las nuevas relaciones
-    for (PerfilDto perfilDto : funcionalidadDto.getPerfiles()) {
-        Perfil perfil = em.find(Perfil.class, perfilDto.getId());
-        if (perfil != null) {
-            FuncionalidadesPerfilesId id = new FuncionalidadesPerfilesId(funcionalidad.getId(), perfil.getId());
-            FuncionalidadesPerfiles funcionalidadesPerfiles = new FuncionalidadesPerfiles(id, funcionalidad, perfil);
-            funcionalidad.getFuncionalidadesPerfiles().add(funcionalidadesPerfiles);
+        // Asegúrate de que la funcionalidad existe antes de intentar actualizarla
+        Funcionalidad funcionalidadExistente = em.find(Funcionalidad.class, funcionalidad.getId());
+        if (funcionalidadExistente == null) {
+            System.out.println("Funcionalidad no encontrada");
+            return null; // Devuelve null si no se encuentra la funcionalidad
         }
+
+        // Actualizar la lista de perfiles asociados
+        List<FuncionalidadesPerfiles> funcionalidadesPerfilesNuevas = new ArrayList<>();
+        for (PerfilDto perfilDto : funcionalidadDto.getPerfiles()) {
+            Perfil perfil = em.find(Perfil.class, perfilDto.getId());
+            if (perfil == null) {
+                System.out.println("Perfil no encontrado con ID: " + perfilDto.getId());
+                continue; // Saltar si el perfil no es encontrado
+            }
+            FuncionalidadesPerfilesId id = new FuncionalidadesPerfilesId(funcionalidad.getId(), perfil.getId());
+            FuncionalidadesPerfiles fp = new FuncionalidadesPerfiles(id, funcionalidad, perfil);
+            funcionalidadesPerfilesNuevas.add(fp);
+        }
+
+        // Setea la nueva lista de perfiles en la funcionalidad
+        funcionalidad.setFuncionalidadesPerfiles(funcionalidadesPerfilesNuevas);
+
+        // Guardar la funcionalidad actualizada
+        em.merge(funcionalidad);
+        em.flush();
+
+        // Retornar el DTO actualizado
+        return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
     }
-
-    // Guardar los cambios
-    funcionalidad = em.merge(funcionalidad);
-    em.flush();
-
-    return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
-}
-
-
 
 
     @Override

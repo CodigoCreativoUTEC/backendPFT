@@ -10,12 +10,12 @@ public class FuncionalidadesPerfiles implements Serializable {
     @EmbeddedId
     private FuncionalidadesPerfilesId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("idFuncionalidad")
     @JoinColumn(name = "ID_FUNCIONALIDAD", nullable = false)
     private Funcionalidad funcionalidad;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("idPerfil")
     @JoinColumn(name = "ID_PERFIL", nullable = false)
     private Perfil perfil;

@@ -1,30 +1,50 @@
 package codigocreativo.uy.servidorapp.dtomappers;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
+import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
+import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;
+import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfilesId;
 import org.mapstruct.*;
 
-import jakarta.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.JAKARTA_CDI)
-public abstract class FuncionalidadMapper {
+public interface FuncionalidadMapper {
 
-    @Inject
-    private PerfilMapper perfilMapper;
+    @Mapping(target = "perfiles", source = "funcionalidadesPerfiles")
+    FuncionalidadDto toDto(Funcionalidad funcionalidad, @Context CycleAvoidingMappingContext context);
 
-    // Método principal para convertir FuncionalidadDto a Funcionalidad (Dto -> Entity)
-    public abstract Funcionalidad toEntity(FuncionalidadDto funcionalidadDto, @Context CycleAvoidingMappingContext context);
+    @AfterMapping
+default void mapPerfilesFromFuncionalidadesPerfiles(Funcionalidad funcionalidad, @MappingTarget FuncionalidadDto dto, @Context CycleAvoidingMappingContext context) {
+    // Verificar que la lista de perfiles no sea null
+    if (funcionalidad.getFuncionalidadesPerfiles() != null) {
+        List<PerfilDto> perfiles = funcionalidad.getFuncionalidadesPerfiles().stream()
+            .map(funcPerfiles -> {
+                PerfilDto perfilDto = new PerfilDto();
+                perfilDto.setId(map(funcPerfiles.getId()));  // Mapeo manual del ID
+                perfilDto.setNombrePerfil(funcPerfiles.getPerfil().getNombrePerfil());
+                perfilDto.setEstado(funcPerfiles.getPerfil().getEstado());
+                return perfilDto;
+            })
+            .collect(Collectors.toList());
+        dto.setPerfiles(perfiles);
+    } else {
+        dto.setPerfiles(new ArrayList<>());  // Inicializar como lista vacía
+    }
+}
 
-    // Método principal para convertir Funcionalidad a FuncionalidadDto (Entity -> Dto)
-    public abstract FuncionalidadDto toDto(Funcionalidad funcionalidad, @Context CycleAvoidingMappingContext context);
 
-    // Método para manejar actualizaciones parciales
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    public abstract Funcionalidad partialUpdate(FuncionalidadDto funcionalidadDto, @MappingTarget Funcionalidad funcionalidad);
+    Funcionalidad toEntity(FuncionalidadDto dto, @Context CycleAvoidingMappingContext context);
 
-    // Métodos para manejar listas
-    public abstract List<Funcionalidad> toEntity(List<FuncionalidadDto> funcionalidadDtos, @Context CycleAvoidingMappingContext context);
-    public abstract List<FuncionalidadDto> toDto(List<Funcionalidad> funcionalidades, @Context CycleAvoidingMappingContext context);
+    List<Funcionalidad> toEntity(List<FuncionalidadDto> dtoList, @Context CycleAvoidingMappingContext context);
 
+    List<FuncionalidadDto> toDto(List<Funcionalidad> entityList, @Context CycleAvoidingMappingContext context);
+
+    // Método para mapear FuncionalidadesPerfilesId a Long (idPerfil)
+    default Long map(FuncionalidadesPerfilesId id) {
+        return id.getIdPerfil();
+    }
 }
