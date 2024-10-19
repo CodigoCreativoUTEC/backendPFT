@@ -4,9 +4,7 @@ import codigocreativo.uy.servidorapp.enumerados.Estados;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.io.Serializable;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "PERFILES")
@@ -24,45 +22,9 @@ public class Perfil implements Serializable {
     @Column(name = "ESTADO", nullable = false, length = 20)
     private Estados estado;
 
-    @ManyToMany(mappedBy = "perfiles")
-    private Set<Funcionalidad> funcionalidades = new LinkedHashSet<>();
-
-    @ManyToMany
-    @JoinTable(name = "PERFILES_PERMISOS",
-            joinColumns = @JoinColumn(name = "ID_PERFIL"),
-            inverseJoinColumns = @JoinColumn(name = "ID_PERMISO"))
-    private Set<Permiso> permisos = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idPerfil")
-    private Set<Usuario> usuarios = new LinkedHashSet<>();
-
-    public Set<Usuario> getUsuarios() {
-        if (usuarios == null) {
-            usuarios = new LinkedHashSet<>();
-        }
-        return usuarios;
-    }
-
-    public void setUsuarios(Set<Usuario> usuarios) {
-        this.usuarios = usuarios;
-    }
-
-    public Set<Permiso> getPermisos() {
-        return permisos;
-    }
-
-    public void setPermisos(Set<Permiso> permisos) {
-        this.permisos = permisos;
-    }
-
-    public Set<Funcionalidad> getFuncionalidades() {
-        return funcionalidades;
-    }
-
-    public void setFuncionalidades(Set<Funcionalidad> funcionalidades) {
-        this.funcionalidades = funcionalidades;
-    }
-
+    @OneToMany(mappedBy = "perfil", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("perfil")
+    private List<FuncionalidadesPerfiles> funcionalidadesPerfiles;
 
     // Getters y Setters
     public Long getId() {
@@ -89,5 +51,11 @@ public class Perfil implements Serializable {
         this.estado = estado;
     }
 
+    public List<FuncionalidadesPerfiles> getFuncionalidadesPerfiles() {
+        return funcionalidadesPerfiles;
+    }
 
+    public void setFuncionalidadesPerfiles(List<FuncionalidadesPerfiles> funcionalidadesPerfiles) {
+        this.funcionalidadesPerfiles = funcionalidadesPerfiles;
+    }
 }
