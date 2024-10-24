@@ -1,8 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
-import codigocreativo.uy.servidorapp.dtos.PerfilDto;
-import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;

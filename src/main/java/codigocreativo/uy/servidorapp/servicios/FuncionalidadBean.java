@@ -52,7 +52,6 @@ public class FuncionalidadBean implements FuncionalidadRemote {
         // Asegúrate de que la funcionalidad existe antes de intentar actualizarla
         Funcionalidad funcionalidadExistente = em.find(Funcionalidad.class, funcionalidad.getId());
         if (funcionalidadExistente == null) {
-            System.out.println("Funcionalidad no encontrada");
             return null; // Devuelve null si no se encuentra la funcionalidad
         }
 
@@ -61,7 +60,6 @@ public class FuncionalidadBean implements FuncionalidadRemote {
         for (PerfilDto perfilDto : funcionalidadDto.getPerfiles()) {
             Perfil perfil = em.find(Perfil.class, perfilDto.getId());
             if (perfil == null) {
-                System.out.println("Perfil no encontrado con ID: " + perfilDto.getId());
                 continue; // Saltar si el perfil no es encontrado
             }
             FuncionalidadesPerfilesId id = new FuncionalidadesPerfilesId(funcionalidad.getId(), perfil.getId());

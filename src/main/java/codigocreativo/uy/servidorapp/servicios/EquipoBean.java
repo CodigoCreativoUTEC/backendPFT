@@ -10,11 +10,11 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Stateless
 public class EquipoBean implements EquipoRemote {
@@ -53,40 +53,39 @@ public class EquipoBean implements EquipoRemote {
         StringBuilder queryStr = new StringBuilder("SELECT e FROM Equipo e WHERE 1=1");
 
         // Añadir condiciones de filtrado
-        if (filtros.containsKey("nombre")) {
-            queryStr.append(" AND LOWER(e.nombre) LIKE LOWER(:nombre)");
-        }
-        if (filtros.containsKey("tipo")) {
-            queryStr.append(" AND LOWER(e.idTipo.nombreTipo) LIKE LOWER(:tipo)");
-        }
-        if (filtros.containsKey("marca")) {
-            queryStr.append(" AND LOWER(e.idModelo.marca.nombre) LIKE LOWER(:marca)");
-        }
-        if (filtros.containsKey("modelo")) {
-            queryStr.append(" AND LOWER(e.idModelo.nombre) LIKE LOWER(:modelo)");
-        }
-        if (filtros.containsKey("numeroSerie")) {
-            queryStr.append(" AND LOWER(e.nroSerie) LIKE LOWER(:numeroSerie)");
-        }
-        if (filtros.containsKey("paisOrigen")) {
-            queryStr.append(" AND LOWER(e.idPais.nombre) LIKE LOWER(:paisOrigen)");
-        }
-        if (filtros.containsKey("proveedor")) {
-            queryStr.append(" AND LOWER(e.idProveedor.nombre) LIKE LOWER(:proveedor)");
-        }
-        if (filtros.containsKey("fechaAdquisicion")) {
-            queryStr.append(" AND e.fechaAdquisicion = :fechaAdquisicion");
-        }
-        if (filtros.containsKey("identificacionInterna")) {
-            queryStr.append(" AND LOWER(e.idInterno) LIKE LOWER(:identificacionInterna)");
-        }
-        if (filtros.containsKey("ubicacion")) {
-            queryStr.append(" AND LOWER(e.idUbicacion.nombre) LIKE LOWER(:ubicacion)");
-        }
+        agregarCondicionesDeFiltrado(queryStr, filtros);
 
         var query = em.createQuery(queryStr.toString(), Equipo.class);
 
         // Establecer parámetros de la consulta
+        establecerParametrosDeConsulta(query, filtros);
+
+        return equipoMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
+    }
+
+    // Método auxiliar para agregar condiciones de filtrado
+    private void agregarCondicionesDeFiltrado(StringBuilder queryStr, Map<String, String> filtros) {
+        agregarCondicion(queryStr, filtros, "nombre", "LOWER(e.nombre) LIKE LOWER(:nombre)");
+        agregarCondicion(queryStr, filtros, "tipo", "LOWER(e.idTipo.nombreTipo) LIKE LOWER(:tipo)");
+        agregarCondicion(queryStr, filtros, "marca", "LOWER(e.idModelo.marca.nombre) LIKE LOWER(:marca)");
+        agregarCondicion(queryStr, filtros, "modelo", "LOWER(e.idModelo.nombre) LIKE LOWER(:modelo)");
+        agregarCondicion(queryStr, filtros, "numeroSerie", "LOWER(e.nroSerie) LIKE LOWER(:numeroSerie)");
+        agregarCondicion(queryStr, filtros, "paisOrigen", "LOWER(e.idPais.nombre) LIKE LOWER(:paisOrigen)");
+        agregarCondicion(queryStr, filtros, "proveedor", "LOWER(e.idProveedor.nombre) LIKE LOWER(:proveedor)");
+        agregarCondicion(queryStr, filtros, "fechaAdquisicion", "e.fechaAdquisicion = :fechaAdquisicion");
+        agregarCondicion(queryStr, filtros, "identificacionInterna", "LOWER(e.idInterno) LIKE LOWER(:identificacionInterna)");
+        agregarCondicion(queryStr, filtros, "ubicacion", "LOWER(e.idUbicacion.nombre) LIKE LOWER(:ubicacion)");
+    }
+
+    // Método auxiliar para agregar una condición individualmente
+    private void agregarCondicion(StringBuilder queryStr, Map<String, String> filtros, String filtroClave, String condicion) {
+        if (filtros.containsKey(filtroClave)) {
+            queryStr.append(" AND ").append(condicion);
+        }
+    }
+
+    // Método auxiliar para establecer los parámetros de consulta
+    private void establecerParametrosDeConsulta(Query query, Map<String, String> filtros) {
         filtros.forEach((key, value) -> {
             if (!value.isEmpty()) {
                 if (key.equals("fechaAdquisicion")) {
@@ -96,9 +95,6 @@ public class EquipoBean implements EquipoRemote {
                 }
             }
         });
-
-        System.out.println("Consulta generada: " + queryStr.toString()); // Depuración
-        return equipoMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
     }
 
 

@@ -7,9 +7,9 @@ import java.util.List;
 
 @Remote
 public interface TipoIntervencioneRemote {
-    public List<TiposIntervencioneDto> obtenerTiposIntervenciones();
-    public TiposIntervencioneDto obtenerTipoIntervencion(Long id);
-    public void crearTipoIntervencion(TiposIntervencioneDto tipoIntervencion);
-    public void modificarTipoIntervencion(TiposIntervencioneDto tipoIntervencion);
-    public void eliminarTipoIntervencion(Long id);
+    List<TiposIntervencioneDto> obtenerTiposIntervenciones();
+    TiposIntervencioneDto obtenerTipoIntervencion(Long id);
+    void crearTipoIntervencion(TiposIntervencioneDto tipoIntervencion);
+    void modificarTipoIntervencion(TiposIntervencioneDto tipoIntervencion);
+    void eliminarTipoIntervencion(Long id);
 }

@@ -19,34 +19,34 @@ public class TipoIntervencionesResource {
 
     @POST
     @Path("/crear")
-    public Response crear(TiposIntervencioneDto p) throws ServiciosException {
+    public Response crear(TiposIntervencioneDto p) {
         this.er.crearTipoIntervencion(p);
         return Response.status(201).build();
     }
 
     @PUT
     @Path("/modificar")
-    public Response modificar(TiposIntervencioneDto p) throws ServiciosException {
+    public Response modificar(TiposIntervencioneDto p) {
         this.er.modificarTipoIntervencion(p);
         return Response.status(200).build();
     }
 
     @DELETE
     @Path("/inactivar")
-    public Response eliminar(@QueryParam("id") Long id) throws ServiciosException {
+    public Response eliminar(@QueryParam("id") Long id) {
         this.er.eliminarTipoIntervencion(id);
         return Response.status(200).build();
     }
 
     @GET
     @Path("/listar")
-    public List<TiposIntervencioneDto> listarTodos() throws ServiciosException {
+    public List<TiposIntervencioneDto> listarTodos() {
         return this.er.obtenerTiposIntervenciones();
     }
 
     @GET
     @Path("/seleccionar")
-    public TiposIntervencioneDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
+    public TiposIntervencioneDto buscarPorId(@QueryParam("id") Long id) {
         return this.er.obtenerTipoIntervencion(id);
     }
 }

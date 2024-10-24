@@ -27,8 +27,7 @@ default void mapPerfilesFromFuncionalidadesPerfiles(Funcionalidad funcionalidad,
                 perfilDto.setNombrePerfil(funcPerfiles.getPerfil().getNombrePerfil());
                 perfilDto.setEstado(funcPerfiles.getPerfil().getEstado());
                 return perfilDto;
-            })
-            .collect(Collectors.toList());
+            }).collect(Collectors.toList());
         dto.setPerfiles(perfiles);
     } else {
         dto.setPerfiles(new ArrayList<>());  // Inicializar como lista vacía
@@ -42,7 +41,6 @@ default void mapPerfilesFromFuncionalidadesPerfiles(Funcionalidad funcionalidad,
 
     List<FuncionalidadDto> toDto(List<Funcionalidad> entityList, @Context CycleAvoidingMappingContext context);
 
-    // Método para mapear FuncionalidadesPerfilesId a Long (idPerfil)
     default Long map(FuncionalidadesPerfilesId id) {
         return id.getIdPerfil();
     }
