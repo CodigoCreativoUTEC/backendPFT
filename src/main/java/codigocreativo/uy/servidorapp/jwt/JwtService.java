@@ -6,13 +6,15 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
+import javax.xml.bind.DatatypeConverter;
 import java.security.Key;
 import java.util.Date;
 
 @Stateless
 public class JwtService {
 
-    private final Key secretKey = Keys.hmacShaKeyFor(System.getenv("SECRET_KEY").getBytes());
+    // Decodificar la clave secreta en Base64
+    private final Key secretKey = Keys.hmacShaKeyFor(DatatypeConverter.parseBase64Binary(System.getenv("SECRET_KEY")));
 
     public String generateToken(String email, String nombrePerfil) {
         try {
@@ -21,7 +23,7 @@ public class JwtService {
                     .claim("perfil", nombrePerfil)
                     .claim("email", email)
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 400 * 60 * 1000)) // 5 min de expiracion
+                    .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min de expiración
                     .signWith(secretKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (Exception e) {
