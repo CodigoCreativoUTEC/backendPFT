@@ -7,12 +7,21 @@ import java.util.List;
 public class FuncionalidadDto implements Serializable {
     private Long id;
     private String nombreFuncionalidad;
+    private String ruta;
     private Estados estado;  // Usamos el enum directamente
     private List<PerfilDto> perfiles;
 
     // Getters y Setters
     public Long getId() {
         return id;
+    }
+
+    public String getRuta() {
+        return ruta;
+    }
+
+    public void setRuta(String ruta) {
+        this.ruta = ruta;
     }
 
     public void setId(Long id) {

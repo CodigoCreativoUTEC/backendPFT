@@ -12,4 +12,6 @@ public interface UsuariosTelefonoRemote {
     public void modificarUsuariosTelefono(UsuariosTelefono usuariosTelefono);
     public void obtenerUsuariosTelefono(Long id);
     public List<UsuariosTelefono> obtenerusuariosTelefono();
+
+    void eliminarTelefono(UsuariosTelefono usuariosTelefono);
 }

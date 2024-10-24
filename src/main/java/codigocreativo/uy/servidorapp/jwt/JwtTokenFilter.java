@@ -94,7 +94,9 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         // enpoint renovador de token
 
-        if (path.startsWith("/usuarios/renovar-token")) {
+        if (    path.startsWith("/usuarios/renovar-token") ||
+                path.startsWith("/usuarios/modificar-propio-usuario") ||
+                path.startsWith("/usuarios/obtenerUserEmail")) {
             return todosLosPermisos;
         }
         // Endpoints referentes a Equipos

@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.PasswordUtils;
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
@@ -32,11 +33,25 @@ public class UsuarioResource {
     private JwtService jwtService;
 
     @POST
-    @Path("/crear")
-    public Response crearUsuario(UsuarioDto usuario) {
+@Path("/crear")
+public Response crearUsuario(UsuarioDto usuario) {
+    try {
+        // Generar el hash con el salt incluido
+        String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+
+        // Asignar el valor hash (con salt) al usuario
+        usuario.setContrasenia(saltedHash);
+
+        // Crear el usuario en el sistema
         this.er.crearUsuario(usuario);
-        return Response.status(201).build();
+
+        return Response.status(201).entity("{\"message\":\"Usuario creado correctamente\"}").build();
+    } catch (Exception e) {
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"message\":\"Error al crear el usuario\"}").build();
     }
+}
+
+
 
     @PUT
     @Path("/modificar")
@@ -49,7 +64,57 @@ public class UsuarioResource {
         }
     }
 
-    //TODO: Se debe crear un enpoint que verifique mi propio usuario y permita modificar sus propios datos
+
+    @PUT
+@Path("/modificar-propio-usuario")
+public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+    try {
+        // Extraer el token JWT del encabezado
+        String token = authorizationHeader.substring("Bearer".length()).trim();
+        Claims claims = jwtService.parseToken(token);
+        String correoDelToken = claims.getSubject();
+
+        // Verificar si el correo del token coincide con el correo del objeto UsuarioDto
+        if (!Objects.equals(correoDelToken, usuario.getEmail())) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"No autorizado para modificar este usuario\"}").build();
+        }
+
+        // Obtener el usuario actual desde la base de datos
+        UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
+
+        // Verificar si se proporciona una nueva contraseña
+        if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
+            // Validar la nueva contraseña
+            if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}").build();
+            }
+
+            // Generar un nuevo salt y hash para la nueva contraseña
+            String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+            usuario.setContrasenia(saltedHash);
+        } else {
+            // Mantener la contraseña actual si no se cambia
+            usuario.setContrasenia(usuarioActual.getContrasenia());
+        }
+
+        // Proteger otros campos que no se pueden modificar
+        usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
+        usuario.setIdPerfil(usuarioActual.getIdPerfil());
+        usuario.setEstado(usuarioActual.getEstado());
+        usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
+
+        // Proceder con la modificación
+        er.modificarUsuario(usuario);
+
+        return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
+    } catch (Exception e) {
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+    }
+}
+
+
+
+
 
     @PUT
     @Path("/inactivar")
@@ -153,30 +218,37 @@ public class UsuarioResource {
     }
 
     @POST
-    @Path("/login")
-    public Response login(LoginRequest loginRequest) {
-        if (loginRequest == null) {
-            System.out.println("Request null");
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-        }
-        System.out.println(loginRequest.toString());
-        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.password);
-        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.getPassword());
-        UsuarioDto user = this.er.login(loginRequest.email, loginRequest.getPassword());
-
-        if (user != null) {
-            String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
-            System.out.println("Token generado: " + token);
-            user = user.setContrasenia(null);
-            LoginResponse loginResponse = new LoginResponse(token, user);
-            System.out.println("Ingreso correcto");
-            System.out.println(Response.ok(loginResponse).build());
-            return Response.ok(loginResponse).build();
-        } else {
-            System.out.println("login unautorized invalid credentials");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
-        }
+@Path("/login")
+public Response login(LoginRequest loginRequest) {
+    if (loginRequest == null) {
+        return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
     }
+
+    UsuarioDto user = this.er.findUserByEmail(loginRequest.getEmail());
+
+    if (user != null && user.getEstado().equals(Estados.ACTIVO)) {
+        try {
+            // Verificar la contraseña usando el hash con el salt incluido
+            boolean isValid = PasswordUtils.verifyPassword(loginRequest.getPassword(), user.getContrasenia());
+
+            if (!isValid) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Contraseña incorrecta\"}").build();
+            }
+
+            // Generar el token
+            String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+            LoginResponse loginResponse = new LoginResponse(token, user);
+
+            return Response.ok(loginResponse).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error durante el login\"}").build();
+        }
+    } else {
+        return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}").build();
+    }
+}
+
+
 
     @POST
     @Path("/google-login")
@@ -252,6 +324,9 @@ public class UsuarioResource {
 
         return Response.ok("{\"token\": \"" + nuevoToken + "\"}").build();
     }
+
+
+
 
     public static class LoginRequest {
         @JsonbProperty("email")

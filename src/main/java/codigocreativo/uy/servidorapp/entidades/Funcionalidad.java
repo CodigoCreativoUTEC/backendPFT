@@ -18,6 +18,9 @@ public class Funcionalidad implements Serializable {
     @Column(name = "NOMBRE_FUNCIONALIDAD")
     private String nombreFuncionalidad;
 
+    @Column(name = "RUTA")
+    private String ruta;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "ESTADO")
     private Estados estado;
@@ -29,6 +32,14 @@ public class Funcionalidad implements Serializable {
     // Getters y Setters
     public Long getId() {
         return id;
+    }
+
+    public String getRuta() {
+        return ruta;
+    }
+
+    public void setRuta(String ruta) {
+        this.ruta = ruta;
     }
 
     public void setId(Long id) {

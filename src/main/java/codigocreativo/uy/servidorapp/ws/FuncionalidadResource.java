@@ -23,6 +23,10 @@ public class FuncionalidadResource {
     @Path("/crear")
     public Response crear(FuncionalidadDto funcionalidadDto) {
         funcionalidadRemote.crear(funcionalidadDto);
+        System.out.println("Creado");
+        System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
+        System.out.println("Estado: " + funcionalidadDto.getEstado());
+        System.out.println("Ruta: " + funcionalidadDto.getRuta());
         return Response.status(201).build();
     }
 
@@ -34,6 +38,7 @@ public class FuncionalidadResource {
         System.out.println("Modificado");
         System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
         System.out.println("Estado: " + funcionalidadDto.getEstado());
+        System.out.println("Ruta: " + funcionalidadDto.getRuta());
         System.out.println("Perfiles recibidos:");
 
         for (PerfilDto perfil : funcionalidadDto.getPerfiles()) {
