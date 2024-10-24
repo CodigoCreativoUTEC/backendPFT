@@ -23,10 +23,6 @@ public class FuncionalidadResource {
     @Path("/crear")
     public Response crear(FuncionalidadDto funcionalidadDto) {
         funcionalidadRemote.crear(funcionalidadDto);
-        System.out.println("Creado");
-        System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
-        System.out.println("Estado: " + funcionalidadDto.getEstado());
-        System.out.println("Ruta: " + funcionalidadDto.getRuta());
         return Response.status(201).build();
     }
 
@@ -34,16 +30,6 @@ public class FuncionalidadResource {
     @Path("/modificar")
     public Response modificar(FuncionalidadDto funcionalidadDto){
         funcionalidadRemote.actualizar(funcionalidadDto);
-
-        System.out.println("Modificado");
-        System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
-        System.out.println("Estado: " + funcionalidadDto.getEstado());
-        System.out.println("Ruta: " + funcionalidadDto.getRuta());
-        System.out.println("Perfiles recibidos:");
-
-        for (PerfilDto perfil : funcionalidadDto.getPerfiles()) {
-            System.out.println("Perfil ID: " + perfil.getId() + ", Nombre: " + perfil.getNombrePerfil());
-        }
         return Response.status(200).build();
     }
     @DELETE
@@ -61,7 +47,7 @@ public class FuncionalidadResource {
 
     @GET
     @Path("/seleccionar")
-    public FuncionalidadDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
+    public FuncionalidadDto buscarPorId(@QueryParam("id") Long id) {
         return funcionalidadRemote.buscarPorId(id);
     }
 }

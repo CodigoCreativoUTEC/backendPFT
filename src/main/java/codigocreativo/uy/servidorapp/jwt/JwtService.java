@@ -23,7 +23,6 @@ public class JwtService {
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
         } catch (Exception e) {
-            System.out.println("Error al generar el token: " + e.getMessage());
             return null;  // Retornar null si ocurre algún error
         }
     }

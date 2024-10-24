@@ -26,7 +26,7 @@ public class UsuariosTelefonoBean implements UsuariosTelefonoRemote{
     }
 
     @Override
-    public void obtenerUsuariosTelefono(Long id) {
+    public void obtenerUsuarioTelefono(Long id) {
         em.find(UsuariosTelefono.class, id);
     }
 

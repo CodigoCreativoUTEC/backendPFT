@@ -8,9 +8,9 @@ import java.util.List;
 
 @Remote
 public interface InstitucionRemote {
-    public void agregarInstitucion(InstitucionDto i);
+    public void agregar(InstitucionDto i);
     public void eliminarInstitucion(InstitucionDto i);
-    public void modificarInstitucion(InstitucionDto i);
+    public void modificar(InstitucionDto i);
     public List<UbicacionDto> obtenerUbicaciones();
     public List<InstitucionDto> obtenerInstituciones();
     public InstitucionDto obtenerInstitucionPorNombre(String nombre);

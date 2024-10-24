@@ -10,7 +10,7 @@ import java.util.List;
 public interface UsuariosTelefonoRemote {
     public void crearUsuariosTelefono(UsuariosTelefono usuariosTelefono);
     public void modificarUsuariosTelefono(UsuariosTelefono usuariosTelefono);
-    public void obtenerUsuariosTelefono(Long id);
+    public void obtenerUsuarioTelefono(Long id);
     public List<UsuariosTelefono> obtenerusuariosTelefono();
 
     void eliminarTelefono(UsuariosTelefono usuariosTelefono);

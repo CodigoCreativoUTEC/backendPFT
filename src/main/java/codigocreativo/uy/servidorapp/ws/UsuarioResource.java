@@ -9,7 +9,6 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.auth.oauth2.TokenVerifier.VerificationException;
-import com.google.auth.oauth2.IdToken;
 
 import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
@@ -128,8 +127,6 @@ public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authori
         if (!perfilSolicitante.equals("Administrador")) {
             return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
         }
-        System.out.println("Email solicitante: " + emailSolicitante);
-        System.out.println("Cedula perfil a borrar: " + usuario.getCedula());
         UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
 
         if (usuarioAInactivar == null) {
@@ -172,7 +169,6 @@ public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authori
         }
         // Lógica para el filtro de perfil (tipo de usuario)
         if (tipoUsuario == null || tipoUsuario.isEmpty()) {
-            // Si no se envía perfil, no aplicamos filtro de perfil
         } else if (!tipoUsuario.equals("default")) {
             filtros.put("tipoUsuario", tipoUsuario);
         }
@@ -253,9 +249,7 @@ public Response login(LoginRequest loginRequest) {
     @POST
     @Path("/google-login")
     public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        System.out.println(googleLoginRequest.toString());
         if (googleLoginRequest.getIdToken() == null) {
-            System.out.println("Token de Google nulo");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
         }
         try {
@@ -267,7 +261,6 @@ public Response login(LoginRequest loginRequest) {
 
             JsonWebSignature idToken = tokenVerifier.verify(idTokenString);
             if (idToken == null) {
-                System.out.println("Token de Google inválido");
                 return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
             }
 
@@ -287,7 +280,6 @@ public Response login(LoginRequest loginRequest) {
                 userNeedsAdditionalInfo = true;
             } else if (!user.getEstado().equals(Estados.ACTIVO)) {
                 // Si el usuario no está activo, devolver un error
-                System.out.println("Cuenta inactiva, por favor contacte al administrador");
                 return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
             }
 
@@ -300,10 +292,8 @@ public Response login(LoginRequest loginRequest) {
             return Response.ok(loginResponse).build();
 
         } catch (VerificationException e) {
-            System.out.println("Token de Google inválido");
             return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
         } catch (Exception e) {
-            System.out.println("Error al procesar el token de Google");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
         }
     }
