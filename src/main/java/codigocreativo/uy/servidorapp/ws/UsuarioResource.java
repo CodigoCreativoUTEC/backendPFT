@@ -17,10 +17,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,7 +28,7 @@ public class UsuarioResource {
     @EJB
     private JwtService jwtService;
 
-     @POST
+    @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
         try {
@@ -301,19 +298,43 @@ public class UsuarioResource {
     @POST
     @Path("/renovar-token")
     public Response renovarToken(@HeaderParam("Authorization") String authorizationHeader) {
+        // Validar si el header contiene el token
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"Falta el token de autorización.\"}")
+                    .build();
+        }
 
-        String token = authorizationHeader.substring("Bearer".length()).trim();
-        Claims claims = jwtService.parseToken(token);
+        try {
+            String token = authorizationHeader.substring("Bearer".length()).trim();
+            Claims claims = jwtService.parseToken(token);
 
-        // Obtener el email y perfil del token antiguo
-        String email = claims.get("email", String.class);
-        String perfil = claims.get("perfil", String.class);
+            // Verificar si el token ha expirado
+            if (claims.getExpiration().before(new Date())) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\": \"El token ha expirado.\"}")
+                        .build();
+            }
 
-        // Generar un nuevo token
-        String nuevoToken = jwtService.generateToken(email, perfil);
+            // Obtener el email y perfil del token antiguo
+            String email = claims.get("email", String.class);
+            String perfil = claims.get("perfil", String.class);
 
-        return Response.ok("{\"token\": \"" + nuevoToken + "\"}").build();
+            // Generar un nuevo token
+            String nuevoToken = jwtService.generateToken(email, perfil);
+
+            // Devolver el nuevo token en formato JSON
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("token", nuevoToken);
+
+            return Response.ok(responseMap).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\": \"Error al procesar el token.\"}")
+                    .build();
+        }
     }
+
 
 
 
