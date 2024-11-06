@@ -282,7 +282,7 @@ public class UsuarioResource {
 
             // Generar un JWT para este usuario si ya existe
             String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
-            String token = jwtService.generateToken(user.getEmail(), perfilNombre);  // Incluir ID
+            String token = jwtService.generateToken(email, perfilNombre);  // Generar un nuevo JWT válido para este usuario
 
             // Enviar la respuesta al cliente con el token y la indicación de si necesita completar más información
             GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
@@ -294,6 +294,7 @@ public class UsuarioResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
         }
     }
+
 
     @POST
     @Path("/renovar-token")
@@ -327,13 +328,17 @@ public class UsuarioResource {
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("token", nuevoToken);
 
+            System.out.println("RenovarToken: Nuevo token generado correctamente para el usuario con email: " + email);
+
             return Response.ok(responseMap).build();
         } catch (Exception e) {
+            System.err.println("RenovarToken: Error al procesar el token - " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\": \"Error al procesar el token.\"}")
                     .build();
         }
     }
+
 
 
 

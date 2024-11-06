@@ -140,6 +140,15 @@
             <version>2.1.1</version>
         </dependency>
 
+
+        <dependency>
+    <groupId>io.swagger.core.v3</groupId>
+    <artifactId>swagger-jaxrs2</artifactId>
+    <version>2.2.22</version> <!-- Ajusta la versión según lo necesites -->
+</dependency>
+
+
+
 <dependency>
     <groupId>com.google.auth</groupId>
     <artifactId>google-auth-library-oauth2-http</artifactId>
