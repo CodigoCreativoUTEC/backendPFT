@@ -32,6 +32,7 @@ public class MiApp extends Application {
         resources.add(PerfilResource.class);
         resources.add(TipoIntervencionesResource.class);
         resources.add(FuncionalidadResource.class);
+        resources.add(UbicacionesResource.class);
         return resources;
     }
 }
