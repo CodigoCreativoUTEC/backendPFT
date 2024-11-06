@@ -8,12 +8,15 @@ import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Path("/equipos")
+@Tag(name = "Mi Endpoint", description = "Gestión de mi endpoint")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class EquipoResource {
@@ -25,6 +28,7 @@ public class EquipoResource {
 
     @POST
     @Path("/crear")
+    @Operation(summary = "Crear un equipo", description = "Crea un equipo en la base de datos")
     public Response crearEquipo(EquipoDto equipo) {
         this.er.crearEquipo(equipo);
         return Response.status(201).build();

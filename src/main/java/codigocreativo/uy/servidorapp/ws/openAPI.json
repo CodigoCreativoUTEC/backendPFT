@@ -1,0 +1,16 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MAD-MED",
+    "description": "Software de gestión de consultorios médicos",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/ServidorApp-1.0-SNAPSHOT/api"
+    }
+  ],
+  "paths": {
+
+  }
+}

@@ -5,6 +5,7 @@ import codigocreativo.uy.servidorapp.dtos.PaisDto;
 import codigocreativo.uy.servidorapp.dtos.ProveedoresEquipoDto;
 import codigocreativo.uy.servidorapp.servicios.PaisRemote;
 import codigocreativo.uy.servidorapp.servicios.ProveedoresEquipoRemote;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
