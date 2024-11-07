@@ -69,8 +69,6 @@ public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authori
         String token = authorizationHeader.substring("Bearer".length()).trim();
         Claims claims = jwtService.parseToken(token);
         String correoDelToken = claims.getSubject();
-        System.out.println("Correo del token: " + correoDelToken);
-        System.out.println("Correo del usuario: " + usuario.getEmail());
 
         // Verificar si el correo del token coincide con el correo del objeto UsuarioDto
         if (!Objects.equals(correoDelToken, usuario.getEmail())) {
@@ -82,21 +80,21 @@ public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authori
         if (usuarioActual == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
         }
-        System.out.println("Usuario actual: " + usuarioActual);
+
 
         // Verificar si se proporciona una nueva contraseña
         if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
-            System.out.println("Nueva contraseña proporcionada: " + usuario.getContrasenia());
+
             // Validar la nueva contraseña
             if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-                System.out.println("Contraseña nueva inválida");
+
                 return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}").build();
             }
 
             // Generar un nuevo salt y hash para la nueva contraseña
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
             usuario.setContrasenia(saltedHash);
-            System.out.println("Contraseña actualizada correctamente");
+
         } else {
             // Mantener la contraseña actual si no se cambia
             usuario.setContrasenia(usuarioActual.getContrasenia());
@@ -110,11 +108,10 @@ public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authori
 
         // Proceder con la modificación
         er.modificarUsuario(usuario);
-        System.out.println("Usuario modificado correctamente");
+
 
         return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
     } catch (Exception e) {
-        System.out.println("Error al modificar el usuario: " + e.getMessage());
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
     }
 }
@@ -246,7 +243,6 @@ public Response login(LoginRequest loginRequest) {
 
             return Response.ok(loginResponse).build();
         } catch (Exception e) {
-            e.printStackTrace(); // Add this line to log the exception
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error durante el login\"}").build();
         }
     } else {
@@ -304,8 +300,7 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
     } catch (VerificationException e) {
         return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
     } catch (Exception e) {
-        e.printStackTrace(); // Add this line to log the exception
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
+       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
     }
 }
 
@@ -342,11 +337,8 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("token", nuevoToken);
 
-            System.out.println("RenovarToken: Nuevo token generado correctamente para el usuario con email: " + email);
-
             return Response.ok(responseMap).build();
         } catch (Exception e) {
-            System.err.println("RenovarToken: Error al procesar el token - " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\": \"Error al procesar el token.\"}")
                     .build();

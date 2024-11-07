@@ -14,7 +14,6 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionManagement;
 import jakarta.ejb.TransactionManagementType;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -27,11 +26,13 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
 
-    @Inject
-    BajaUbicacionMapper bajaUbicacionMapper;
+    private final BajaUbicacionMapper bajaUbicacionMapper;
+    private final UbicacionMapper ubicacionMapper;
 
-    @Inject
-    UbicacionMapper ubicacionMapper;
+    public BajaUbicacionBean(BajaUbicacionMapper bajaUbicacionMapper, UbicacionMapper ubicacionMapper) {
+        this.bajaUbicacionMapper = bajaUbicacionMapper;
+        this.ubicacionMapper = ubicacionMapper;
+    }
 
     @EJB
     UbicacionRemote ubicacionBean;
