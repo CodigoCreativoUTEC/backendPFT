@@ -104,6 +104,7 @@ public class UsuarioResource {
 
             return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
