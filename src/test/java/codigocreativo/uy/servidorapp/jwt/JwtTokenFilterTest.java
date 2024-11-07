@@ -164,4 +164,41 @@ class JwtTokenFilterTest {
 
         verify(requestContext, never()).abortWith(any(Response.class));
     }
+     @Test
+    void testFilter_ValidTokenWithEmptyEmail_ShouldAbortWithUnauthorized() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "")
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+    }
+
+    @Test
+    void testFilter_ValidTokenWithEmptyPerfil_ShouldAbortWithUnauthorized() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+    }
 }
