@@ -31,30 +31,116 @@ public class EquipoDto implements Serializable {
     private LocalDate fechaAdquisicion;
     private Estados estado;
 
+    // Public no-argument constructor
     public EquipoDto() {
     }
 
-    public EquipoDto(Long id, String idInterno, String nroSerie,
-                     String garantia, TiposEquipoDto idTipo,
-                     ProveedoresEquipoDto idProveedor,
-                     PaisDto idPais,
-                     ModelosEquipoDto idModelo,
-                     Set<EquiposUbicacioneDto> equiposUbicaciones,
-                     UbicacionDto idUbicacion, String nombre, String imagen, LocalDate fechaAdquisicion, Estados estado) {
-        this.id = id;
-        this.idInterno = idInterno;
-        this.nroSerie = nroSerie;
-        this.nombre = nombre;
-        this.imagen = imagen;
-        this.fechaAdquisicion = fechaAdquisicion;
-        this.estado = estado;
-        this.idTipo = idTipo;
-        this.idProveedor = idProveedor;
-        this.idPais = idPais;
-        this.idModelo = idModelo;
-        this.equiposUbicaciones = equiposUbicaciones;
-        this.idUbicacion = idUbicacion;
-        this.garantia = garantia;
+    private EquipoDto(Builder builder) {
+        this.id = builder.id;
+        this.idInterno = builder.idInterno;
+        this.nroSerie = builder.nroSerie;
+        this.garantia = builder.garantia;
+        this.idTipo = builder.idTipo;
+        this.idProveedor = builder.idProveedor;
+        this.idPais = builder.idPais;
+        this.idModelo = builder.idModelo;
+        this.equiposUbicaciones = builder.equiposUbicaciones;
+        this.idUbicacion = builder.idUbicacion;
+        this.nombre = builder.nombre;
+        this.imagen = builder.imagen;
+        this.fechaAdquisicion = builder.fechaAdquisicion;
+        this.estado = builder.estado;
+    }
+
+    public static class Builder {
+        private Long id;
+        private String idInterno;
+        private String nroSerie;
+        private String garantia;
+        private TiposEquipoDto idTipo;
+        private ProveedoresEquipoDto idProveedor;
+        private PaisDto idPais;
+        private ModelosEquipoDto idModelo;
+        private Set<EquiposUbicacioneDto> equiposUbicaciones = new LinkedHashSet<>();
+        private UbicacionDto idUbicacion;
+        private String nombre;
+        private String imagen;
+        private LocalDate fechaAdquisicion;
+        private Estados estado;
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder idInterno(String idInterno) {
+            this.idInterno = idInterno;
+            return this;
+        }
+
+        public Builder nroSerie(String nroSerie) {
+            this.nroSerie = nroSerie;
+            return this;
+        }
+
+        public Builder garantia(String garantia) {
+            this.garantia = garantia;
+            return this;
+        }
+
+        public Builder idTipo(TiposEquipoDto idTipo) {
+            this.idTipo = idTipo;
+            return this;
+        }
+
+        public Builder idProveedor(ProveedoresEquipoDto idProveedor) {
+            this.idProveedor = idProveedor;
+            return this;
+        }
+
+        public Builder idPais(PaisDto idPais) {
+            this.idPais = idPais;
+            return this;
+        }
+
+        public Builder idModelo(ModelosEquipoDto idModelo) {
+            this.idModelo = idModelo;
+            return this;
+        }
+
+        public Builder equiposUbicaciones(Set<EquiposUbicacioneDto> equiposUbicaciones) {
+            this.equiposUbicaciones = equiposUbicaciones;
+            return this;
+        }
+
+        public Builder idUbicacion(UbicacionDto idUbicacion) {
+            this.idUbicacion = idUbicacion;
+            return this;
+        }
+
+        public Builder nombre(String nombre) {
+            this.nombre = nombre;
+            return this;
+        }
+
+        public Builder imagen(String imagen) {
+            this.imagen = imagen;
+            return this;
+        }
+
+        public Builder fechaAdquisicion(LocalDate fechaAdquisicion) {
+            this.fechaAdquisicion = fechaAdquisicion;
+            return this;
+        }
+
+        public Builder estado(Estados estado) {
+            this.estado = estado;
+            return this;
+        }
+
+        public EquipoDto build() {
+            return new EquipoDto(this);
+        }
     }
 
     public Long getId() {

@@ -5,12 +5,13 @@ on:
     branches:
       - master
 
-
 jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-    
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,8 +33,10 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
+      - name: Build and Run Tests
+        run: mvn -B clean verify
+      - name: SonarQube Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=CodigoCreativoUTEC_backendPFT_182e862c-b890-4f3f-8ad3-b0277c87bcc5 -Dsonar.projectName='backendPFT'
+        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=CodigoCreativoUTEC_backendPFT_182e862c-b890-4f3f-8ad3-b0277c87bcc5 -Dsonar.projectName='backendPFT' -Dsonar.junit.reportPaths=target/surefire-reports -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml

@@ -1,24 +1,21 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
-import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.dtomappers.BajaUbicacionMapper;
 import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
+import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.entidades.BajaUbicacion;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
-
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionManagement;
 import jakarta.ejb.TransactionManagementType;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-
 import java.util.List;
 
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -27,11 +24,19 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
 
-    @Inject
-    BajaUbicacionMapper bajaUbicacionMapper;
+    private final BajaUbicacionMapper bajaUbicacionMapper;
+    private final UbicacionMapper ubicacionMapper;
 
-    @Inject
-    UbicacionMapper ubicacionMapper;
+    // Public no-argument constructor
+    public BajaUbicacionBean() {
+        this.bajaUbicacionMapper = null;
+        this.ubicacionMapper = null;
+    }
+
+    public BajaUbicacionBean(BajaUbicacionMapper bajaUbicacionMapper, UbicacionMapper ubicacionMapper) {
+        this.bajaUbicacionMapper = bajaUbicacionMapper;
+        this.ubicacionMapper = ubicacionMapper;
+    }
 
     @EJB
     UbicacionRemote ubicacionBean;
@@ -40,9 +45,7 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     @Override
     public void crearBajaUbicacion(BajaUbicacionDto bajaUbicacion) throws ServiciosException {
         try {
-            // Persistir la baja de ubicación
             em.persist(bajaUbicacionMapper.toEntity(bajaUbicacion, new CycleAvoidingMappingContext()));
-            // Dar de baja lógica a la ubicación
         } catch (Exception e) {
             throw new ServiciosException(e.getMessage());
         }
@@ -62,6 +65,7 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     @Override
     public List<BajaUbicacionDto> listarBajaUbicaciones() throws ServiciosException {
         try {
+            assert bajaUbicacionMapper != null;
             return bajaUbicacionMapper.toDto(em.createQuery("SELECT bajaUbicacion FROM BajaUbicacion bajaUbicacion", BajaUbicacion.class).getResultList(), new CycleAvoidingMappingContext());
         } catch (Exception e) {
             throw new ServiciosException("No se pudo listar las bajas de ubicaciones");
@@ -70,6 +74,7 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
 
     @Override
     public void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException {
+        assert ubicacionMapper != null;
         Ubicacion ubicacion = ubicacionMapper.toEntity(ub);
         try {
             ubicacion.setEstado(Estados.INACTIVO);

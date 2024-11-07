@@ -68,6 +68,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             }
 
         } catch (Exception e) {
+
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }

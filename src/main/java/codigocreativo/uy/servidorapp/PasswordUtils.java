@@ -22,15 +22,13 @@ public class PasswordUtils {
     }
 
     // Aplica hashing a la contraseña usando PBKDF2, con el salt ya concatenado
-    public static String hashPasswordWithSalt(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    byte[] saltBytes = Base64.getDecoder().decode(salt);  // Decodificar el salt desde Base64
-
-    PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), saltBytes, ITERATIONS, KEY_LENGTH);
-    SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
-    byte[] hash = factory.generateSecret(spec).getEncoded();
-
-    return Base64.getEncoder().encodeToString(hash);  // Devolver el hash codificado en Base64
-}
+    private static String hashPasswordWithSalt(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] saltBytes = Base64.getDecoder().decode(salt);
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), saltBytes, ITERATIONS, KEY_LENGTH);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
+        byte[] hash = factory.generateSecret(spec).getEncoded();
+        return Base64.getEncoder().encodeToString(hash);
+    }
 
 
     // Combina salt y hash en una sola cadena
@@ -42,6 +40,9 @@ public class PasswordUtils {
 
     // Extrae el salt y verifica la contraseña
     public static boolean verifyPassword(String password, String storedSaltedHash) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    if (storedSaltedHash == null) {
+            return false;
+        }
     String[] parts = storedSaltedHash.split(":");
     String salt = parts[0];
     String storedHash = parts[1];
