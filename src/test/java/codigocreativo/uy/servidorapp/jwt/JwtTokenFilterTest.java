@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -119,5 +120,48 @@ class JwtTokenFilterTest {
         ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
         verify(requestContext).abortWith(captor.capture());
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+    }
+
+    @Test
+    void testFilter_ValidTokenWithMissingClaims_ShouldAbortWithUnauthorized() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+    }
+
+    @Test
+    void testFilter_PublicEndpointSwagger_ShouldPass() {
+        when(uriInfo.getPath()).thenReturn("/swagger-ui");
+
+        jwtTokenFilter.filter(requestContext);
+
+        verify(requestContext, never()).abortWith(any(Response.class));
+    }
+
+    @Test
+    void testFilter_ValidTokenWithUnknownPath_ShouldPass() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/unknown/path");
+
+        jwtTokenFilter.filter(requestContext);
+
+        verify(requestContext, never()).abortWith(any(Response.class));
     }
 }
