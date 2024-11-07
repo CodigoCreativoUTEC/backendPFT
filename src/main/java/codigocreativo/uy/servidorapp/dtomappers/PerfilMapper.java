@@ -2,25 +2,21 @@ package codigocreativo.uy.servidorapp.dtomappers;
 
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.CDI, uses = {PermisoMapper.class})
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.JAKARTA_CDI)
 public interface PerfilMapper {
-    Perfil toEntity(PerfilDto perfilDto, @Context CycleAvoidingMappingContext context);
 
-    @AfterMapping
-    default void linkUsuarios(@MappingTarget Perfil perfil) {
-        perfil.getUsuarios().forEach(usuario -> usuario.setIdPerfil(perfil));
-    }
+    Perfil toEntity(PerfilDto perfilDto);
 
-    PerfilDto toDto(Perfil perfil, @Context CycleAvoidingMappingContext context);
+    PerfilDto toDto(Perfil perfil);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Perfil partialUpdate(PerfilDto perfilDto, @MappingTarget Perfil perfil);
+    // Métodos para mapear listas
+    List<Perfil> toEntityList(List<PerfilDto> perfilDtos);
 
-    List<Perfil> toEntity(List<PerfilDto> perfilDto, @Context CycleAvoidingMappingContext context);
-
-    List<PerfilDto> toDto(List<Perfil> perfil, @Context CycleAvoidingMappingContext context);
+    List<PerfilDto> toDtoList(List<Perfil> perfiles);
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
@@ -13,6 +14,7 @@ import java.util.Set;
 @Entity
 @Table(name = "USUARIOS")
 public class Usuario implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1829283312323331L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

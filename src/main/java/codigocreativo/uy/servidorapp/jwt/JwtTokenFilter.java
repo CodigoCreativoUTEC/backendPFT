@@ -75,6 +75,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     // Función para identificar los endpoints públicos
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/usuarios/login") ||
+                path.startsWith("/usuarios/renovar-token") ||
+                path.startsWith("/swagger-ui") ||
                 path.startsWith("/usuarios/google-login") ||
                 path.startsWith("/usuarios/crear");
     }
@@ -94,7 +96,9 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         // enpoint renovador de token
 
-        if (path.startsWith("/usuarios/renovar-token")) {
+        if (    path.startsWith("/usuarios/renovar-token") ||
+                path.startsWith("/usuarios/modificar-propio-usuario") ||
+                path.startsWith("/usuarios/obtenerUserEmail")) {
             return todosLosPermisos;
         }
         // Endpoints referentes a Equipos

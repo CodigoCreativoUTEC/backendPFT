@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.PasswordUtils;
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
@@ -8,7 +9,6 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.auth.oauth2.TokenVerifier.VerificationException;
-import com.google.auth.oauth2.IdToken;
 
 import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
@@ -17,10 +17,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -34,9 +31,23 @@ public class UsuarioResource {
     @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
-        this.er.crearUsuario(usuario);
-        return Response.status(201).build();
+        try {
+            // Generar el hash con el salt incluido
+            String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+
+            // Asignar el valor hash (con salt) al usuario
+            usuario.setContrasenia(saltedHash);
+
+            // Crear el usuario en el sistema
+            this.er.crearUsuario(usuario);
+
+            return Response.status(201).entity("{\"message\":\"Usuario creado correctamente\"}").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"message\":\"Error al crear el usuario\"}").build();
+        }
     }
+
+
 
     @PUT
     @Path("/modificar")
@@ -49,7 +60,58 @@ public class UsuarioResource {
         }
     }
 
-    //TODO: Se debe crear un enpoint que verifique mi propio usuario y permita modificar sus propios datos
+
+    @PUT
+    @Path("/modificar-propio-usuario")
+    public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            // Extraer el token JWT del encabezado
+            String token = authorizationHeader.substring("Bearer".length()).trim();
+            Claims claims = jwtService.parseToken(token);
+            String correoDelToken = claims.getSubject();
+
+            // Verificar si el correo del token coincide con el correo del objeto UsuarioDto
+            if (!Objects.equals(correoDelToken, usuario.getEmail())) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"No autorizado para modificar este usuario\"}").build();
+            }
+
+            // Obtener el usuario actual desde la base de datos
+            UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
+
+            // Verificar si se proporciona una nueva contraseña
+            if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
+                // Validar la nueva contraseña
+                if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+                    return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}").build();
+                }
+
+                // Generar un nuevo salt y hash para la nueva contraseña
+                String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+                usuario.setContrasenia(saltedHash);
+            } else {
+                // Mantener la contraseña actual si no se cambia
+                usuario.setContrasenia(usuarioActual.getContrasenia());
+            }
+
+            // Proteger otros campos que no se pueden modificar
+            usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
+            usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            usuario.setEstado(usuarioActual.getEstado());
+            usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
+
+            // Proceder con la modificación
+            er.modificarUsuario(usuario);
+
+            return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }
+    }
+
+
+
+
 
     @PUT
     @Path("/inactivar")
@@ -63,8 +125,6 @@ public class UsuarioResource {
         if (!perfilSolicitante.equals("Administrador")) {
             return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
         }
-        System.out.println("Email solicitante: " + emailSolicitante);
-        System.out.println("Cedula perfil a borrar: " + usuario.getCedula());
         UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
 
         if (usuarioAInactivar == null) {
@@ -107,7 +167,6 @@ public class UsuarioResource {
         }
         // Lógica para el filtro de perfil (tipo de usuario)
         if (tipoUsuario == null || tipoUsuario.isEmpty()) {
-            // Si no se envía perfil, no aplicamos filtro de perfil
         } else if (!tipoUsuario.equals("default")) {
             filtros.put("tipoUsuario", tipoUsuario);
         }
@@ -156,34 +215,39 @@ public class UsuarioResource {
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
         if (loginRequest == null) {
-            System.out.println("Request null");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
         }
-        System.out.println(loginRequest.toString());
-        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.password);
-        System.out.println("Login request: " + loginRequest.email + " " + loginRequest.getPassword());
-        UsuarioDto user = this.er.login(loginRequest.email, loginRequest.getPassword());
 
-        if (user != null) {
-            String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
-            System.out.println("Token generado: " + token);
-            user = user.setContrasenia(null);
-            LoginResponse loginResponse = new LoginResponse(token, user);
-            System.out.println("Ingreso correcto");
-            System.out.println(Response.ok(loginResponse).build());
-            return Response.ok(loginResponse).build();
+        UsuarioDto user = this.er.findUserByEmail(loginRequest.getEmail());
+
+        if (user != null && user.getEstado().equals(Estados.ACTIVO)) {
+            try {
+                // Verificar la contraseña usando el hash con el salt incluido
+                boolean isValid = PasswordUtils.verifyPassword(loginRequest.getPassword(), user.getContrasenia());
+
+                if (!isValid) {
+                    return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Contraseña incorrecta\"}").build();
+                }
+
+                // Generar el token
+                String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+                LoginResponse loginResponse = new LoginResponse(token, user);
+
+                return Response.ok(loginResponse).build();
+            } catch (Exception e) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error durante el login\"}").build();
+            }
         } else {
-            System.out.println("login unautorized invalid credentials");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}").build();
         }
     }
+
+
 
     @POST
     @Path("/google-login")
     public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        System.out.println(googleLoginRequest.toString());
         if (googleLoginRequest.getIdToken() == null) {
-            System.out.println("Token de Google nulo");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
         }
         try {
@@ -195,7 +259,6 @@ public class UsuarioResource {
 
             JsonWebSignature idToken = tokenVerifier.verify(idTokenString);
             if (idToken == null) {
-                System.out.println("Token de Google inválido");
                 return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
             }
 
@@ -215,43 +278,72 @@ public class UsuarioResource {
                 userNeedsAdditionalInfo = true;
             } else if (!user.getEstado().equals(Estados.ACTIVO)) {
                 // Si el usuario no está activo, devolver un error
-                System.out.println("Cuenta inactiva, por favor contacte al administrador");
                 return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
             }
 
             // Generar un JWT para este usuario si ya existe
             String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
-            String token = jwtService.generateToken(user.getEmail(), perfilNombre);  // Incluir ID
+            String token = jwtService.generateToken(email, perfilNombre);  // Generar un nuevo JWT válido para este usuario
 
             // Enviar la respuesta al cliente con el token y la indicación de si necesita completar más información
             GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
             return Response.ok(loginResponse).build();
 
         } catch (VerificationException e) {
-            System.out.println("Token de Google inválido");
             return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
         } catch (Exception e) {
-            System.out.println("Error al procesar el token de Google");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
         }
     }
 
+
     @POST
     @Path("/renovar-token")
     public Response renovarToken(@HeaderParam("Authorization") String authorizationHeader) {
+        // Validar si el header contiene el token
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"Falta el token de autorización.\"}")
+                    .build();
+        }
 
-        String token = authorizationHeader.substring("Bearer".length()).trim();
-        Claims claims = jwtService.parseToken(token);
+        try {
+            String token = authorizationHeader.substring("Bearer".length()).trim();
+            Claims claims = jwtService.parseToken(token);
 
-        // Obtener el email y perfil del token antiguo
-        String email = claims.get("email", String.class);
-        String perfil = claims.get("perfil", String.class);
+            // Verificar si el token ha expirado
+            if (claims.getExpiration().before(new Date())) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\": \"El token ha expirado.\"}")
+                        .build();
+            }
 
-        // Generar un nuevo token
-        String nuevoToken = jwtService.generateToken(email, perfil);
+            // Obtener el email y perfil del token antiguo
+            String email = claims.get("email", String.class);
+            String perfil = claims.get("perfil", String.class);
 
-        return Response.ok("{\"token\": \"" + nuevoToken + "\"}").build();
+            // Generar un nuevo token
+            String nuevoToken = jwtService.generateToken(email, perfil);
+
+            // Devolver el nuevo token en formato JSON
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("token", nuevoToken);
+
+            System.out.println("RenovarToken: Nuevo token generado correctamente para el usuario con email: " + email);
+
+            return Response.ok(responseMap).build();
+        } catch (Exception e) {
+            System.err.println("RenovarToken: Error al procesar el token - " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\": \"Error al procesar el token.\"}")
+                    .build();
+        }
     }
+
+
+
+
+
 
     public static class LoginRequest {
         @JsonbProperty("email")

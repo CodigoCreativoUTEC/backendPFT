@@ -1,35 +1,45 @@
 package codigocreativo.uy.servidorapp.entidades;
 
+import codigocreativo.uy.servidorapp.enumerados.Estados;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Table(name = "FUNCIONALIDADES")
-public class Funcionalidad {
+public class Funcionalidad implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_FUNCIONALIDAD", nullable = false)
+    @Column(name = "ID_FUNCIONALIDAD")
     private Long id;
 
-    @Size(max = 255)
     @Column(name = "NOMBRE_FUNCIONALIDAD")
     private String nombreFuncionalidad;
 
-    @Size(max = 255)
+    @Column(name = "RUTA")
+    private String ruta;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "ESTADO")
-    private String estado;
+    private Estados estado;
 
-    @ManyToMany
-    @JoinTable(name = "FUNCIONALIDADES_PERFILES",
-            joinColumns = @JoinColumn(name = "ID_FUNCIONALIDAD"),
-            inverseJoinColumns = @JoinColumn(name = "ID_PERFIL"))
-    private Set<Perfil> perfiles = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "funcionalidad", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("funcionalidad")
+    private List<FuncionalidadesPerfiles> funcionalidadesPerfiles;
 
+    // Getters y Setters
     public Long getId() {
         return id;
+    }
+
+    public String getRuta() {
+        return ruta;
+    }
+
+    public void setRuta(String ruta) {
+        this.ruta = ruta;
     }
 
     public void setId(Long id) {
@@ -44,20 +54,19 @@ public class Funcionalidad {
         this.nombreFuncionalidad = nombreFuncionalidad;
     }
 
-    public String getEstado() {
+    public Estados getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(Estados estado) {
         this.estado = estado;
     }
 
-    public Set<Perfil> getPerfiles() {
-        return perfiles;
+    public List<FuncionalidadesPerfiles> getFuncionalidadesPerfiles() {
+        return funcionalidadesPerfiles;
     }
 
-    public void setPerfiles(Set<Perfil> perfiles) {
-        this.perfiles = perfiles;
+    public void setFuncionalidadesPerfiles(List<FuncionalidadesPerfiles> funcionalidadesPerfiles) {
+        this.funcionalidadesPerfiles = funcionalidadesPerfiles;
     }
-
 }

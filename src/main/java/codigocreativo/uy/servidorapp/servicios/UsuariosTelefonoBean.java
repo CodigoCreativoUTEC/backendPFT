@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.entidades.Pais;
 import codigocreativo.uy.servidorapp.entidades.UsuariosTelefono;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
@@ -27,7 +26,7 @@ public class UsuariosTelefonoBean implements UsuariosTelefonoRemote{
     }
 
     @Override
-    public void obtenerUsuariosTelefono(Long id) {
+    public void obtenerUsuarioTelefono(Long id) {
         em.find(UsuariosTelefono.class, id);
     }
 
@@ -35,6 +34,12 @@ public class UsuariosTelefonoBean implements UsuariosTelefonoRemote{
     @Override
     public List<UsuariosTelefono> obtenerusuariosTelefono() {
         return em.createQuery("SELECT UsuariosTelefono FROM UsuariosTelefono usuariosTelefono", UsuariosTelefono.class).getResultList();
+    }
+
+    @Override
+    public void eliminarTelefono(UsuariosTelefono usuariosTelefono) {
+        UsuariosTelefono telefono = em.merge(usuariosTelefono);
+        em.remove(telefono);
     }
 }
 

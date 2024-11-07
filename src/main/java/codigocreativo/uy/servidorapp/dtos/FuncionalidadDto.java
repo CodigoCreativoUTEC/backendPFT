@@ -1,76 +1,54 @@
 package codigocreativo.uy.servidorapp.dtos;
 
-import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.Size;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import java.io.Serializable;
-import java.util.Objects;
-import java.util.Set;
+import java.util.List;
 
-/**
- * DTO for {@link Funcionalidad}
- */
-@JsonIgnoreProperties({"perfiles"})
 public class FuncionalidadDto implements Serializable {
-    private final Long id;
-    @Size(max = 255)
-    private final String nombreFuncionalidad;
-    @Size(max = 255)
-    private final String estado;
-    private final Set<PerfilDto> perfiles;
+    private Long id;
+    private String nombreFuncionalidad;
+    private String ruta;
+    private Estados estado;  // Usamos el enum directamente
+    private List<PerfilDto> perfiles;
 
-    @JsonCreator
-    public FuncionalidadDto(
-        @JsonProperty("id") Long id,
-        @JsonProperty("nombreFuncionalidad") String nombreFuncionalidad,
-        @JsonProperty("estado") String estado,
-        @JsonProperty("perfiles") Set<PerfilDto> perfiles) {
-        this.id = id;
-        this.nombreFuncionalidad = nombreFuncionalidad;
-        this.estado = estado;
-        this.perfiles = perfiles;
-    }
-
+    // Getters y Setters
     public Long getId() {
         return id;
+    }
+
+    public String getRuta() {
+        return ruta;
+    }
+
+    public void setRuta(String ruta) {
+        this.ruta = ruta;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNombreFuncionalidad() {
         return nombreFuncionalidad;
     }
 
-    public String getEstado() {
+    public void setNombreFuncionalidad(String nombreFuncionalidad) {
+        this.nombreFuncionalidad = nombreFuncionalidad;
+    }
+
+    public Estados getEstado() {
         return estado;
     }
 
-    public Set<PerfilDto> getPerfiles() {
+    public void setEstado(Estados estado) {
+        this.estado = estado;
+    }
+
+    public List<PerfilDto> getPerfiles() {
         return perfiles;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FuncionalidadDto entity = (FuncionalidadDto) o;
-        return Objects.equals(this.id, entity.id) &&
-                Objects.equals(this.nombreFuncionalidad, entity.nombreFuncionalidad) &&
-                Objects.equals(this.estado, entity.estado) &&
-                Objects.equals(this.perfiles, entity.perfiles);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nombreFuncionalidad, estado, perfiles);
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "(" +
-                "id = " + id + ", " +
-                "nombreFuncionalidad = " + nombreFuncionalidad + ", " +
-                "estado = " + estado + ", " +
-                "perfiles = " + perfiles + ")";
+    public void setPerfiles(List<PerfilDto> perfiles) {
+        this.perfiles = perfiles;
     }
 }

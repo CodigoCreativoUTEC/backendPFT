@@ -19,7 +19,7 @@ public class InstitucionBean implements InstitucionRemote{
     private InstitucionMapper institucionMapper;
 
     @Override
-    public void agregarInstitucion(InstitucionDto i) {
+    public void agregar(InstitucionDto i) {
         Institucion institucionEntity = institucionMapper.toEntity(i);
         em.persist(institucionEntity);
         em.flush();
@@ -33,7 +33,7 @@ public class InstitucionBean implements InstitucionRemote{
 
     }
     @Override
-    public void modificarInstitucion(InstitucionDto i) {
+    public void modificar(InstitucionDto i) {
         Institucion institucionEntity = institucionMapper.toEntity(i);
         em.persist(institucionEntity);
         em.flush();

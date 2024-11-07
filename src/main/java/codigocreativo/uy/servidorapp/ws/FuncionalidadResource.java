@@ -1,8 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
-import codigocreativo.uy.servidorapp.dtos.PerfilDto;
-import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -28,25 +26,13 @@ public class FuncionalidadResource {
 
     @PUT
     @Path("/modificar")
-    public Response modificar(FuncionalidadDto funcionalidadDto) {
+    public Response modificar(FuncionalidadDto funcionalidadDto){
         funcionalidadRemote.actualizar(funcionalidadDto);
-
-        System.out.println("Modificado");
-        System.out.println("Funcionalidad: " + funcionalidadDto.getNombreFuncionalidad());
-        System.out.println("Estado: " + funcionalidadDto.getEstado());
-
-        System.out.println("Perfiles recibidos:");
-        for (PerfilDto perfil : funcionalidadDto.getPerfiles()) {
-            System.out.println("Perfil ID: " + perfil.getId() + ", Nombre: " + perfil.getNombrePerfil());
-        }
-
         return Response.status(200).build();
     }
-
-
     @DELETE
     @Path("/inactivar")
-    public Response eliminar(@QueryParam("id") Long id) {
+    public Response eliminar(@QueryParam("id") Long id)  {
         funcionalidadRemote.eliminar(id);
         return Response.status(200).build();
     }
@@ -59,7 +45,7 @@ public class FuncionalidadResource {
 
     @GET
     @Path("/seleccionar")
-    public FuncionalidadDto buscarPorId(@QueryParam("id") Long id) throws ServiciosException {
+    public FuncionalidadDto buscarPorId(@QueryParam("id") Long id) {
         return funcionalidadRemote.buscarPorId(id);
     }
 }

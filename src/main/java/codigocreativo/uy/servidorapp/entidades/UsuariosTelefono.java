@@ -2,9 +2,14 @@ package codigocreativo.uy.servidorapp.entidades;
 
 import jakarta.persistence.*;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Entity
 @Table(name = "USUARIOS_TELEFONOS")
-public class UsuariosTelefono {
+public class UsuariosTelefono implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 122546342290563L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_TELEFONO", nullable = false)
@@ -41,5 +46,4 @@ public class UsuariosTelefono {
         this.idUsuario = idUsuario;
     }
 
-    //TODO [JPA Buddy] generate columns from DB
 }

@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.dtos;
 
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -22,6 +23,7 @@ public class UsuarioDto implements Serializable {
     private String cedula;
     private String email;
     private String contrasenia;
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate fechaNacimiento;
     private Estados estado;
     private String nombre;

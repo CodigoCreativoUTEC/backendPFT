@@ -68,8 +68,6 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public List<UsuarioDto> obtenerUsuariosFiltrados(String filtro, Object valor) {
-        System.out.println("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor");
-        System.out.println("valor: " + valor);
         return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor", Usuario.class)
                 .setParameter("valor", valor)
                 .getResultList(), new CycleAvoidingMappingContext());
@@ -111,7 +109,7 @@ public class UsuarioBean implements UsuarioRemote {
             UsuarioDto usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", UsuarioDto.class)
                     .setParameter("email", email)
                     .getSingleResult();
-            return usuario.getIdPerfil().equals(requiredRole);
+            return usuario.getIdPerfil().getNombrePerfil().equals(requiredRole);
         } catch (NoResultException e) {
             return false;
         }
@@ -153,8 +151,6 @@ public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
             }
         }
     });
-
-    System.out.println("Consulta generada: " + queryStr.toString()); // Depuración
     return usuarioMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
 }
 
