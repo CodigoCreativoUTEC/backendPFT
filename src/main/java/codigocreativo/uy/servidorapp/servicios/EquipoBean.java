@@ -29,7 +29,7 @@ public class EquipoBean implements EquipoRemote {
 
     @Override
     public void crearEquipo(EquipoDto equipo) {
-        em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
+        em.persist(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
         em.flush();
     }
 
