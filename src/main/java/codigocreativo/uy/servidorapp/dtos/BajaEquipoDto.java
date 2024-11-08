@@ -36,6 +36,7 @@ public class BajaEquipoDto implements Serializable {
 
     public Long getId() {
         return id;
+        }
 
 
     public BajaEquipoDto setId(Long id) {

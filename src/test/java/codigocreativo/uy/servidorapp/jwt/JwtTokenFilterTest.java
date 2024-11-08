@@ -1,7 +1,12 @@
 package codigocreativo.uy.servidorapp.jwt;
 
+import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
+import codigocreativo.uy.servidorapp.dtos.PerfilDto;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.ejb.EJB;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
@@ -14,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.security.Key;
 import java.util.Base64;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,6 +40,7 @@ class JwtTokenFilterTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         jwtTokenFilter = new JwtTokenFilter();
+        jwtTokenFilter.funcionalidadService = mock(FuncionalidadRemote.class);
         when(requestContext.getUriInfo()).thenReturn(uriInfo);
         key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(System.getenv("SECRET_KEY"))); // Clave secreta de ejemplo
     }
@@ -101,7 +108,16 @@ class JwtTokenFilterTest {
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/ListarTodosLosUsuarios");
+
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setRuta("/usuarios/ListarTodosLosUsuarios");
+        PerfilDto perfil = new PerfilDto();
+        perfil.setNombrePerfil("Aux administrativo");
+        perfil.setId(1L);
+        perfil.setEstado(Estados.ACTIVO);
+        funcionalidadDto.setPerfiles(List.of(perfil));
+        when(jwtTokenFilter.funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidadDto));
 
         jwtTokenFilter.filter(requestContext);
 
@@ -146,24 +162,7 @@ class JwtTokenFilterTest {
 
         verify(requestContext, never()).abortWith(any(Response.class));
     }
-
     @Test
-    void testFilter_ValidTokenWithUnknownPath_ShouldPass() {
-        String token = Jwts.builder()
-                .setSubject("testUser")
-                .claim("perfil", "Aux administrativo")
-                .claim("email", "test@example.com")
-                .signWith(key)
-                .compact();
-
-        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/unknown/path");
-
-        jwtTokenFilter.filter(requestContext);
-
-        verify(requestContext, never()).abortWith(any(Response.class));
-    }
-     @Test
     void testFilter_ValidTokenWithEmptyEmail_ShouldAbortWithUnauthorized() {
         String token = Jwts.builder()
                 .setSubject("testUser")
@@ -193,6 +192,25 @@ class JwtTokenFilterTest {
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
         when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+    }
+    @Test
+    void testFilter_UnexpectedException_ShouldAbortWithUnauthorized() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        doThrow(new RuntimeException("Unexpected exception")).when(jwtTokenFilter.funcionalidadService).obtenerTodas();
 
         jwtTokenFilter.filter(requestContext);
 
