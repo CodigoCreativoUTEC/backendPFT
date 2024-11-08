@@ -6,9 +6,6 @@ import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
-import codigocreativo.uy.servidorapp.PasswordUtils;
-import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import io.jsonwebtoken.Claims;
 import jakarta.ws.rs.core.Response;
@@ -20,7 +17,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

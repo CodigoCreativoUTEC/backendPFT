@@ -21,11 +21,11 @@ public class UbicacionesResource {
 
     @GET
     @Path("/listar")
-    public List<UbicacionDto> listarUbicaciones(){
+    public List<UbicacionDto> listarUbicaciones() throws ServiciosException {
         try {
             return this.er.listarUbicaciones();
         } catch (ServiciosException e) {
-            throw new RuntimeException(e);
+            throw new ServiciosException("Error al listar ubicaciones");
         }
     }
 
