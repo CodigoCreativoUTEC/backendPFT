@@ -6,7 +6,7 @@ import jakarta.ejb.Remote;
 import java.util.List;
 @Remote
 public interface PerfilesPermisoRemote {
-    public void CrearPerfilesPermiso(PerfilesPermisoDto perfilesPermiso);
+    public void crearPerfilesPermiso(PerfilesPermisoDto perfilesPermiso);
     public void modificarPerfilesPermiso(PerfilesPermisoDto perfilesPermiso);
     public List<PerfilesPermisoDto> obtenerPerfilesPermiso();
 }

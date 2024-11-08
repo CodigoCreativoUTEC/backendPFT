@@ -46,14 +46,7 @@ public class PasswordUtils {
     String[] parts = storedSaltedHash.split(":");
     String salt = parts[0];
     String storedHash = parts[1];
-
-    // Imprimir valores para depuración
-    System.out.println("Salt almacenado: " + salt);
-    System.out.println("Hash almacenado: " + storedHash);
-
     String computedHash = hashPasswordWithSalt(password, salt);
-
-    System.out.println("Hash calculado: " + computedHash);
 
     return storedHash.equals(computedHash);
 }

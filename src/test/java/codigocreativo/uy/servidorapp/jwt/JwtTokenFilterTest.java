@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.jwt;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.ws.rs.container.ContainerRequestContext;

@@ -18,7 +18,7 @@ public class PerfilesPermisoBean implements PerfilesPermisoRemote {
     private PerfilesPermisoMapper perfilesPermisoMapper;
 
     @Override
-    public void CrearPerfilesPermiso(PerfilesPermisoDto perfilesPermiso) {
+    public void crearPerfilesPermiso(PerfilesPermisoDto perfilesPermiso) {
         em.persist(perfilesPermisoMapper.toEntity(perfilesPermiso));
         em.flush();
     }

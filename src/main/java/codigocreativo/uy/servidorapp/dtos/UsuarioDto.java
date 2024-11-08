@@ -17,6 +17,7 @@ import java.util.Set;
  */
 @JsonIgnoreProperties({"usuarios"})
 public class UsuarioDto implements Serializable {
+
     @JsonManagedReference
     private Set<UsuariosTelefonoDto> usuariosTelefonos = new LinkedHashSet<>();
     private Long id;
@@ -35,18 +36,101 @@ public class UsuarioDto implements Serializable {
     public UsuarioDto() {
     }
 
-    public UsuarioDto(Long id, String cedula, String email, String contrasenia, LocalDate fechaNacimiento, Estados estado, String nombre, String apellido, String nombreUsuario) {
-        this.id = id;
-        this.cedula = cedula;
-        this.email = email;
-        this.contrasenia = contrasenia;
-        this.fechaNacimiento = fechaNacimiento;
-        this.estado = estado;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.nombreUsuario = nombreUsuario;
+    private UsuarioDto(Builder builder) {
+        this.id = builder.id;
+        this.cedula = builder.cedula;
+        this.email = builder.email;
+        this.contrasenia = builder.contrasenia;
+        this.fechaNacimiento = builder.fechaNacimiento;
+        this.estado = builder.estado;
+        this.nombre = builder.nombre;
+        this.apellido = builder.apellido;
+        this.nombreUsuario = builder.nombreUsuario;
+        this.idInstitucion = builder.idInstitucion;
+        this.idPerfil = builder.idPerfil;
+        this.usuariosTelefonos = builder.usuariosTelefonos;
     }
 
+    public static class Builder {
+        private Long id;
+        private String cedula;
+        private String email;
+        private String contrasenia;
+        private LocalDate fechaNacimiento;
+        private Estados estado;
+        private String nombre;
+        private String apellido;
+        private String nombreUsuario;
+        private InstitucionDto idInstitucion;
+        private PerfilDto idPerfil;
+        private Set<UsuariosTelefonoDto> usuariosTelefonos = new LinkedHashSet<>();
+
+        public Builder setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder setCedula(String cedula) {
+            this.cedula = cedula;
+            return this;
+        }
+
+        public Builder setEmail(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Builder setContrasenia(String contrasenia) {
+            this.contrasenia = contrasenia;
+            return this;
+        }
+
+        public Builder setFechaNacimiento(LocalDate fechaNacimiento) {
+            this.fechaNacimiento = fechaNacimiento;
+            return this;
+        }
+
+        public Builder setEstado(Estados estado) {
+            this.estado = estado;
+            return this;
+        }
+
+        public Builder setNombre(String nombre) {
+            this.nombre = nombre;
+            return this;
+        }
+
+        public Builder setApellido(String apellido) {
+            this.apellido = apellido;
+            return this;
+        }
+
+        public Builder setNombreUsuario(String nombreUsuario) {
+            this.nombreUsuario = nombreUsuario;
+            return this;
+        }
+
+        public Builder setIdInstitucion(InstitucionDto idInstitucion) {
+            this.idInstitucion = idInstitucion;
+            return this;
+        }
+
+        public Builder setIdPerfil(PerfilDto idPerfil) {
+            this.idPerfil = idPerfil;
+            return this;
+        }
+
+        public Builder setUsuariosTelefonos(Set<UsuariosTelefonoDto> usuariosTelefonos) {
+            this.usuariosTelefonos = usuariosTelefonos;
+            return this;
+        }
+
+        public UsuarioDto build() {
+            return new UsuarioDto(this);
+        }
+    }
+
+    // Getters and Setters (mantener los que ya tienes si son necesarios para otras funcionalidades)
     public Long getId() {
         return id;
     }

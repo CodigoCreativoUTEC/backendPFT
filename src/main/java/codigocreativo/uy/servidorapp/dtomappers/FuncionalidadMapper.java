@@ -17,22 +17,22 @@ public interface FuncionalidadMapper {
     FuncionalidadDto toDto(Funcionalidad funcionalidad, @Context CycleAvoidingMappingContext context);
 
     @AfterMapping
-default void mapPerfilesFromFuncionalidadesPerfiles(Funcionalidad funcionalidad, @MappingTarget FuncionalidadDto dto, @Context CycleAvoidingMappingContext context) {
-    // Verificar que la lista de perfiles no sea null
-    if (funcionalidad.getFuncionalidadesPerfiles() != null) {
-        List<PerfilDto> perfiles = funcionalidad.getFuncionalidadesPerfiles().stream()
-            .map(funcPerfiles -> {
-                PerfilDto perfilDto = new PerfilDto();
-                perfilDto.setId(map(funcPerfiles.getId()));  // Mapeo manual del ID
-                perfilDto.setNombrePerfil(funcPerfiles.getPerfil().getNombrePerfil());
-                perfilDto.setEstado(funcPerfiles.getPerfil().getEstado());
-                return perfilDto;
-            }).collect(Collectors.toList());
-        dto.setPerfiles(perfiles);
-    } else {
-        dto.setPerfiles(new ArrayList<>());  // Inicializar como lista vacía
+    default void mapPerfilesFromFuncionalidadesPerfiles(Funcionalidad funcionalidad, @MappingTarget FuncionalidadDto dto, @Context CycleAvoidingMappingContext context) {
+        // Verificar que la lista de perfiles no sea null
+        if (funcionalidad.getFuncionalidadesPerfiles() != null) {
+            List<PerfilDto> perfiles = funcionalidad.getFuncionalidadesPerfiles().stream()
+                    .map(funcPerfiles -> {
+                        PerfilDto perfilDto = new PerfilDto();
+                        perfilDto.setId(map(funcPerfiles.getId()));  // Mapeo manual del ID
+                        perfilDto.setNombrePerfil(funcPerfiles.getPerfil().getNombrePerfil());
+                        perfilDto.setEstado(funcPerfiles.getPerfil().getEstado());
+                        return perfilDto;
+                    }).toList();  // Use Stream.toList() to get an unmodifiable list
+            dto.setPerfiles(perfiles);
+        } else {
+            dto.setPerfiles(new ArrayList<>());  // Inicializar como lista vacía
+        }
     }
-}
 
 
     Funcionalidad toEntity(FuncionalidadDto dto, @Context CycleAvoidingMappingContext context);

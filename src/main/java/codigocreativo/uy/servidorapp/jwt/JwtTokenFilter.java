@@ -187,6 +187,10 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 path.startsWith("/funcionalidades/seleccionar"))
             return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
 
+        // Endpoints referentes a Ubicaciones
+        if ( path.startsWith("/ubicaciones/listar"))
+            return todosLosPermisos;
+
         return true; // Por defecto permitir el acceso si no se especifica lo contrario
     }
 }

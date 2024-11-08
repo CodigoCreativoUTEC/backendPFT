@@ -22,6 +22,9 @@ public class UsuarioBean implements UsuarioRemote {
     @Inject
     UsuarioMapper usuarioMapper;
 
+    private static final String EMAIL = "email";
+    private static final String ESTADO = "estado";
+
     @Override
     public void crearUsuario(UsuarioDto u) {
         u.setEstado(Estados.SIN_VALIDAR);
@@ -76,7 +79,7 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado) {
         return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.estado = :estado", Usuario.class)
-                .setParameter("estado", estado)
+                .setParameter(ESTADO, estado)
                 .getResultList(), new CycleAvoidingMappingContext());
     }
 
@@ -96,7 +99,7 @@ public class UsuarioBean implements UsuarioRemote {
     public UsuarioDto findUserByEmail(String email) {
         try {
             return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
-                    .setParameter("email", email)
+                    .setParameter(EMAIL, email)
                     .getSingleResult(), new CycleAvoidingMappingContext());
         } catch (NoResultException e) {
             return null;
@@ -107,7 +110,7 @@ public class UsuarioBean implements UsuarioRemote {
     public boolean hasPermission(String email, String requiredRole) {
         try {
             UsuarioDto usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", UsuarioDto.class)
-                    .setParameter("email", email)
+                    .setParameter(EMAIL, email)
                     .getSingleResult();
             return usuario.getIdPerfil().getNombrePerfil().equals(requiredRole);
         } catch (NoResultException e) {
@@ -129,13 +132,13 @@ public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
     if (filtros.containsKey("nombreUsuario")) {
         queryStr.append(" AND LOWER(u.nombreUsuario) LIKE LOWER(:nombreUsuario)");
     }
-    if (filtros.containsKey("email")) {
+    if (filtros.containsKey(EMAIL)) {
         queryStr.append(" AND LOWER(u.email) LIKE LOWER(:email)");
     }
     if (filtros.containsKey("tipoUsuario")) {
         queryStr.append(" AND LOWER(u.idPerfil.nombrePerfil) LIKE LOWER(:tipoUsuario)");
     }
-    if (filtros.containsKey("estado")) {
+    if (filtros.containsKey(ESTADO)) {
         queryStr.append(" AND u.estado = :estado");
     }
 
@@ -144,7 +147,7 @@ public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
     // Establecer parámetros de la consulta
     filtros.forEach((key, value) -> {
         if (!value.isEmpty()) {
-            if (key.equals("estado")) {
+            if (key.equals(ESTADO)) {
                 query.setParameter(key, Estados.valueOf(value));  // Si es el estado, usamos el enum
             } else {
                 query.setParameter(key, "%" + value + "%");

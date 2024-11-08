@@ -1,8 +1,7 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
 import codigocreativo.uy.servidorapp.dtos.TiposEquipoDto;
-import codigocreativo.uy.servidorapp.servicios.MarcasModeloRemote;
+
 import codigocreativo.uy.servidorapp.servicios.TiposEquipoRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -11,7 +10,6 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
-//TODO: Falta agregar filtros del listado
 @Path("/tipoEquipos")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
