@@ -55,7 +55,7 @@ class BajaEquipoDtoTest {
         BajaEquipoDto bajaEquipoDto = new BajaEquipoDto();
         bajaEquipoDto.setId(1L).setRazon("Razon").setFecha(LocalDate.of(2023, 1, 1)).setEstado(Estados.ACTIVO).setComentarios("Comentarios");
 
-        String expected = "BajaEquipoDto(id = 1, razon = Razon, fecha = 2023-01-01, estado = ACTIVO, comentarios = Comentarios)";
+        String expected = "BajaEquipoDto(id = 1, razon = Razon, fecha = 2023-01-01, estado = Activo, comentarios = Comentarios)";
         assertEquals(expected, bajaEquipoDto.toString());
     }
 }
