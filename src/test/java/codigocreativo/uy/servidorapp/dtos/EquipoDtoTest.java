@@ -117,6 +117,7 @@ class EquipoDtoTest {
                 .build();
 
         assertEquals(equipoDto1, equipoDto2);
+        assertEquals(equipoDto1, equipoDto1);
         assertEquals(equipoDto1.hashCode(), equipoDto2.hashCode());
         assertNotEquals(equipoDto1, equipoDto3);
     }
@@ -129,5 +130,65 @@ class EquipoDtoTest {
                 .build();
 
         assertEquals("idInterno - nombre", equipoDto.toString());
+    }
+
+    @Test
+    void testEqualsForIdInterno() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().idInterno("idInterno").build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().idInterno("idInterno").build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().idInterno("differentIdInterno").build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
+    }
+
+    @Test
+    void testEqualsForNroSerie() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().nroSerie("nroSerie").build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().nroSerie("nroSerie").build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().nroSerie("differentNroSerie").build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
+    }
+
+    @Test
+    void testEqualsForNombre() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().nombre("nombre").build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().nombre("nombre").build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().nombre("differentNombre").build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
+    }
+
+    @Test
+    void testEqualsForImagen() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().imagen("imagen").build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().imagen("imagen").build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().imagen("differentImagen").build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
+    }
+
+    @Test
+    void testEqualsForFechaAdquisicion() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().fechaAdquisicion(LocalDate.now()).build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().fechaAdquisicion(LocalDate.now()).build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().fechaAdquisicion(LocalDate.now().minusDays(1)).build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
+    }
+
+    @Test
+    void testEqualsForEstado() {
+        EquipoDto equipoDto1 = new EquipoDto.Builder().estado(Estados.ACTIVO).build();
+        EquipoDto equipoDto2 = new EquipoDto.Builder().estado(Estados.ACTIVO).build();
+        EquipoDto equipoDto3 = new EquipoDto.Builder().estado(Estados.INACTIVO).build();
+
+        assertEquals(equipoDto1, equipoDto2);
+        assertNotEquals(equipoDto1, equipoDto3);
     }
 }
