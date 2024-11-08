@@ -35,7 +35,7 @@ public class InstitucionBean implements InstitucionRemote{
     @Override
     public void modificar(InstitucionDto i) {
         Institucion institucionEntity = institucionMapper.toEntity(i);
-        em.persist(institucionEntity);
+        em.merge(institucionEntity);
         em.flush();
 
     }

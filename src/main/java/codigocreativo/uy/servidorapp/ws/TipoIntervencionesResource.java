@@ -1,7 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.TiposIntervencioneDto;
-import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.TipoIntervencioneRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
