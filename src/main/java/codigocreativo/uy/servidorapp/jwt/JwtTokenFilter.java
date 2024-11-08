@@ -2,14 +2,18 @@ package codigocreativo.uy.servidorapp.jwt;
 
 import java.security.Key;
 import java.util.Base64;
+import java.util.List;
 
 import jakarta.annotation.Priority;
+import jakarta.ejb.EJB;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
+import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -18,12 +22,10 @@ import io.jsonwebtoken.security.Keys;
 @Priority(Priorities.AUTHENTICATION)
 public class JwtTokenFilter implements ContainerRequestFilter {
 
-    private static final String ADMINISTRADOR = "Administrador";
-    private static final String AUX_ADMINISTRATIVO = "Aux administrativo";
-    private static final String INGENIERO_BIOMEDICO = "Ingeniero biomédico";
-    private static final String TECNICO = "Tecnico";
-
     private static final String SECRET_KEY = System.getenv("SECRET_KEY");
+
+    @EJB
+    FuncionalidadRemote funcionalidadService;
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
@@ -68,7 +70,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             }
 
         } catch (Exception e) {
-
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
@@ -76,121 +77,16 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     // Función para identificar los endpoints públicos
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/usuarios/login") ||
-                path.startsWith("/usuarios/renovar-token") ||
-                path.startsWith("/swagger-ui") ||
                 path.startsWith("/usuarios/google-login") ||
+                path.startsWith("/swagger-ui") ||
                 path.startsWith("/usuarios/crear");
     }
 
     private boolean hasPermission(String perfil, String path) {
-        boolean todosLosPermisos = perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO) || perfil.equals(INGENIERO_BIOMEDICO) || perfil.equals(TECNICO);
-
-        // Endpoints referentes a Usuarios
-        if (    path.startsWith("/usuarios/listar") ||
-                path.startsWith("/usuarios/modificar") ||
-                path.startsWith("/usuarios/seleccionar") ||
-                path.startsWith("/usuarios/filtrar") ||
-                path.startsWith("/usuarios/BuscarUsuarioPorId") ||
-                path.startsWith("/usuarios/inactivar")) {
-            return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
-        }
-
-        // enpoint renovador de token
-
-        if (    path.startsWith("/usuarios/renovar-token") ||
-                path.startsWith("/usuarios/modificar-propio-usuario") ||
-                path.startsWith("/usuarios/obtenerUserEmail")) {
-            return todosLosPermisos;
-        }
-        // Endpoints referentes a Equipos
-        if (    path.startsWith("/equipos/crear") ||
-                path.startsWith("/equipos/modificar") ||
-                path.startsWith("/equipos/inactivar") ||
-                path.startsWith("/equipos/listar") ||
-                path.startsWith("/equipos/seleccionar") ||
-                path.startsWith("/equipos/filtrar") ||
-                path.startsWith("/equipos/listarBajas"))
-            return todosLosPermisos;
-
-        // Endpoints referentes a Proveedores
-        if (    path.startsWith("/proveedores/crear") ||
-                path.startsWith("/proveedores/modificar") ||
-                path.startsWith("/proveedores/inactivar") ||
-                path.startsWith("/proveedores/listar") ||
-                path.startsWith("/proveedores/seleccionar") ||
-                path.startsWith("/proveedores/buscar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Marcas
-        if (    path.startsWith("/marca/crear") ||
-                path.startsWith("/marca/modificar") ||
-                path.startsWith("/marca/inactivar") ||
-                path.startsWith("/marca/listar") ||
-                path.startsWith("/marca/seleccionar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Modelos
-        if (    path.startsWith("/modelo/crear") ||
-                path.startsWith("/modelo/modificar") ||
-                path.startsWith("/modelo/inactivar") ||
-                path.startsWith("/modelo/listar") ||
-                path.startsWith("/modelo/seleccionar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Paises
-        if (    path.startsWith("/paises/crear") ||
-                path.startsWith("/paises/modificar") ||
-                path.startsWith("/paises/inactivar") ||
-                path.startsWith("/paises/listar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Tipos de Equipos
-        if (    path.startsWith("/tipoEquipos/crear") ||
-                path.startsWith("/tipoEquipos/modificar") ||
-                path.startsWith("/tipoEquipos/inactivar") ||
-                path.startsWith("/tipoEquipos/listar") ||
-                path.startsWith("/tipoEquipos/seleccionar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Intervenciones
-        if (    path.startsWith("/intervenciones/crear") ||
-                path.startsWith("/intervenciones/modificar") ||
-                path.startsWith("/intervenciones/listar") ||
-                path.startsWith("/intervenciones/seleccionar") ||
-                path.startsWith("/intervenciones/reportePorFechas") ||
-                path.startsWith("/intervenciones/reportePorTipo"))
-            return todosLosPermisos;
-
-        // Enpoints referentes a Perfiles
-        if (    path.startsWith("/perfiles/crear") ||
-                path.startsWith("/perfiles/modificar") ||
-                path.startsWith("/perfiles/inactivar") ||
-                path.startsWith("/perfiles/seleccionar") ||
-                path.startsWith("/perfiles/listar") ||
-                path.startsWith("/perfiles/buscarPorNombre") ||
-                path.startsWith("/perfiles/buscarPorEstado"))
-            return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Enpoints referentes a Tipo de Intervenciones
-        if (    path.startsWith("/tipoIntervenciones/crear") ||
-                path.startsWith("/tipoIntervenciones/modificar") ||
-                path.startsWith("/tipoIntervenciones/inactivar") ||
-                path.startsWith("/tipoIntervenciones/listar") ||
-                path.startsWith("/tipoIntervenciones/seleccionar"))
-            return perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Funcionalidades
-        if (    path.startsWith("/funcionalidades/crear") ||
-                path.startsWith("/funcionalidades/modificar") ||
-                path.startsWith("/funcionalidades/inactivar") ||
-                path.startsWith("/funcionalidades/listar") ||
-                path.startsWith("/funcionalidades/seleccionar"))
-            return perfil.equals(ADMINISTRADOR) || perfil.equals(AUX_ADMINISTRATIVO);
-
-        // Endpoints referentes a Ubicaciones
-        if ( path.startsWith("/ubicaciones/listar"))
-            return todosLosPermisos;
-
-        return true; // Por defecto permitir el acceso si no se especifica lo contrario
+        List<FuncionalidadDto> funcionalidades = funcionalidadService.obtenerTodas();
+        return funcionalidades.stream()
+                .anyMatch(funcionalidad -> path.startsWith(funcionalidad.getRuta()) &&
+                        funcionalidad.getPerfiles().stream()
+                                .anyMatch(perfilDto -> perfilDto.getNombrePerfil().equals(perfil)));
     }
 }
