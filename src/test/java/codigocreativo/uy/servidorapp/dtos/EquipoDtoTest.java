@@ -106,8 +106,19 @@ class EquipoDtoTest {
                 .estado(Estados.ACTIVO)
                 .build();
 
+        EquipoDto equipoDto3 = new EquipoDto.Builder()
+                .id(2L)
+                .idInterno("diferenteIdInterno")
+                .nroSerie("diferenteNroSerie")
+                .nombre("otroNombre")
+                .imagen("otraImagen")
+                .fechaAdquisicion(LocalDate.now().minusDays(1))
+                .estado(Estados.INACTIVO)
+                .build();
+
         assertEquals(equipoDto1, equipoDto2);
         assertEquals(equipoDto1.hashCode(), equipoDto2.hashCode());
+        assertNotEquals(equipoDto1, equipoDto3);
     }
 
     @Test
