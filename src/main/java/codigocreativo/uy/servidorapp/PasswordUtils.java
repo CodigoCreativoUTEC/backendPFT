@@ -13,6 +13,11 @@ public class PasswordUtils {
     private static final int KEY_LENGTH = 256;
     private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
 
+    // Private constructor to prevent instantiation
+    private PasswordUtils() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     // Genera un salt aleatorio
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
@@ -30,7 +35,6 @@ public class PasswordUtils {
         return Base64.getEncoder().encodeToString(hash);
     }
 
-
     // Combina salt y hash en una sola cadena
     public static String generateSaltedHash(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String salt = generateSalt();
@@ -40,16 +44,14 @@ public class PasswordUtils {
 
     // Extrae el salt y verifica la contraseña
     public static boolean verifyPassword(String password, String storedSaltedHash) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    if (storedSaltedHash == null) {
+        if (storedSaltedHash == null) {
             return false;
         }
-    String[] parts = storedSaltedHash.split(":");
-    String salt = parts[0];
-    String storedHash = parts[1];
-    String computedHash = hashPasswordWithSalt(password, salt);
+        String[] parts = storedSaltedHash.split(":");
+        String salt = parts[0];
+        String storedHash = parts[1];
+        String computedHash = hashPasswordWithSalt(password, salt);
 
-    return storedHash.equals(computedHash);
+        return storedHash.equals(computedHash);
+    }
 }
-
-}
-
