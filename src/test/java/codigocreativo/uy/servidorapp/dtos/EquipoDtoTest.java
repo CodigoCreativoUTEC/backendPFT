@@ -12,44 +12,52 @@ class EquipoDtoTest {
 
     @Test
     void testBuilder() {
-        EquipoDto equipoDto = new EquipoDto.Builder()
-                .id(1L)
-                .idInterno("idInterno")
-                .nroSerie("nroSerie")
-                .garantia("garantia")
-                .idTipo(new TiposEquipoDto())
-                .idProveedor(new ProveedoresEquipoDto())
-                .idPais(new PaisDto())
-                .idModelo(new ModelosEquipoDto())
-                .equiposUbicaciones(new LinkedHashSet<>())
-                .idUbicacion(new UbicacionDto())
-                .nombre("nombre")
-                .imagen("imagen")
-                .fechaAdquisicion(LocalDate.now())
-                .estado(Estados.ACTIVO)
+        Long id = 1L;
+        String idInterno = "ID123";
+        String nroSerie = "SN123456";
+        String garantia = "2 years";
+        TiposEquipoDto idTipo = new TiposEquipoDto();
+        ProveedoresEquipoDto idProveedor = new ProveedoresEquipoDto();
+        PaisDto idPais = new PaisDto();
+        ModelosEquipoDto idModelo = new ModelosEquipoDto();
+        LinkedHashSet<EquiposUbicacioneDto> equiposUbicaciones = new LinkedHashSet<>();
+        UbicacionDto idUbicacion = new UbicacionDto();
+        String nombre = "Equipo1";
+        String imagen = "imagen.png";
+        LocalDate fechaAdquisicion = LocalDate.now();
+        Estados estado = Estados.ACTIVO;
+
+        EquipoDto dto = new EquipoDto.Builder()
+                .id(id)
+                .idInterno(idInterno)
+                .nroSerie(nroSerie)
+                .garantia(garantia)
+                .idTipo(idTipo)
+                .idProveedor(idProveedor)
+                .idPais(idPais)
+                .idModelo(idModelo)
+                .equiposUbicaciones(equiposUbicaciones)
+                .idUbicacion(idUbicacion)
+                .nombre(nombre)
+                .imagen(imagen)
+                .fechaAdquisicion(fechaAdquisicion)
+                .estado(estado)
                 .build();
 
-        assertEquals(1L, equipoDto.getId());
-        assertEquals("idInterno", equipoDto.getIdInterno());
-        assertEquals(new TiposEquipoDto(), equipoDto.getIdTipo());
-        assertEquals(new ProveedoresEquipoDto(), equipoDto.getIdProveedor());
-        assertEquals(new PaisDto(), equipoDto.getIdPais());
-        assertEquals(new ModelosEquipoDto(), equipoDto.getIdModelo());
-        assertEquals(new LinkedHashSet<>(), equipoDto.getEquiposUbicaciones());
-        assertEquals(new UbicacionDto(), equipoDto.getIdUbicacion());
-        assertEquals("garantia", equipoDto.getGarantia());
-        assertEquals("nroSerie", equipoDto.getNroSerie());
-        assertEquals("garantia", equipoDto.getGarantia());
-        assertNotNull(equipoDto.getIdTipo());
-        assertNotNull(equipoDto.getIdProveedor());
-        assertNotNull(equipoDto.getIdPais());
-        assertNotNull(equipoDto.getIdModelo());
-        assertNotNull(equipoDto.getEquiposUbicaciones());
-        assertNotNull(equipoDto.getIdUbicacion());
-        assertEquals("nombre", equipoDto.getNombre());
-        assertEquals("imagen", equipoDto.getImagen());
-        assertEquals(LocalDate.now(), equipoDto.getFechaAdquisicion());
-        assertEquals(Estados.ACTIVO, equipoDto.getEstado());
+        assertEquals(id, dto.getId());
+        assertEquals(idInterno, dto.getIdInterno());
+        assertEquals(nroSerie, dto.getNroSerie());
+        assertEquals(garantia, dto.getGarantia());
+        assertEquals(idTipo, dto.getIdTipo());
+        assertEquals(idProveedor, dto.getIdProveedor());
+        assertEquals(idPais, dto.getIdPais());
+        assertEquals(idModelo, dto.getIdModelo());
+        assertEquals(equiposUbicaciones, dto.getEquiposUbicaciones());
+        assertEquals(idUbicacion, dto.getIdUbicacion());
+        assertEquals(nombre, dto.getNombre());
+        assertEquals(imagen, dto.getImagen());
+        assertEquals(fechaAdquisicion, dto.getFechaAdquisicion());
+        assertEquals(estado, dto.getEstado());
     }
 
     @Test

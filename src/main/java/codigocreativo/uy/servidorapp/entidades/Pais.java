@@ -35,4 +35,12 @@ public class Pais implements Serializable {
     public String toString() {
         return nombre;
     }
+
+    public Pais(Long id, String nombre) {
+        this.id = id;
+        this.nombre = nombre;
+    }
+
+    public Pais() {
+    }
 }
