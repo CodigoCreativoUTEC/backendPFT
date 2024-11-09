@@ -28,6 +28,10 @@ public class UsuarioResource {
     @EJB
     private JwtService jwtService;
 
+    //defino variables static para repetidas
+    private static final String EMAIL = "email";
+    private static final String BEARER = "bearer";
+
     @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
@@ -66,7 +70,7 @@ public class UsuarioResource {
     public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
         try {
             // Extraer el token JWT del encabezado
-            String token = authorizationHeader.substring("Bearer".length()).trim();
+            String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String correoDelToken = claims.getSubject();
 
@@ -124,7 +128,7 @@ public class UsuarioResource {
     @Path("/inactivar")
     public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
 
-        String token = authorizationHeader.substring("Bearer".length()).trim();
+        String token = authorizationHeader.substring(BEARER.length()).trim();
         Claims claims = jwtService.parseToken(token);
         String emailSolicitante = claims.getSubject();
         String perfilSolicitante = claims.get("perfil", String.class);
@@ -163,7 +167,7 @@ public class UsuarioResource {
         if (nombre != null) filtros.put("nombre", nombre);
         if (apellido != null) filtros.put("apellido", apellido);
         if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
-        if (email != null) filtros.put("email", email);
+        if (email != null) filtros.put(EMAIL, email);
 
         // Si no se envía el filtro de estado, por defecto se buscan usuarios activos
         if (estado == null || estado.isEmpty()) {
@@ -270,7 +274,7 @@ public class UsuarioResource {
             }
 
             JsonWebToken.Payload payload = idToken.getPayload();
-            String email = (String) payload.get("email");
+            String email = (String) payload.get(EMAIL);
             String name = (String) payload.get("name");
 
             // Verificar si el usuario ya existe en el sistema
@@ -315,7 +319,7 @@ public class UsuarioResource {
         }
 
         try {
-            String token = authorizationHeader.substring("Bearer".length()).trim();
+            String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
 
             // Verificar si el token ha expirado
@@ -326,7 +330,7 @@ public class UsuarioResource {
             }
 
             // Obtener el email y perfil del token antiguo
-            String email = claims.get("email", String.class);
+            String email = claims.get(EMAIL, String.class);
             String perfil = claims.get("perfil", String.class);
 
             // Generar un nuevo token

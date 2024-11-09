@@ -22,7 +22,7 @@ import java.util.List;
 @Stateless
 public class BajaUbicacionBean implements BajaUbicacionRemote {
     @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    EntityManager em;
 
     private final BajaUbicacionMapper bajaUbicacionMapper;
     private final UbicacionMapper ubicacionMapper;
@@ -45,6 +45,7 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     @Override
     public void crearBajaUbicacion(BajaUbicacionDto bajaUbicacion) throws ServiciosException {
         try {
+            assert bajaUbicacionMapper != null;
             em.persist(bajaUbicacionMapper.toEntity(bajaUbicacion, new CycleAvoidingMappingContext()));
         } catch (Exception e) {
             throw new ServiciosException(e.getMessage());
@@ -55,6 +56,9 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
     public void borrarUbicacion(Long id) throws ServiciosException {
         try {
             Ubicacion ubi = em.find(Ubicacion.class, id);
+            if (ubi == null) {
+                throw new ServiciosException("No se pudo borrar la ubicacion");
+            }
             em.remove(ubi);
             em.flush();
         } catch (Exception e) {
@@ -74,9 +78,10 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
 
     @Override
     public void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException {
-        assert ubicacionMapper != null;
-        Ubicacion ubicacion = ubicacionMapper.toEntity(ub);
         try {
+            assert ubicacionMapper != null;
+            Ubicacion ubicacion = ubicacionMapper.toEntity(ub);
+
             ubicacion.setEstado(Estados.INACTIVO);
             em.merge(ubicacion);
             em.flush();

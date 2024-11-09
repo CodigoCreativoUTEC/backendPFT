@@ -45,7 +45,7 @@ class UbicacionDtoTest {
         UbicacionDto ubicacionDto1 = new UbicacionDto(1L, "Nombre", "Sector", 2L, 3L, 4L, Estados.ACTIVO);
         UbicacionDto ubicacionDto2 = new UbicacionDto(1L, "Nombre", "Sector", 2L, 3L, 4L, Estados.ACTIVO);
 
-        assertTrue(ubicacionDto1.equals(ubicacionDto2));
+        assertEquals(ubicacionDto1, ubicacionDto2);
         assertEquals(ubicacionDto1.hashCode(), ubicacionDto2.hashCode());
     }
 
