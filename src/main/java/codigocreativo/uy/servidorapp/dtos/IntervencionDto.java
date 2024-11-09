@@ -78,7 +78,9 @@ public class IntervencionDto implements Serializable {
         return Objects.equals(this.id, entity.id) &&
                 Objects.equals(this.motivo, entity.motivo) &&
                 Objects.equals(this.fechaHora, entity.fechaHora) &&
-                Objects.equals(this.comentarios, entity.comentarios);
+                Objects.equals(this.comentarios, entity.comentarios) &&
+                Objects.equals(this.idUsuario, entity.idUsuario) &&
+                Objects.equals(this.idEquipo, entity.idEquipo);
     }
 
     @Override

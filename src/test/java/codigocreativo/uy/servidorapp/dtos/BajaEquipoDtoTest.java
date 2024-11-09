@@ -46,7 +46,7 @@ class BajaEquipoDtoTest {
         BajaEquipoDto bajaEquipoDto1 = new BajaEquipoDto(1L, "Razon", LocalDate.of(2023, 1, 1), new UsuarioDto(), new EquipoDto(), Estados.ACTIVO, "Comentarios");
         BajaEquipoDto bajaEquipoDto2 = new BajaEquipoDto(1L, "Razon", LocalDate.of(2023, 1, 1), new UsuarioDto(), new EquipoDto(), Estados.ACTIVO, "Comentarios");
 
-        assertTrue(bajaEquipoDto1.equals(bajaEquipoDto2));
+        assertEquals(bajaEquipoDto1, bajaEquipoDto2);
         assertEquals(bajaEquipoDto1.hashCode(), bajaEquipoDto2.hashCode());
     }
 
