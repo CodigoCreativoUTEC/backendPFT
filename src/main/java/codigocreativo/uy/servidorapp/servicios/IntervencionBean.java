@@ -92,6 +92,8 @@ public class IntervencionBean implements IntervencionRemote {
             query.setParameter("idTipo", idTipo);
         }
         List<Intervencion> intervenciones = query.getResultList();
-        return intervenciones.stream().collect(Collectors.groupingBy(i -> i.getIdTipo().getNombreTipo(), Collectors.counting()));
+        return intervenciones.stream()
+                .filter(i -> i.getIdTipo() != null) // Add null check here
+                .collect(Collectors.groupingBy(i -> i.getIdTipo().getNombreTipo(), Collectors.counting()));
     }
 }
