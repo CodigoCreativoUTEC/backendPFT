@@ -61,8 +61,13 @@ class IntervencionDtoTest {
 
     @Test
     void testHashCode() {
-        IntervencionDto dto1 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
-        IntervencionDto dto2 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
+        UsuarioDto usuario = new UsuarioDto();
+        TiposIntervencioneDto tipo = new TiposIntervencioneDto();
+        EquipoDto equipo = new EquipoDto();
+
+
+        IntervencionDto dto1 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", usuario, tipo, equipo);
+        IntervencionDto dto2 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", usuario, tipo, equipo);
         assertEquals(dto1.hashCode(), dto2.hashCode());
     }
 
