@@ -68,32 +68,7 @@ class EquiposUbicacioneDtoTest {
     }
 
     @Test
-    void testGetters() {
-        EquipoDto equipo = new EquipoDto();
-        UbicacionDto ubicacion = new UbicacionDto();
-        UsuarioDto usuario = new UsuarioDto();
-        String observaciones = "Observaciones";
-        Long id = 1L;
-        LocalDate fecha = LocalDate.now();
-
-        EquiposUbicacioneDto dto = new EquiposUbicacioneDto();
-        dto.setIdEquipo(equipo);
-        dto.setIdUbicacion(ubicacion);
-        dto.setUsuario(usuario);
-        dto.setObservaciones(observaciones);
-        dto.setId(id);
-        dto.setFecha(fecha);
-
-        assertEquals(equipo, dto.getIdEquipo());
-        assertEquals(ubicacion, dto.getIdUbicacion());
-        assertEquals(usuario, dto.getUsuario());
-        assertEquals(observaciones, dto.getObservaciones());
-        assertEquals(id, dto.getId());
-        assertEquals(fecha, dto.getFecha());
-    }
-
-    @Test
-    void testSetters() {
+    void testGettersAndSetters() {
         EquipoDto equipo = new EquipoDto();
         UbicacionDto ubicacion = new UbicacionDto();
         UsuarioDto usuario = new UsuarioDto();
