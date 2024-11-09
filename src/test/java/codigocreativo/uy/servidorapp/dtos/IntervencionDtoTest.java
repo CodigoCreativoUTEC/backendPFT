@@ -9,6 +9,70 @@ import static org.junit.jupiter.api.Assertions.*;
 class IntervencionDtoTest {
 
     @Test
+    void testConstructorAndGetters() {
+        Long id = 1L;
+        String motivo = "Test Motivo";
+        LocalDateTime fechaHora = LocalDateTime.now();
+        String comentarios = "Test Comentarios";
+        UsuarioDto usuario = new UsuarioDto();
+        TiposIntervencioneDto tipo = new TiposIntervencioneDto();
+        EquipoDto equipo = new EquipoDto();
+
+        IntervencionDto dto = new IntervencionDto(id, motivo, fechaHora, comentarios, usuario, tipo, equipo);
+
+        assertEquals(id, dto.getId());
+        assertEquals(motivo, dto.getMotivo());
+        assertEquals(fechaHora, dto.getFechaHora());
+        assertEquals(comentarios, dto.getComentarios());
+        assertEquals(usuario, dto.getIdUsuario());
+        assertEquals(tipo, dto.getIdTipo());
+        assertEquals(equipo, dto.getIdEquipo());
+    }
+
+    @Test
+    void testSetters() {
+        IntervencionDto dto = new IntervencionDto();
+        Long id = 1L;
+        String motivo = "Test Motivo";
+        LocalDateTime fechaHora = LocalDateTime.now();
+        String comentarios = "Test Comentarios";
+        UsuarioDto usuario = new UsuarioDto();
+        TiposIntervencioneDto tipo = new TiposIntervencioneDto();
+        EquipoDto equipo = new EquipoDto();
+
+        dto.setId(id);
+        dto.setMotivo(motivo);
+        dto.setFechaHora(fechaHora);
+        dto.setComentarios(comentarios);
+        dto.setIdUsuario(usuario);
+        dto.setIdTipo(tipo);
+        dto.setIdEquipo(equipo);
+
+        assertEquals(id, dto.getId());
+        assertEquals(motivo, dto.getMotivo());
+        assertEquals(fechaHora, dto.getFechaHora());
+        assertEquals(comentarios, dto.getComentarios());
+        assertEquals(usuario, dto.getIdUsuario());
+        assertEquals(tipo, dto.getIdTipo());
+        assertEquals(equipo, dto.getIdEquipo());
+    }
+
+
+
+    @Test
+    void testHashCode() {
+        IntervencionDto dto1 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
+        IntervencionDto dto2 = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
+        assertEquals(dto1.hashCode(), dto2.hashCode());
+    }
+
+    @Test
+    void testToString() {
+        IntervencionDto dto = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
+        assertEquals("Motivo", dto.toString());
+    }
+
+    @Test
     void testEquals_SameObject() {
         IntervencionDto dto = new IntervencionDto(1L, "Motivo", LocalDateTime.now(), "Comentarios", new UsuarioDto(), new TiposIntervencioneDto(), new EquipoDto());
         assertEquals(dto, dto);
