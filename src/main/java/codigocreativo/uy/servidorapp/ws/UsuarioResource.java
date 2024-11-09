@@ -5,6 +5,7 @@ import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
+import com.fabdelgado.ciuy.Validator;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
@@ -35,6 +36,17 @@ public class UsuarioResource {
     @POST
     @Path("/crear")
     public Response crearUsuario(UsuarioDto usuario) {
+        if (usuario == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Usuario nulo\"}").build();
+        }
+        if (usuario.getEmail() == null || usuario.getEmail().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
+        }
+        Validator validator = new Validator();
+        if (validator.validateCi(usuario.getCedula())){
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
+        }
+
         try {
             // Generar el hash con el salt incluido
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
