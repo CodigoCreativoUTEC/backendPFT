@@ -85,7 +85,7 @@ public class IntervencionDto implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, motivo, fechaHora, comentarios);
+        return Objects.hash(id, motivo, fechaHora, comentarios, idUsuario, idTipo, idEquipo);
     }
 
     @Override
