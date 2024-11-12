@@ -6,7 +6,6 @@ import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
-import com.fabdelgado.ciuy.Validator;
 import com.google.auth.oauth2.TokenVerifier;
 import io.jsonwebtoken.Claims;
 import jakarta.ws.rs.core.Response;
@@ -42,24 +41,6 @@ class UsuarioResourceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-//    @Test
-//    void testCrearUsuario() {
-//        UsuarioDto usuario = new UsuarioDto();
-//        usuario.setContrasenia("password123");
-//        usuario.setEmail("test@test.com");
-//        usuario.setNombreUsuario("testUser");
-//        Validator validator = mock(Validator.class);
-//        usuario.setCedula(validator.randomCi());
-//        when(validator.validateCi(anyString())).thenReturn(true);
-//
-//
-//        doNothing().when(usuarioRemote).crearUsuario(any(UsuarioDto.class));
-//
-//        Response response = usuarioResource.crearUsuario(usuario);
-//
-//        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-//        verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
-//    }
 
     @Test
     void testModificarUsuario() {
@@ -308,14 +289,4 @@ void testCrearUsuarioEmailVacio() {
     assertEquals("{\"message\":\"El email es obligatorio\"}", response.getEntity());
 }
 
-//@Test
-//void testCrearUsuarioCedulaInvalida() {
-//    UsuarioDto usuario = new UsuarioDto();
-//    usuario.setEmail("invalidEmail");
-//    Validator validator = mock(Validator.class);
-//    when(validator.validateCi(usuario.getEmail())).thenReturn(true);
-//    Response response = usuarioResource.crearUsuario(usuario);
-//    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-//    assertEquals("{\"message\":\"Cedula no es válida\"}", response.getEntity());
-//}
 }
