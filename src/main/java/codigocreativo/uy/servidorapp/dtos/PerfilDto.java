@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.dtos;
 
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import java.io.Serializable;
+import java.util.Objects;
 
 public class PerfilDto implements Serializable {
     private Long id;
@@ -41,5 +42,20 @@ public class PerfilDto implements Serializable {
 
     public void setEstado(Estados estado) {
         this.estado = estado;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PerfilDto entity = (PerfilDto) o;
+        return Objects.equals(this.id, entity.id) &&
+                Objects.equals(this.nombrePerfil, entity.nombrePerfil) &&
+                Objects.equals(this.estado, entity.estado);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, nombrePerfil, estado);
     }
 }

@@ -74,4 +74,56 @@ class BajaUbicacionDtoTest {
         BajaUbicacionDto dto2 = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now().plusDays(1));
         assertNotEquals(dto1, dto2);
     }
+
+    @Test
+    void testHashCode_SameObject() {
+        BajaUbicacionDto dto = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        assertEquals(dto.hashCode(), dto.hashCode());
+    }
+
+    @Test
+    void testHashCode_EqualObjects() {
+        BajaUbicacionDto dto1 = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        BajaUbicacionDto dto2 = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        assertEquals(dto1.hashCode(), dto2.hashCode());
+    }
+
+    @Test
+    void testHashCode_DifferentObjects() {
+        BajaUbicacionDto dto1 = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        BajaUbicacionDto dto2 = new BajaUbicacionDto(2L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        assertNotEquals(dto1.hashCode(), dto2.hashCode());
+    }
+
+    @Test
+    void testToString() {
+        BajaUbicacionDto dto = new BajaUbicacionDto(1L, new UsuarioDto(), new UbicacionDto(), "Razon", "Comentario", LocalDate.now());
+        String expected = "BajaUbicacionDto(id = 1, idUsuario = " + dto.getIdUsuario() + ", idUbicacion = " + dto.getIdUbicacion() + ", razon = Razon, comentario = Comentario, fecha = " + dto.getFecha() + ")";
+        assertEquals(expected, dto.toString());
+    }
+
+    @Test
+    void testGettersAndSetters() {
+        UsuarioDto usuario = new UsuarioDto();
+        UbicacionDto ubicacion = new UbicacionDto();
+        String razon = "Razon";
+        String comentario = "Comentario";
+        Long id = 1L;
+        LocalDate fecha = LocalDate.now();
+
+        BajaUbicacionDto dto = new BajaUbicacionDto();
+        dto.setId(id);
+        dto.setIdUsuario(usuario);
+        dto.setIdUbicacion(ubicacion);
+        dto.setRazon(razon);
+        dto.setComentario(comentario);
+        dto.setFecha(fecha);
+
+        assertEquals(id, dto.getId());
+        assertEquals(usuario, dto.getIdUsuario());
+        assertEquals(ubicacion, dto.getIdUbicacion());
+        assertEquals(razon, dto.getRazon());
+        assertEquals(comentario, dto.getComentario());
+        assertEquals(fecha, dto.getFecha());
+    }
 }
