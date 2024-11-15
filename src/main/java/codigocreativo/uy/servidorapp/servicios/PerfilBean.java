@@ -14,10 +14,14 @@ import java.util.List;
 @Stateless
 public class PerfilBean implements PerfilRemote {
     @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final PerfilMapper perfilMapper;
 
     @Inject
-    private PerfilMapper perfilMapper;
+    public PerfilBean(EntityManager em, PerfilMapper perfilMapper) {
+        this.em = em;
+        this.perfilMapper = perfilMapper;
+    }
 
     @Override
     public void crearPerfil(PerfilDto p) {

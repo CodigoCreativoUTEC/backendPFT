@@ -13,10 +13,14 @@ import java.util.List;
 public class InstitucionBean implements InstitucionRemote{
 
     @PersistenceContext (unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final InstitucionMapper institucionMapper;
 
     @Inject //Se inyecta el mapper
-    private InstitucionMapper institucionMapper;
+    public InstitucionBean(EntityManager em, InstitucionMapper institucionMapper) {
+        this.em = em;
+        this.institucionMapper = institucionMapper;
+    }
 
     @Override
     public void agregar(InstitucionDto i) {

@@ -2,9 +2,13 @@ package codigocreativo.uy.servidorapp.dtos;
 
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,54 +44,38 @@ class FuncionalidadDtoTest {
         assertNotEquals("some string", dto);
     }
 
-    @Test
-    void testEquals_DifferentId() {
-        FuncionalidadDto dto1 = new FuncionalidadDto();
-        dto1.setId(1L);
-        dto1.setNombreFuncionalidad("Funcionalidad1");
-        dto1.setRuta("/ruta1");
-        dto1.setEstado(Estados.ACTIVO);
+    static Stream<Arguments> provideDifferentFuncionalidadDtos() {
+        List<PerfilDto> perfiles1 = new ArrayList<>();
+        List<PerfilDto> perfiles2 = new ArrayList<>();
+        PerfilDto perfil1 = new PerfilDto(1L, "Perfil1", Estados.ACTIVO);
+        PerfilDto perfil2 = new PerfilDto(2L, "Perfil2", Estados.ACTIVO);
+        PerfilDto perfil3 = new PerfilDto(3L, "Perfil3", Estados.ACTIVO);
 
-        FuncionalidadDto dto2 = new FuncionalidadDto();
-        dto2.setId(2L);
-        dto2.setNombreFuncionalidad("Funcionalidad1");
-        dto2.setRuta("/ruta1");
-        dto2.setEstado(Estados.ACTIVO);
+        perfiles1.add(perfil1);
+        perfiles1.add(perfil2);
+        perfiles2.add(perfil1);
+        perfiles2.add(perfil3);
 
-        assertNotEquals(dto1, dto2);
+        return Stream.of(
+
+            Arguments.of(
+                new FuncionalidadDto(1L, "Funcionalidad1",perfiles1 , "/ruta1", Estados.ACTIVO),
+                new FuncionalidadDto(2L, "Funcionalidad1",perfiles1 , "/ruta1", Estados.ACTIVO)
+            ),
+            Arguments.of(
+                new FuncionalidadDto(1L, "Funcionalidad1",perfiles1, "/ruta1", Estados.ACTIVO),
+                new FuncionalidadDto(1L, "Funcionalidad2",perfiles2, "/ruta1", Estados.ACTIVO)
+            ),
+            Arguments.of(
+                new FuncionalidadDto(1L, "Funcionalidad1",perfiles1, "/ruta1", Estados.ACTIVO),
+                new FuncionalidadDto(1L, "Funcionalidad1",perfiles2, "/ruta2", Estados.ACTIVO)
+            )
+        );
     }
 
-    @Test
-    void testEquals_DifferentNombreFuncionalidad() {
-        FuncionalidadDto dto1 = new FuncionalidadDto();
-        dto1.setId(1L);
-        dto1.setNombreFuncionalidad("Funcionalidad1");
-        dto1.setRuta("/ruta1");
-        dto1.setEstado(Estados.ACTIVO);
-
-        FuncionalidadDto dto2 = new FuncionalidadDto();
-        dto2.setId(1L);
-        dto2.setNombreFuncionalidad("Funcionalidad2");
-        dto2.setRuta("/ruta1");
-        dto2.setEstado(Estados.ACTIVO);
-
-        assertNotEquals(dto1, dto2);
-    }
-
-    @Test
-    void testEquals_DifferentRuta() {
-        FuncionalidadDto dto1 = new FuncionalidadDto();
-        dto1.setId(1L);
-        dto1.setNombreFuncionalidad("Funcionalidad1");
-        dto1.setRuta("/ruta1");
-        dto1.setEstado(Estados.ACTIVO);
-
-        FuncionalidadDto dto2 = new FuncionalidadDto();
-        dto2.setId(1L);
-        dto2.setNombreFuncionalidad("Funcionalidad1");
-        dto2.setRuta("/ruta2");
-        dto2.setEstado(Estados.ACTIVO);
-
+    @ParameterizedTest
+    @MethodSource("provideDifferentFuncionalidadDtos")
+    void testEquals_DifferentAttributes(FuncionalidadDto dto1, FuncionalidadDto dto2) {
         assertNotEquals(dto1, dto2);
     }
 

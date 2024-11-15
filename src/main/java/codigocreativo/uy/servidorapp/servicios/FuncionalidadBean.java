@@ -19,11 +19,14 @@ import java.util.List;
 @Stateless
 public class FuncionalidadBean implements FuncionalidadRemote {
 
-    @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final FuncionalidadMapper funcionalidadMapper;
 
     @Inject
-    private FuncionalidadMapper funcionalidadMapper;
+    public FuncionalidadBean(EntityManager em, FuncionalidadMapper funcionalidadMapper) {
+        this.em = em;
+        this.funcionalidadMapper = funcionalidadMapper;
+    }
 
     @Override
     public List<FuncionalidadDto> obtenerTodas() {
@@ -77,7 +80,6 @@ public class FuncionalidadBean implements FuncionalidadRemote {
         // Retornar el DTO actualizado
         return funcionalidadMapper.toDto(funcionalidad, new CycleAvoidingMappingContext());
     }
-
 
     @Override
     public void eliminar(Long id) {

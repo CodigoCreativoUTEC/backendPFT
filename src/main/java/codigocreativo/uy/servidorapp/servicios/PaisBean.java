@@ -12,9 +12,14 @@ import java.util.List;
 @Stateless
 public class PaisBean implements PaisRemote{
     @PersistenceContext (unitName = "default")
-    private EntityManager em;
-    @Inject
-    private PaisMapper paisMapper;
+    private final EntityManager em;
+    private final PaisMapper paisMapper;
+
+    @Inject //Se inyecta el mapper
+    public PaisBean(EntityManager em, PaisMapper paisMapper) {
+        this.em = em;
+        this.paisMapper = paisMapper;
+    }
 
     @Override
     public void crearPais(PaisDto pais) {

@@ -13,10 +13,14 @@ import java.util.List;
 @Stateless
 public class TiposEquipoBean implements TiposEquipoRemote{
     @PersistenceContext (unitName = "default")
-    private EntityManager em;
-    @Inject
-    private TiposEquipoMapper tiposEquipoMapper;
+    private final EntityManager em;
+    private final TiposEquipoMapper tiposEquipoMapper;
 
+    @Inject
+    public TiposEquipoBean(EntityManager em, TiposEquipoMapper tiposEquipoMapper) {
+        this.em = em;
+        this.tiposEquipoMapper = tiposEquipoMapper;
+    }
 
     @Override
     public void crearTiposEquipo(TiposEquipoDto tiposEquipo) {

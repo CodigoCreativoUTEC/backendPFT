@@ -21,11 +21,15 @@ public class EquipoBean implements EquipoRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
 
-    @Inject
-    EquipoMapper equipoMapper;
+    private final EquipoMapper equipoMapper;
+    private final BajaEquipoMapper bajaEquipoMapper;
 
     @Inject
-    BajaEquipoMapper bajaEquipoMapper;
+    public EquipoBean(EntityManager em,EquipoMapper equipoMapper, BajaEquipoMapper bajaEquipoMapper) {
+        this.em = em;
+        this.equipoMapper = equipoMapper;
+        this.bajaEquipoMapper = bajaEquipoMapper;
+    }
 
     @Override
     public void crearEquipo(EquipoDto equipo) {
@@ -96,9 +100,6 @@ public class EquipoBean implements EquipoRemote {
             }
         });
     }
-
-
-
 
     @Override
     public EquipoDto obtenerEquipo(Long id) {

@@ -11,7 +11,7 @@ import org.mockito.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class) // Agregar esto para usar el MockitoExtension
+@ExtendWith(MockitoExtension.class)
 class OperacionBeanTest {
 
     @Mock
@@ -23,53 +23,47 @@ class OperacionBeanTest {
     @InjectMocks
     private OperacionBean operacionBean;
 
-    @Mock
-    private OperacionDto operacionDto;
-
     @BeforeEach
     void setUp() {
-        // Inicialización de los mocks
-        MockitoAnnotations.openMocks(this); // Si no usas @ExtendWith(MockitoExtension.class)
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
     void testCrearOperacion() {
-        OperacionDto operacionDtoT = new OperacionDto();
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDtoT)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        operacionBean.crearOperacion(operacionDtoT);
+        operacionBean.crearOperacion(operacionDto);
 
-        verify(em, times(1)).persist(operacionEntity); // Verificar que persist fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em, times(1)).persist(eq(operacionEntity));
+        verify(em, times(1)).flush();
     }
 
     @Test
     void testModificarOperacion() {
-        OperacionDto operacionDtoT = new OperacionDto();
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDtoT)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        operacionBean.modificarOperacion(operacionDtoT);
+        operacionBean.modificarOperacion(operacionDto);
 
-        verify(em, times(1)).merge(operacionEntity); // Verificar que merge fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em, times(1)).merge(eq(operacionEntity));
+        verify(em, times(1)).flush();
     }
 
     @Test
     void testEliminarOperacion() {
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        // Mockear el comportamiento de 'operacionMapper.toEntity'
         when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        // Llamar al método de la clase OperacionBean
         operacionBean.eliminarOperacion(operacionDto);
 
-        // Verificar que las operaciones sobre el EntityManager se ejecuten
-        verify(em, times(1)).remove(operacionEntity); // Verificar que remove fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em, times(1)).remove(eq(operacionEntity));
+        verify(em, times(1)).flush();
     }
 }

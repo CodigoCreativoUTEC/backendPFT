@@ -13,10 +13,14 @@ import java.util.List;
 @Stateless
 public class TipoIntervencioneBean implements TipoIntervencioneRemote {
     @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final TiposIntervencioneMapper tiposIntervencioneMapper;
 
     @Inject
-    private TiposIntervencioneMapper tiposIntervencioneMapper;
+    public TipoIntervencioneBean(EntityManager em, TiposIntervencioneMapper tiposIntervencioneMapper) {
+        this.em = em;
+        this.tiposIntervencioneMapper = tiposIntervencioneMapper;
+    }
 
     @Override
     public List<TiposIntervencioneDto> obtenerTiposIntervenciones() {

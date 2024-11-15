@@ -19,17 +19,18 @@ import java.util.stream.Collectors;
 @Stateless
 public class IntervencionBean implements IntervencionRemote {
     @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final IntervencionMapper intervencionMapper;
 
     @Inject //Se inyecta el mapper
-    private IntervencionMapper intervencionMapper;
+    public IntervencionBean(EntityManager em, IntervencionMapper intervencionMapper) {
+        this.em = em;
+        this.intervencionMapper = intervencionMapper;
+    }
 
     @Override
     public void crear(IntervencionDto intervencion) throws ServiciosException {
-        //Se "transforma" el DTO a una entidad
         Intervencion intervencionEntity = intervencionMapper.toEntity(intervencion, new CycleAvoidingMappingContext());
-
-        //Se persiste la entidad (no el DTO)
         em.persist(intervencionEntity);
     }
 

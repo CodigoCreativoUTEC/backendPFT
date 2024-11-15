@@ -17,13 +17,16 @@ import java.util.List;
 @Stateless
 public class UbicacionBean implements UbicacionRemote {
     @PersistenceContext(unitName = "default")
-    private EntityManager em;
+    private final EntityManager em;
+    private final UbicacionMapper ubicacionMapper;
+    private final EquipoMapper equipoMapper;
 
     @Inject
-    private UbicacionMapper ubicacionMapper;
-
-    @Inject
-    private EquipoMapper equipoMapper;
+    public UbicacionBean(EntityManager em, UbicacionMapper ubicacionMapper, EquipoMapper equipoMapper) {
+        this.em = em;
+        this.ubicacionMapper = ubicacionMapper;
+        this.equipoMapper = equipoMapper;
+    }
 
     @Override
     public void crearUbicacion(UbicacionDto ubi) throws ServiciosException {

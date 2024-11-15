@@ -11,6 +11,17 @@ public class FuncionalidadDto implements Serializable {
     private Estados estado;  // Usamos el enum directamente
     private List<PerfilDto> perfiles;
 
+    public FuncionalidadDto(Long id, String nombreFuncionalidad, List<PerfilDto> perfiles, String ruta, Estados estado) {
+        this.estado = estado;
+        this.id = id;
+        this.nombreFuncionalidad = nombreFuncionalidad;
+        this.perfiles = perfiles;
+        this.ruta = ruta;
+    }
+
+    public FuncionalidadDto() {
+    }
+
     // Getters y Setters
     public Long getId() {
         return id;
