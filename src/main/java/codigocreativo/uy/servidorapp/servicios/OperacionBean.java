@@ -12,9 +12,12 @@ import jakarta.persistence.PersistenceContext;
 public class OperacionBean implements OperacionRemote{
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final OperacionMapper operacionMapper;
 
     @Inject
-    private OperacionMapper operacionMapper;
+    public OperacionBean(OperacionMapper operacionMapper) {
+        this.operacionMapper = operacionMapper;
+    }
 
     @Override
     public void crearOperacion(OperacionDto o) {

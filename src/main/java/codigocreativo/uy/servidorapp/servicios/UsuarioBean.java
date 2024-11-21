@@ -17,12 +17,11 @@ import java.util.Map;
 @Stateless
 public class UsuarioBean implements UsuarioRemote {
     @PersistenceContext (unitName = "default")
-    private final EntityManager em;
+    private EntityManager em;
     private final UsuarioMapper usuarioMapper;
 
     @Inject
-    public UsuarioBean(EntityManager em, UsuarioMapper usuarioMapper) {
-        this.em = em;
+    public UsuarioBean(UsuarioMapper usuarioMapper) {
         this.usuarioMapper = usuarioMapper;
     }
 

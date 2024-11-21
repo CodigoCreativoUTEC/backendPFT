@@ -1,17 +1,20 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import static org.mockito.Mockito.*;
-import codigocreativo.uy.servidorapp.dtomappers.OperacionMapper;
 import codigocreativo.uy.servidorapp.dtos.OperacionDto;
+import codigocreativo.uy.servidorapp.dtomappers.OperacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Operacion;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@ExtendWith(MockitoExtension.class)
+import java.lang.reflect.Field;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 class OperacionBeanTest {
 
     @Mock
@@ -24,8 +27,15 @@ class OperacionBeanTest {
     private OperacionBean operacionBean;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+
+        operacionBean = new OperacionBean(operacionMapper);
+
+        // Inyectar el EntityManager usando reflexión
+        Field emField = OperacionBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(operacionBean, em);
     }
 
     @Test
@@ -33,12 +43,12 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
 
         operacionBean.crearOperacion(operacionDto);
 
-        verify(em, times(1)).persist(eq(operacionEntity));
-        verify(em, times(1)).flush();
+        verify(em).persist(operacionEntity);
+        verify(em).flush();
     }
 
     @Test
@@ -46,12 +56,12 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
 
         operacionBean.modificarOperacion(operacionDto);
 
-        verify(em, times(1)).merge(eq(operacionEntity));
-        verify(em, times(1)).flush();
+        verify(em).merge(operacionEntity);
+        verify(em).flush();
     }
 
     @Test
@@ -59,11 +69,11 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
 
         operacionBean.eliminarOperacion(operacionDto);
 
-        verify(em, times(1)).remove(eq(operacionEntity));
-        verify(em, times(1)).flush();
+        verify(em).remove(operacionEntity);
+        verify(em).flush();
     }
 }

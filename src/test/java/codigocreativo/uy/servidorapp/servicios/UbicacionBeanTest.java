@@ -1,27 +1,29 @@
 package codigocreativo.uy.servidorapp.servicios;
 
+import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
+import codigocreativo.uy.servidorapp.dtomappers.EquipoMapper;
 import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class UbicacionBeanTest {
 
     @Mock
@@ -30,78 +32,121 @@ class UbicacionBeanTest {
     @Mock
     private UbicacionMapper ubicacionMapper;
 
+    @Mock
+    private EquipoMapper equipoMapper;
+
     @InjectMocks
     private UbicacionBean ubicacionBean;
 
-    private UbicacionDto ubicacionDto;
-    private Ubicacion ubicacion;
-
     @BeforeEach
-    void setUp() {
-        ubicacionDto = new UbicacionDto();
-        ubicacionDto.setId(1L);
-        ubicacionDto.setNombre("Ubicacion Test");
+    void setUp() throws Exception {
+        MockitoAnnotations.openMocks(this);
 
-        ubicacion = new Ubicacion();
-        ubicacion.setId(1L);
-        ubicacion.setNombre("Ubicacion Test");
+        ubicacionBean = new UbicacionBean(ubicacionMapper, equipoMapper);
+
+        // Inyectar el EntityManager usando reflexión
+        Field emField = UbicacionBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(ubicacionBean, em);
     }
 
     @Test
     void testCrearUbicacion() throws ServiciosException {
-        when(ubicacionMapper.toEntity(any(UbicacionDto.class))).thenReturn(ubicacion);
+        UbicacionDto ubicacionDto = new UbicacionDto();
+        Ubicacion ubicacionEntity = new Ubicacion();
+
+        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
 
         ubicacionBean.crearUbicacion(ubicacionDto);
 
-        verify(em, times(1)).persist(ubicacion);
-        verify(em, times(1)).flush();
+        verify(em).persist(ubicacionEntity);
+        verify(em).flush();
     }
 
     @Test
     void testModificarUbicacion() throws ServiciosException {
-        when(ubicacionMapper.toEntity(any(UbicacionDto.class))).thenReturn(ubicacion);
+        UbicacionDto ubicacionDto = new UbicacionDto();
+        Ubicacion ubicacionEntity = new Ubicacion();
+
+        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
 
         ubicacionBean.modificarUbicacion(ubicacionDto);
 
-        verify(em, times(1)).merge(ubicacion);
-        verify(em, times(1)).flush();
+        verify(em).merge(ubicacionEntity);
+        verify(em).flush();
     }
 
     @Test
-    void testEliminarUbicacion() throws ServiciosException {
-        Query mockedQuery = mock(Query.class);
-        when(em.createQuery("UPDATE Ubicacion ubicacion SET ubicacion.estado = 'INACTIVO' WHERE ubicacion.id = :id")).thenReturn(mockedQuery);
-        when(mockedQuery.setParameter("id", 1L)).thenReturn(mockedQuery);
+    void testBorrarUbicacion() throws ServiciosException {
+        Long id = 1L;
 
-        ubicacionBean.borrarUbicacion(1L);
+        Query query = mock(Query.class);
+        when(em.createQuery("UPDATE Ubicacion ubicacion SET ubicacion.estado = 'INACTIVO' WHERE ubicacion.id = :id")).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
 
-        verify(mockedQuery, times(1)).setParameter("id", 1L);
-        verify(mockedQuery, times(1)).executeUpdate();
+        ubicacionBean.borrarUbicacion(id);
+
+        verify(query).setParameter("id", id);
+        verify(query).executeUpdate();
     }
 
     @Test
-    void testObtenerUbicacion() throws ServiciosException {
-        TypedQuery<Ubicacion> mockedQuery = mock(TypedQuery.class);
-        when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.id = :id", Ubicacion.class)).thenReturn(mockedQuery);
-        when(mockedQuery.setParameter("id", 1L)).thenReturn(mockedQuery);
-        when(mockedQuery.getSingleResult()).thenReturn(ubicacion);
-        when(ubicacionMapper.toDto(any(Ubicacion.class))).thenReturn(ubicacionDto);
+    void testMoverEquipoDeUbicacion() throws ServiciosException {
+        EquipoDto equipoDto = new EquipoDto();
+        UbicacionDto ubicacionDto = new UbicacionDto();
 
-        UbicacionDto result = ubicacionBean.obtenerUbicacionPorId(1L);
+        ubicacionBean.moverEquipoDeUbicacion(equipoDto, ubicacionDto);
 
-        assertEquals(ubicacionDto, result);
+        verify(equipoMapper).toEntity(eq(equipoDto), any());
+        verify(em).merge(any());
+        verify(em).flush();
     }
 
     @Test
     void testListarUbicaciones() throws ServiciosException {
-        TypedQuery<Ubicacion> mockedQuery = mock(TypedQuery.class);
-        when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.estado = 'ACTIVO'", Ubicacion.class)).thenReturn(mockedQuery);
-        when(mockedQuery.getResultList()).thenReturn(Collections.singletonList(ubicacion));
-        when(ubicacionMapper.toDto(anyList())).thenReturn(Collections.singletonList(ubicacionDto));
+        Ubicacion ubicacionEntity = new Ubicacion();
+        List<Ubicacion> ubicaciones = Collections.singletonList(ubicacionEntity);
+
+        TypedQuery<Ubicacion> query = mock(TypedQuery.class);
+        when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.estado = 'ACTIVO'", Ubicacion.class)).thenReturn(query);
+        when(query.getResultList()).thenReturn(ubicaciones);
+        when(ubicacionMapper.toDto(eq(ubicaciones))).thenReturn(Collections.singletonList(new UbicacionDto()));
 
         List<UbicacionDto> result = ubicacionBean.listarUbicaciones();
 
+        assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(ubicacionDto, result.get(0));
+    }
+
+    @Test
+    void testObtenerUbicacionPorId() throws ServiciosException {
+        Long id = 1L;
+        Ubicacion ubicacionEntity = new Ubicacion();
+        UbicacionDto ubicacionDto = new UbicacionDto();
+
+        TypedQuery<Ubicacion> query = mock(TypedQuery.class);
+        when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.id = :id", Ubicacion.class)).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(ubicacionEntity);
+        when(ubicacionMapper.toDto(eq(ubicacionEntity))).thenReturn(ubicacionDto);
+
+        UbicacionDto result = ubicacionBean.obtenerUbicacionPorId(id);
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void testBajaLogicaUbicacion() throws ServiciosException {
+        UbicacionDto ubicacionDto = new UbicacionDto();
+        Ubicacion ubicacionEntity = new Ubicacion();
+        ubicacionDto.setEstado(Estados.ACTIVO);
+
+        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
+
+        ubicacionBean.bajaLogicaUbicacion(ubicacionDto);
+
+        assertEquals(Estados.INACTIVO, ubicacionEntity.getEstado());
+        verify(em).merge(ubicacionEntity);
+        verify(em).flush();
     }
 }

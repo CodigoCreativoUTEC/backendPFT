@@ -25,8 +25,7 @@ public class EquipoBean implements EquipoRemote {
     private final BajaEquipoMapper bajaEquipoMapper;
 
     @Inject
-    public EquipoBean(EntityManager em,EquipoMapper equipoMapper, BajaEquipoMapper bajaEquipoMapper) {
-        this.em = em;
+    public EquipoBean(EquipoMapper equipoMapper, BajaEquipoMapper bajaEquipoMapper) {
         this.equipoMapper = equipoMapper;
         this.bajaEquipoMapper = bajaEquipoMapper;
     }

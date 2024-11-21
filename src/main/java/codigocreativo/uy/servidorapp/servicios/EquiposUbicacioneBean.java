@@ -6,18 +6,18 @@ import codigocreativo.uy.servidorapp.entidades.EquiposUbicacione;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 
 @Stateless
 public class EquiposUbicacioneBean implements EquiposUbicacioneRemote {
-
-    private final EntityManager em;
+    @PersistenceContext(unitName = "default")
+    private EntityManager em;
     private final EquiposUbicacioneMapper equiposUbicacioneMapper;
 
     @Inject
-    public EquiposUbicacioneBean(EntityManager em, EquiposUbicacioneMapper equiposUbicacioneMapper) {
-        this.em = em;
+    public EquiposUbicacioneBean(EquiposUbicacioneMapper equiposUbicacioneMapper) {
         this.equiposUbicacioneMapper = equiposUbicacioneMapper;
     }
 

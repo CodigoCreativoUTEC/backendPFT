@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
+
 @Stateless
 public class MarcasModeloBean implements MarcasModeloRemote{
     @PersistenceContext (unitName = "default")

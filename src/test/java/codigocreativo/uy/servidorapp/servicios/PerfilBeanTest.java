@@ -16,9 +16,9 @@ import jakarta.persistence.EntityManager;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
-
 
 class PerfilBeanTest {
 
@@ -28,15 +28,18 @@ class PerfilBeanTest {
     @Mock
     private PerfilMapper perfilMapper;
 
-    @Mock
-    private TypedQuery<Perfil> queryT;
-
     @InjectMocks
     private PerfilBean perfilBean;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+        perfilBean = new PerfilBean(perfilMapper);
+
+        // Use reflection to set the private EntityManager field
+        Field emField = PerfilBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(perfilBean, em);
     }
 
     @Test
@@ -54,7 +57,7 @@ class PerfilBeanTest {
     }
 
     @Test
-     void testModificarPerfil() {
+    void testModificarPerfil() {
         PerfilDto perfilDto = new PerfilDto();
         Perfil perfilEntity = new Perfil();
 
@@ -71,21 +74,16 @@ class PerfilBeanTest {
         PerfilDto perfilDto = new PerfilDto();
         Perfil perfilEntity = new Perfil();
 
-        // Configura el comportamiento del mapper para devolver la entidad perfilEntity
         when(perfilMapper.toEntity(perfilDto)).thenReturn(perfilEntity);
 
-        // Ejecuta el método eliminarPerfil
         perfilBean.eliminarPerfil(perfilDto);
 
-        // Verifica que el estado de la entidad se estableció en INACTIVO
         assertEquals(Estados.INACTIVO, perfilEntity.getEstado());
-
-        // Verifica que el método merge fue llamado una vez con perfilEntity
         verify(em, times(1)).merge(perfilEntity);
     }
 
     @Test
-     void testObtenerPerfil() {
+    void testObtenerPerfil() {
         Long id = 1L;
         Perfil perfilEntity = new Perfil();
         PerfilDto perfilDto = new PerfilDto();
@@ -104,17 +102,12 @@ class PerfilBeanTest {
         List<Perfil> perfilesEntity = Arrays.asList(new Perfil(), new Perfil());
         List<PerfilDto> perfilesDto = Arrays.asList(new PerfilDto(), new PerfilDto());
 
-        // Mock de TypedQuery
         TypedQuery<Perfil> query = mock(TypedQuery.class);
 
-        // Configura el EntityManager para devolver el query simulado
         when(em.createQuery("SELECT p FROM Perfil p", Perfil.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(perfilesEntity);
-
-        // Configura el mapper para convertir la lista de entidades en DTOs
         when(perfilMapper.toDtoList(perfilesEntity)).thenReturn(perfilesDto);
 
-        // Ejecuta el método y verifica el resultado
         List<PerfilDto> result = perfilBean.obtenerPerfiles();
 
         assertEquals(perfilesDto, result);
@@ -128,10 +121,11 @@ class PerfilBeanTest {
         List<Perfil> perfilesEntity = Arrays.asList(new Perfil(), new Perfil());
         List<PerfilDto> perfilesDto = Arrays.asList(new PerfilDto(), new PerfilDto());
 
-        // Configura el comportamiento del EntityManager y el TypedQuery
-        when(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil LIKE :nombre", Perfil.class)).thenReturn(queryT);
-        when(queryT.setParameter("nombre", "%" + nombre + "%")).thenReturn(queryT);
-        when(queryT.getResultList()).thenReturn(perfilesEntity);
+        TypedQuery<Perfil> query = mock(TypedQuery.class);
+
+        when(em.createQuery("SELECT p FROM Perfil p WHERE p.nombrePerfil LIKE :nombre", Perfil.class)).thenReturn(query);
+        when(query.setParameter("nombre", "%" + nombre + "%")).thenReturn(query);
+        when(query.getResultList()).thenReturn(perfilesEntity);
         when(perfilMapper.toDtoList(perfilesEntity)).thenReturn(perfilesDto);
 
         List<PerfilDto> result = perfilBean.listarPerfilesPorNombre(nombre);
@@ -140,15 +134,16 @@ class PerfilBeanTest {
     }
 
     @Test
-     void testListarPerfilesPorEstado() {
+    void testListarPerfilesPorEstado() {
         Estados estado = Estados.ACTIVO;
         List<Perfil> perfilesEntity = Arrays.asList(new Perfil(), new Perfil());
         List<PerfilDto> perfilesDto = Arrays.asList(new PerfilDto(), new PerfilDto());
 
-        // Configura el comportamiento del EntityManager y el TypedQuery
-        when(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class)).thenReturn(queryT);
-        when(queryT.setParameter("estado", estado)).thenReturn(queryT);
-        when(queryT.getResultList()).thenReturn(perfilesEntity);
+        TypedQuery<Perfil> query = mock(TypedQuery.class);
+
+        when(em.createQuery("SELECT p FROM Perfil p WHERE p.estado = :estado", Perfil.class)).thenReturn(query);
+        when(query.setParameter("estado", estado)).thenReturn(query);
+        when(query.getResultList()).thenReturn(perfilesEntity);
         when(perfilMapper.toDtoList(perfilesEntity)).thenReturn(perfilesDto);
 
         List<PerfilDto> result = perfilBean.listarPerfilesPorEstado(estado);

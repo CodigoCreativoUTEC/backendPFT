@@ -19,12 +19,11 @@ import java.util.stream.Collectors;
 @Stateless
 public class IntervencionBean implements IntervencionRemote {
     @PersistenceContext(unitName = "default")
-    private final EntityManager em;
+    private EntityManager em;
     private final IntervencionMapper intervencionMapper;
 
     @Inject //Se inyecta el mapper
-    public IntervencionBean(EntityManager em, IntervencionMapper intervencionMapper) {
-        this.em = em;
+    public IntervencionBean(IntervencionMapper intervencionMapper) {
         this.intervencionMapper = intervencionMapper;
     }
 
@@ -42,7 +41,6 @@ public class IntervencionBean implements IntervencionRemote {
         //Se actualiza la entidad (no el DTO)
         em.merge(intervencionEntity);
     }
-
 
     @Override
     public List<IntervencionDto> obtenerTodas() throws ServiciosException {

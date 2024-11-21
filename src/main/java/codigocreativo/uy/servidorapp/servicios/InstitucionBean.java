@@ -13,12 +13,11 @@ import java.util.List;
 public class InstitucionBean implements InstitucionRemote{
 
     @PersistenceContext (unitName = "default")
-    private final EntityManager em;
+    private EntityManager em;
     private final InstitucionMapper institucionMapper;
 
     @Inject //Se inyecta el mapper
-    public InstitucionBean(EntityManager em, InstitucionMapper institucionMapper) {
-        this.em = em;
+    public InstitucionBean(InstitucionMapper institucionMapper) {
         this.institucionMapper = institucionMapper;
     }
 

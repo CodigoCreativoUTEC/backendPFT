@@ -11,7 +11,6 @@ import codigocreativo.uy.servidorapp.entidades.Perfil;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +18,11 @@ import java.util.List;
 @Stateless
 public class FuncionalidadBean implements FuncionalidadRemote {
 
-    private final EntityManager em;
+    private EntityManager em;
     private final FuncionalidadMapper funcionalidadMapper;
 
     @Inject
-    public FuncionalidadBean(EntityManager em, FuncionalidadMapper funcionalidadMapper) {
-        this.em = em;
+    public FuncionalidadBean(FuncionalidadMapper funcionalidadMapper) {
         this.funcionalidadMapper = funcionalidadMapper;
     }
 

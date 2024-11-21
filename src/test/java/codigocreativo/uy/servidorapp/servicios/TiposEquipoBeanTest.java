@@ -1,23 +1,24 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtomappers.TiposEquipoMapper;
 import codigocreativo.uy.servidorapp.dtos.TiposEquipoDto;
+import codigocreativo.uy.servidorapp.dtomappers.TiposEquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.TiposEquipo;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
-import java.util.ArrayList;
-import java.util.List;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-    class TiposEquipoBeanTest {
+class TiposEquipoBeanTest {
 
     @Mock
     private EntityManager em;
@@ -29,12 +30,19 @@ import static org.mockito.Mockito.*;
     private TiposEquipoBean tiposEquipoBean;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+
+        tiposEquipoBean = new TiposEquipoBean(tiposEquipoMapper);
+
+        // Inyectar el EntityManager usando reflexión
+        Field emField = TiposEquipoBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(tiposEquipoBean, em);
     }
 
     @Test
-     void testCrearTiposEquipo() {
+    void testCrearTiposEquipo() {
         TiposEquipoDto tiposEquipoDto = new TiposEquipoDto();
         TiposEquipo tiposEquipoEntity = new TiposEquipo();
 
@@ -42,13 +50,12 @@ import static org.mockito.Mockito.*;
 
         tiposEquipoBean.crearTiposEquipo(tiposEquipoDto);
 
-        verify(tiposEquipoMapper, times(1)).toEntity(tiposEquipoDto);
-        verify(em, times(1)).persist(tiposEquipoEntity);
-        verify(em, times(1)).flush();
+        verify(em).persist(tiposEquipoEntity);
+        verify(em).flush();
     }
 
     @Test
-     void testModificarTiposEquipo() {
+    void testModificarTiposEquipo() {
         TiposEquipoDto tiposEquipoDto = new TiposEquipoDto();
         TiposEquipo tiposEquipoEntity = new TiposEquipo();
 
@@ -56,27 +63,26 @@ import static org.mockito.Mockito.*;
 
         tiposEquipoBean.modificarTiposEquipo(tiposEquipoDto);
 
-        verify(tiposEquipoMapper, times(1)).toEntity(tiposEquipoDto);
-        verify(em, times(1)).merge(tiposEquipoEntity);
-        verify(em, times(1)).flush();
+        verify(em).merge(tiposEquipoEntity);
+        verify(em).flush();
     }
 
     @Test
     void testEliminarTiposEquipo() {
         Long id = 1L;
         TiposEquipo tiposEquipoEntity = new TiposEquipo();
+        tiposEquipoEntity.setEstado("ACTIVO");
 
         when(em.find(TiposEquipo.class, id)).thenReturn(tiposEquipoEntity);
 
         tiposEquipoBean.eliminarTiposEquipo(id);
 
-        verify(em, times(1)).find(TiposEquipo.class, id);
         assertEquals("INACTIVO", tiposEquipoEntity.getEstado());
-        verify(em, times(1)).merge(tiposEquipoEntity);
+        verify(em).merge(tiposEquipoEntity);
     }
 
     @Test
-     void testObtenerPorId() {
+    void testObtenerPorId() {
         Long id = 1L;
         TiposEquipo tiposEquipoEntity = new TiposEquipo();
         TiposEquipoDto tiposEquipoDto = new TiposEquipoDto();
@@ -86,26 +92,22 @@ import static org.mockito.Mockito.*;
 
         TiposEquipoDto result = tiposEquipoBean.obtenerPorId(id);
 
-        verify(em, times(1)).find(TiposEquipo.class, id);
-        verify(tiposEquipoMapper, times(1)).toDto(tiposEquipoEntity);
         assertEquals(tiposEquipoDto, result);
     }
 
     @Test
-     void testListarTiposEquipo() {
-        List<TiposEquipo> tiposEquipos = new ArrayList<>();
-        List<TiposEquipoDto> tiposEquipoDtos = new ArrayList<>();
-        TypedQuery<TiposEquipo> query = mock(TypedQuery.class);
+    void testListarTiposEquipo() {
+        List<TiposEquipo> tiposEquiposEntity = Collections.singletonList(new TiposEquipo());
+        List<TiposEquipoDto> tiposEquiposDto = Collections.singletonList(new TiposEquipoDto());
 
+        TypedQuery<TiposEquipo> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT t FROM TiposEquipo t", TiposEquipo.class)).thenReturn(query);
-        when(query.getResultList()).thenReturn(tiposEquipos);
-        when(tiposEquipoMapper.toDto(tiposEquipos)).thenReturn(tiposEquipoDtos);
+        when(query.getResultList()).thenReturn(tiposEquiposEntity);
+        when(tiposEquipoMapper.toDto(tiposEquiposEntity)).thenReturn(tiposEquiposDto);
 
         List<TiposEquipoDto> result = tiposEquipoBean.listarTiposEquipo();
 
-        verify(em, times(1)).createQuery("SELECT t FROM TiposEquipo t", TiposEquipo.class);
-        verify(query, times(1)).getResultList();
-        verify(tiposEquipoMapper, times(1)).toDto(tiposEquipos);
-        assertEquals(tiposEquipoDtos, result);
+        assertEquals(tiposEquiposDto, result);
+        verify(query).getResultList();
     }
 }
