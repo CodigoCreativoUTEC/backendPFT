@@ -11,13 +11,14 @@ import codigocreativo.uy.servidorapp.entidades.Perfil;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
 public class FuncionalidadBean implements FuncionalidadRemote {
-
+    @PersistenceContext(unitName = "default")
     private EntityManager em;
     private final FuncionalidadMapper funcionalidadMapper;
 
