@@ -55,7 +55,7 @@ class UbicacionBeanTest {
         UbicacionDto ubicacionDto = new UbicacionDto();
         Ubicacion ubicacionEntity = new Ubicacion();
 
-        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
+        when(ubicacionMapper.toEntity(ubicacionDto)).thenReturn(ubicacionEntity);
 
         ubicacionBean.crearUbicacion(ubicacionDto);
 
@@ -68,7 +68,7 @@ class UbicacionBeanTest {
         UbicacionDto ubicacionDto = new UbicacionDto();
         Ubicacion ubicacionEntity = new Ubicacion();
 
-        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
+        when(ubicacionMapper.toEntity(ubicacionDto)).thenReturn(ubicacionEntity);
 
         ubicacionBean.modificarUbicacion(ubicacionDto);
 
@@ -110,7 +110,7 @@ class UbicacionBeanTest {
         TypedQuery<Ubicacion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.estado = 'ACTIVO'", Ubicacion.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(ubicaciones);
-        when(ubicacionMapper.toDto(eq(ubicaciones))).thenReturn(Collections.singletonList(new UbicacionDto()));
+        when(ubicacionMapper.toDto(ubicaciones)).thenReturn(Collections.singletonList(new UbicacionDto()));
 
         List<UbicacionDto> result = ubicacionBean.listarUbicaciones();
 
@@ -128,7 +128,7 @@ class UbicacionBeanTest {
         when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.id = :id", Ubicacion.class)).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);
         when(query.getSingleResult()).thenReturn(ubicacionEntity);
-        when(ubicacionMapper.toDto(eq(ubicacionEntity))).thenReturn(ubicacionDto);
+        when(ubicacionMapper.toDto(ubicacionEntity)).thenReturn(ubicacionDto);
 
         UbicacionDto result = ubicacionBean.obtenerUbicacionPorId(id);
 
@@ -141,7 +141,7 @@ class UbicacionBeanTest {
         Ubicacion ubicacionEntity = new Ubicacion();
         ubicacionDto.setEstado(Estados.ACTIVO);
 
-        when(ubicacionMapper.toEntity(eq(ubicacionDto))).thenReturn(ubicacionEntity);
+        when(ubicacionMapper.toEntity(ubicacionDto)).thenReturn(ubicacionEntity);
 
         ubicacionBean.bajaLogicaUbicacion(ubicacionDto);
 

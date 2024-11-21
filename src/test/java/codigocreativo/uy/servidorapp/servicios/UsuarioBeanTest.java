@@ -6,7 +6,6 @@ import codigocreativo.uy.servidorapp.dtomappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import org.mockito.MockitoAnnotations;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

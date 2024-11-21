@@ -12,7 +12,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Field;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class OperacionBeanTest {
@@ -43,7 +42,7 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
         operacionBean.crearOperacion(operacionDto);
 
@@ -56,7 +55,7 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
         operacionBean.modificarOperacion(operacionDto);
 
@@ -69,7 +68,7 @@ class OperacionBeanTest {
         OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(eq(operacionDto))).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
         operacionBean.eliminarOperacion(operacionDto);
 

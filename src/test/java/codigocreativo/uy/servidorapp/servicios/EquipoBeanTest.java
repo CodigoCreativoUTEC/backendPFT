@@ -131,7 +131,7 @@ class EquipoBeanTest {
         Equipo equipoEntity = new Equipo();
         EquipoDto equipoDto = new EquipoDto();
 
-        when(em.find(eq(Equipo.class), eq(id))).thenReturn(equipoEntity);
+        when(em.find(Equipo.class, id)).thenReturn(equipoEntity);
         when(equipoMapper.toDto(eq(equipoEntity), any(CycleAvoidingMappingContext.class))).thenReturn(equipoDto);
 
         EquipoDto result = equipoBean.obtenerEquipo(id);

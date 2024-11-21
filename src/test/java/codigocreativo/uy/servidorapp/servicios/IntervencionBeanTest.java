@@ -113,9 +113,9 @@ class IntervencionBeanTest {
 
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
-        when(query.setParameter(eq("fechaDesde"), eq(fechaDesde))).thenReturn(query);
-        when(query.setParameter(eq("fechaHasta"), eq(fechaHasta))).thenReturn(query);
-        when(query.setParameter(eq("idEquipo"), eq(idEquipo))).thenReturn(query);
+        when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);
+        when(query.setParameter("fechaHasta", fechaHasta)).thenReturn(query);
+        when(query.setParameter("idEquipo", idEquipo)).thenReturn(query);
         when(query.getResultList()).thenReturn(intervenciones);
         when(intervencionMapper.toDto(eq(intervenciones), any(CycleAvoidingMappingContext.class))).thenReturn(Collections.singletonList(new IntervencionDto()));
 
@@ -138,9 +138,9 @@ class IntervencionBeanTest {
 
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
-        when(query.setParameter(eq("fechaDesde"), eq(fechaDesde))).thenReturn(query);
-        when(query.setParameter(eq("fechaHasta"), eq(fechaHasta))).thenReturn(query);
-        when(query.setParameter(eq("idTipo"), eq(idTipo))).thenReturn(query);
+        when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);
+        when(query.setParameter("fechaHasta", fechaHasta)).thenReturn(query);
+        when(query.setParameter("idTipo", idTipo)).thenReturn(query);
         when(query.getResultList()).thenReturn(intervenciones);
 
         Map<String, Long> result = intervencionBean.obtenerCantidadPorTipo(fechaDesde, fechaHasta, idTipo);
