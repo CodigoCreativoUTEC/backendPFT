@@ -12,6 +12,14 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.auth.oauth2.TokenVerifier.VerificationException;
 
 import io.jsonwebtoken.Claims;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ejb.EJB;
 import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.ws.rs.*;
@@ -21,6 +29,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.*;
 
 @Path("/usuarios")
+@Tag(name = "Usuarios", description = "Gestión de usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UsuarioResource {
@@ -29,13 +38,18 @@ public class UsuarioResource {
     @EJB
     private JwtService jwtService;
 
-    //defino variables static para repetidas
     private static final String EMAIL = "email";
     private static final String BEARER = "bearer";
 
     @POST
     @Path("/crear")
-    public Response crearUsuario(UsuarioDto usuario) {
+    @Operation(summary = "Crear un usuario", description = "Crea un nuevo usuario en el sistema", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuario creado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al crear el usuario", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response crearUsuario(@Parameter(description = "Datos del usuario a crear", required = true) UsuarioDto usuario) {
         if (usuario == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Usuario nulo\"}").build();
         }
@@ -43,31 +57,28 @@ public class UsuarioResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
         }
         Validator validator = new Validator();
-        if (validator.validateCi(usuario.getCedula())){
+        if (validator.validateCi(usuario.getCedula())) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
         }
 
         try {
-            // Generar el hash con el salt incluido
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
-
-            // Asignar el valor hash (con salt) al usuario
             usuario.setContrasenia(saltedHash);
-
-            // Crear el usuario en el sistema
             this.er.crearUsuario(usuario);
-
             return Response.status(201).entity("{\"message\":\"Usuario creado correctamente\"}").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"message\":\"Error al crear el usuario\"}").build();
         }
     }
 
-
-
     @PUT
     @Path("/modificar")
-    public Response modificarUsuario(UsuarioDto usuario) {
+    @Operation(summary = "Modificar un usuario", description = "Modifica los datos de un usuario existente", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response modificarUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario) {
         try {
             this.er.modificarUsuario(usuario);
             return Response.status(200).build();
@@ -76,90 +87,107 @@ public class UsuarioResource {
         }
     }
 
-
     @PUT
     @Path("/modificar-propio-usuario")
-    public Response modificarPropioUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+    @Operation(summary = "Modificar el propio usuario", description = "Permite a un usuario modificar sus propios datos", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "No autorizado para modificar este usuario", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    @SecurityRequirement(name = "BearerAuth")
+    public Response modificarPropioUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
         try {
-            // Extraer el token JWT del encabezado
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String correoDelToken = claims.getSubject();
 
-            // Verificar si el correo del token coincide con el correo del objeto UsuarioDto
             if (!Objects.equals(correoDelToken, usuario.getEmail())) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"No autorizado para modificar este usuario\"}").build();
             }
 
-            // Obtener el usuario actual desde la base de datos
             UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
             if (usuarioActual == null) {
                 return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
             }
 
-
-            // Verificar si se proporciona una nueva contraseña
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
-
-                // Validar la nueva contraseña
                 if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-
                     return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}").build();
                 }
-
-                // Generar un nuevo salt y hash para la nueva contraseña
                 String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
                 usuario.setContrasenia(saltedHash);
-
             } else {
-                // Mantener la contraseña actual si no se cambia
                 usuario.setContrasenia(usuarioActual.getContrasenia());
             }
 
-            // Proteger otros campos que no se pueden modificar
             usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
             usuario.setIdPerfil(usuarioActual.getIdPerfil());
             usuario.setEstado(usuarioActual.getEstado());
             usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
 
-            // Proceder con la modificación
             er.modificarUsuario(usuario);
-
-
             return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
 
-
-
-
-
     @PUT
     @Path("/inactivar")
-    public Response inactivarUsuario(UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-
+    @Operation(
+            summary = "Inactivar un usuario",
+            description = "Permite inactivar un usuario en el sistema. Requiere permisos de Administrador.",
+            tags = { "Usuarios" }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Usuario inactivado correctamente",
+                    content = @Content(schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Requiere ser Administrador para inactivar usuarios o no puedes inactivar a otro administrador",
+                    content = @Content(schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Usuario no encontrado",
+                    content = @Content(schema = @Schema(implementation = String.class))
+            )
+    })
+    @SecurityRequirement(name = "BearerAuth")
+    public Response inactivarUsuario(
+            @Parameter(description = "Datos del usuario a inactivar", required = true)
+            UsuarioDto usuario,
+            @Parameter(description = "Token Bearer de autorización", required = true)
+            @HeaderParam("Authorization") String authorizationHeader
+    ) {
         String token = authorizationHeader.substring(BEARER.length()).trim();
         Claims claims = jwtService.parseToken(token);
         String emailSolicitante = claims.getSubject();
         String perfilSolicitante = claims.get("perfil", String.class);
 
         if (!perfilSolicitante.equals("Administrador")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
         }
-        UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
 
+        UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
         if (usuarioAInactivar == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("{\"message\":\"Usuario no encontrado\"}").build();
         }
 
         if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
-            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
         }
 
         if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
         }
 
         this.er.eliminarUsuario(usuarioAInactivar);
@@ -168,12 +196,17 @@ public class UsuarioResource {
 
     @GET
     @Path("/filtrar")
-    public List<UsuarioDto> filtrarUsuarios(@QueryParam("nombre") String nombre,
-                                            @QueryParam("apellido") String apellido,
-                                            @QueryParam("nombreUsuario") String nombreUsuario,
-                                            @QueryParam("email") String email,
-                                            @QueryParam("perfil") String tipoUsuario,
-                                            @QueryParam("estado") String estado) {
+    @Operation(summary = "Filtrar usuarios", description = "Filtra los usuarios según los criterios proporcionados", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios filtrada correctamente", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
+            @ApiResponse(responseCode = "500", description = "Error al filtrar los usuarios", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public List<UsuarioDto> filtrarUsuarios(@Parameter(description = "Nombre del usuario") @QueryParam("nombre") String nombre,
+                                            @Parameter(description = "Apellido del usuario") @QueryParam("apellido") String apellido,
+                                            @Parameter(description = "Nombre de usuario") @QueryParam("nombreUsuario") String nombreUsuario,
+                                            @Parameter(description = "Email del usuario") @QueryParam("email") String email,
+                                            @Parameter(description = "Tipo de perfil del usuario") @QueryParam("perfil") String tipoUsuario,
+                                            @Parameter(description = "Estado del usuario") @QueryParam("estado") String estado) {
 
         Map<String, String> filtros = new HashMap<>();
         if (nombre != null) filtros.put("nombre", nombre);
@@ -181,50 +214,74 @@ public class UsuarioResource {
         if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
         if (email != null) filtros.put(EMAIL, email);
 
-        // Si no se envía el filtro de estado, por defecto se buscan usuarios activos
         if (estado == null || estado.isEmpty()) {
             filtros.put("estado", "ACTIVO");
         } else if (!estado.equals("default")) {
-            // Si el estado es "default", no agregamos ningún filtro de estado
             filtros.put("estado", estado);
         }
-        // Lógica para el filtro de perfil (tipo de usuario)
         if (tipoUsuario != null && !tipoUsuario.isEmpty() && !tipoUsuario.equals("default")) {
             filtros.put("tipoUsuario", tipoUsuario);
         }
 
-        return this.er.obtenerUsuariosFiltrado(filtros);
+        List<UsuarioDto> usuarios = this.er.obtenerUsuariosFiltrado(filtros);
+
+        // Crear una nueva lista de usuarios sin la contraseña
+        List<UsuarioDto> usuariosSinContrasenia = new ArrayList<>();
+        for (UsuarioDto usuario : usuarios) {
+            UsuarioDto usuarioSinContrasenia = new UsuarioDto();
+            usuarioSinContrasenia.setId(usuario.getId());
+            usuarioSinContrasenia.setUsuariosTelefonos(usuario.getUsuariosTelefonos());
+            usuarioSinContrasenia.setNombre(usuario.getNombre());
+            usuarioSinContrasenia.setCedula(usuario.getCedula());
+            usuarioSinContrasenia.setFechaNacimiento(usuario.getFechaNacimiento());
+            usuarioSinContrasenia.setApellido(usuario.getApellido());
+            usuarioSinContrasenia.setNombreUsuario(usuario.getNombreUsuario());
+            usuarioSinContrasenia.setEmail(usuario.getEmail());
+            usuarioSinContrasenia.setEstado(usuario.getEstado());
+            usuarioSinContrasenia.setIdPerfil(usuario.getIdPerfil());
+            usuarioSinContrasenia.setIdInstitucion(usuario.getIdInstitucion());
+
+            // No seteamos la contraseña para que no se incluya en la respuesta
+            usuariosSinContrasenia.add(usuarioSinContrasenia);
+        }
+
+        return usuariosSinContrasenia;
     }
 
-
-
-    @GET
-    @Path("/BuscarUsuarioPorCI")
-    public UsuarioDto buscarUsuario(@QueryParam("ci") String ci){
-        return this.er.obtenerUsuarioPorCI(ci);
-    }
 
     @GET
     @Path("/seleccionar")
-    public UsuarioDto buscarUsuario(@QueryParam("id") Long id){
+    @Operation(summary = "Buscar un usuario por ID", description = "Obtiene la información de un usuario específico por su ID", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public UsuarioDto buscarUsuario(@Parameter(description = "ID del usuario a buscar", required = true) @QueryParam("id") Long id) {
         return this.er.obtenerUsuario(id);
     }
 
     @GET
-    @Path("/ObtenerUsuarioPorEstado")
-    public List<UsuarioDto> obtenerUsuarioPorEstado(@QueryParam("estado") Estados estado){
-        return this.er.obtenerUsuariosPorEstado(estado);
-    }
-
-    @GET
     @Path("/listar")
+    @Operation(summary = "Listar todos los usuarios", description = "Obtiene una lista de todos los usuarios", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida correctamente", content = @Content(schema = @Schema(implementation = UsuarioDto.class)))
+    })
     public List<UsuarioDto> obtenerTodosLosUsuarios() {
-        return this.er.obtenerUsuarios();
+        List<UsuarioDto> usuarios = this.er.obtenerUsuarios();
+        for (UsuarioDto usuario : usuarios) {
+            usuario.setContrasenia(null); // Eliminar la contraseña de la respuesta
+        }
+        return usuarios;
     }
 
     @GET
     @Path("/obtenerUserEmail")
-    public Response getUserByEmail(@QueryParam("email") String email) {
+    @Operation(summary = "Buscar usuario por email", description = "Obtiene un usuario por su email", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response getUserByEmail(@Parameter(description = "Email del usuario a buscar", required = true) @QueryParam("email") String email) {
         UsuarioDto user = er.findUserByEmail(email);
         if (user != null) {
             return Response.ok(user).build();
@@ -235,8 +292,14 @@ public class UsuarioResource {
 
     @POST
     @Path("/login")
-    // In UsuarioResource.java
-    public Response login(LoginRequest loginRequest) {
+    @Operation(summary = "Iniciar sesión", description = "Permite a un usuario iniciar sesión en el sistema", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciales incorrectas o cuenta inactiva", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error durante el login", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response login(@Parameter(description = "Datos de inicio de sesión", required = true) LoginRequest loginRequest) {
         if (loginRequest == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
         }
@@ -245,15 +308,14 @@ public class UsuarioResource {
 
         if (user != null && user.getEstado().equals(Estados.ACTIVO)) {
             try {
-                // Verificar la contraseña usando el hash con el salt incluido
                 boolean isValid = PasswordUtils.verifyPassword(loginRequest.getPassword(), user.getContrasenia());
 
                 if (!isValid) {
                     return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Contraseña incorrecta\"}").build();
                 }
 
-                // Generar el token
                 String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+                user.setContrasenia(null);// No enviar la contraseña en la respuesta
                 LoginResponse loginResponse = new LoginResponse(token, user);
 
                 return Response.ok(loginResponse).build();
@@ -265,16 +327,20 @@ public class UsuarioResource {
         }
     }
 
-
-
     @POST
     @Path("/google-login")
-    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
+    @Operation(summary = "Iniciar sesión con Google", description = "Permite a un usuario iniciar sesión con Google", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Inicio de sesión con Google exitoso", content = @Content(schema = @Schema(implementation = GoogleLoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Token de Google nulo", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "Token de Google inválido", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al procesar el token de Google", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response googleLogin(@Parameter(description = "Token de Google para iniciar sesión", required = true) GoogleLoginRequest googleLoginRequest) {
         if (googleLoginRequest.getIdToken() == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
         }
         try {
-            // Validar el idToken con Google
             String idTokenString = googleLoginRequest.getIdToken();
             TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
                     .setAudience("103181333646-gp6uip6g6k1rg6p52tsidphj3gt22qut.apps.googleusercontent.com")
@@ -289,26 +355,21 @@ public class UsuarioResource {
             String email = (String) payload.get(EMAIL);
             String name = (String) payload.get("name");
 
-            // Verificar si el usuario ya existe en el sistema
             UsuarioDto user = er.findUserByEmail(email);
             boolean userNeedsAdditionalInfo = false;
 
             if (user == null) {
-                // El usuario no existe, pedir más información para completar el registro
                 user = new UsuarioDto();
                 user.setEmail(email);
                 user.setNombre(name);
                 userNeedsAdditionalInfo = true;
             } else if (!user.getEstado().equals(Estados.ACTIVO)) {
-                // Si el usuario no está activo, devolver un error
                 return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
             }
 
-            // Generar un JWT para este usuario si ya existe
             String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
-            String token = jwtService.generateToken(email, perfilNombre);  // Generar un nuevo JWT válido para este usuario
+            String token = jwtService.generateToken(email, perfilNombre);
 
-            // Enviar la respuesta al cliente con el token y la indicación de si necesita completar más información
             GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
             return Response.ok(loginResponse).build();
 
@@ -319,11 +380,17 @@ public class UsuarioResource {
         }
     }
 
-
     @POST
     @Path("/renovar-token")
+    @Operation(summary = "Renovar token JWT", description = "Renueva el token JWT antes de su expiración", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token renovado exitosamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Falta el token de autorización", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "El token ha expirado", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al procesar el token", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    @SecurityRequirement(name = "BearerAuth")
     public Response renovarToken(@HeaderParam("Authorization") String authorizationHeader) {
-        // Validar si el header contiene el token
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"error\": \"Falta el token de autorización.\"}")
@@ -334,21 +401,17 @@ public class UsuarioResource {
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
 
-            // Verificar si el token ha expirado
             if (claims.getExpiration().before(new Date())) {
                 return Response.status(Response.Status.UNAUTHORIZED)
                         .entity("{\"error\": \"El token ha expirado.\"}")
                         .build();
             }
 
-            // Obtener el email y perfil del token antiguo
             String email = claims.get(EMAIL, String.class);
             String perfil = claims.get("perfil", String.class);
 
-            // Generar un nuevo token
             String nuevoToken = jwtService.generateToken(email, perfil);
 
-            // Devolver el nuevo token en formato JSON
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("token", nuevoToken);
 

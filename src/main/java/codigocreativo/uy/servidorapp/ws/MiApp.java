@@ -5,13 +5,12 @@ import codigocreativo.uy.servidorapp.jwt.JacksonConfig;
 import codigocreativo.uy.servidorapp.jwt.JwtTokenFilter;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.HashSet;
 import java.util.Set;
 
-
-
+@Tag(name = "API Principal", description = "Configuración y punto de entrada para todos los recursos de la API")
 @ApplicationPath("/api")
 public class MiApp extends Application {
     @Override

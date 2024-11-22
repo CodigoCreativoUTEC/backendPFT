@@ -10,15 +10,22 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Path("/equipos")
-@Tag(name = "Mi Endpoint", description = "Gestión de mi endpoint")
+@Tag(name = "Equipos", description = "Gestión de equipos")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@SecurityRequirement(name = "BearerAuth")
 public class EquipoResource {
     @EJB
     private EquipoRemote er;
@@ -28,7 +35,11 @@ public class EquipoResource {
 
     @POST
     @Path("/crear")
-    @Operation(summary = "Crear un equipo", description = "Crea un equipo en la base de datos")
+    @Operation(summary = "Crear un equipo", description = "Crea un equipo en la base de datos", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Equipo creado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
+    })
     public Response crearEquipo(EquipoDto equipo) {
         this.er.crearEquipo(equipo);
         return Response.status(201).build();
@@ -36,42 +47,66 @@ public class EquipoResource {
 
     @PUT
     @Path("/modificar")
-    public Response modificarProducto(EquipoDto equipo){
+    @Operation(summary = "Modificar un equipo", description = "Modifica la información de un equipo existente en la base de datos", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Equipo modificado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Equipo no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response modificarProducto(EquipoDto equipo) {
         this.er.modificarEquipo(equipo);
         return Response.status(200).build();
     }
 
     @PUT
     @Path("/inactivar")
-    public Response eliminarEquipo(BajaEquipoDto equipo){
+    @Operation(summary = "Inactivar un equipo", description = "Inactiva un equipo en la base de datos", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Equipo inactivado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Equipo no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response eliminarEquipo(BajaEquipoDto equipo) {
         this.er.eliminarEquipo(equipo);
         return Response.status(200).build();
     }
 
     @GET
     @Path("/listar")
-    public List<EquipoDto> obtenerTodosLosEquipos(){
+    @Operation(summary = "Listar equipos", description = "Obtiene una lista de todos los equipos", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de equipos obtenida correctamente", content = @Content(schema = @Schema(implementation = EquipoDto.class)))
+    })
+    public List<EquipoDto> obtenerTodosLosEquipos() {
         return this.er.listarEquipos();
     }
 
     @GET
     @Path("/seleccionar")
-    public EquipoDto buscarEquipo(@QueryParam("id") Long id){
+    @Operation(summary = "Buscar un equipo", description = "Obtiene la información de un equipo específico por su ID", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Equipo encontrado", content = @Content(schema = @Schema(implementation = EquipoDto.class))),
+            @ApiResponse(responseCode = "404", description = "Equipo no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public EquipoDto buscarEquipo(@Parameter(description = "ID del equipo a buscar", required = true) @QueryParam("id") Long id) {
         return this.er.obtenerEquipo(id);
     }
 
     @GET
     @Path("/filtrar")
-    public List<EquipoDto> filtrar(@QueryParam("nombre") String nombre,
-                                   @QueryParam("tipo") String tipo,
-                                   @QueryParam("marca") String marca,
-                                   @QueryParam("modelo") String modelo,
-                                   @QueryParam("numeroSerie") String numeroSerie,
-                                   @QueryParam("paisOrigen") String paisOrigen,
-                                   @QueryParam("proveedor") String proveedor,
-                                   @QueryParam("fechaAdquisicion") String fechaAdquisicion,
-                                   @QueryParam("identificacionInterna") String identificacionInterna,
-                                   @QueryParam("ubicacion") String ubicacion) {
+    @Operation(summary = "Filtrar equipos", description = "Filtra los equipos según los criterios proporcionados", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de equipos filtrada correctamente", content = @Content(schema = @Schema(implementation = EquipoDto.class)))
+    })
+    public List<EquipoDto> filtrar(
+            @Parameter(description = "Nombre del equipo") @QueryParam("nombre") String nombre,
+            @Parameter(description = "Tipo del equipo") @QueryParam("tipo") String tipo,
+            @Parameter(description = "Marca del equipo") @QueryParam("marca") String marca,
+            @Parameter(description = "Modelo del equipo") @QueryParam("modelo") String modelo,
+            @Parameter(description = "Número de serie del equipo") @QueryParam("numeroSerie") String numeroSerie,
+            @Parameter(description = "País de origen del equipo") @QueryParam("paisOrigen") String paisOrigen,
+            @Parameter(description = "Proveedor del equipo") @QueryParam("proveedor") String proveedor,
+            @Parameter(description = "Fecha de adquisición del equipo") @QueryParam("fechaAdquisicion") String fechaAdquisicion,
+            @Parameter(description = "Identificación interna del equipo") @QueryParam("identificacionInterna") String identificacionInterna,
+            @Parameter(description = "Ubicación del equipo") @QueryParam("ubicacion") String ubicacion) {
         Map<String, String> filtros = new HashMap<>();
         if (nombre != null) filtros.put("nombre", nombre);
         if (tipo != null) filtros.put("tipo", tipo);
@@ -87,14 +122,24 @@ public class EquipoResource {
         return this.er.obtenerEquiposFiltrado(filtros);
     }
 
-
     @GET
     @Path("/listarBajas")
-    public List<BajaEquipoDto> obtenerBajasEquipos() {return this.ber.obtenerBajasEquipos();}
+    @Operation(summary = "Listar equipos dados de baja", description = "Obtiene una lista de todos los equipos dados de baja", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de equipos dados de baja obtenida correctamente", content = @Content(schema = @Schema(implementation = BajaEquipoDto.class)))
+    })
+    public List<BajaEquipoDto> obtenerBajasEquipos() {
+        return this.ber.obtenerBajasEquipos();
+    }
 
     @GET
     @Path("/VerEquipoInactivo")
-    public BajaEquipoDto obtenerBaja(@QueryParam("id") Long id) {
+    @Operation(summary = "Obtener un equipo inactivo", description = "Obtiene la información de un equipo dado de baja por su ID", tags = { "Equipos" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Equipo dado de baja encontrado", content = @Content(schema = @Schema(implementation = BajaEquipoDto.class))),
+            @ApiResponse(responseCode = "404", description = "Equipo no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public BajaEquipoDto obtenerBaja(@Parameter(description = "ID del equipo dado de baja a buscar", required = true) @QueryParam("id") Long id) {
         return this.ber.obtenerBajaEquipo(id);
     }
 }
