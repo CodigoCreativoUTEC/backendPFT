@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Field;
 import java.security.Key;
 import java.util.Base64;
 import java.util.List;
@@ -32,16 +33,22 @@ class JwtTokenFilterTest {
     private UriInfo uriInfo;
 
     private JwtTokenFilter jwtTokenFilter;
+    private FuncionalidadRemote funcionalidadService;
 
     private Key key;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         jwtTokenFilter = new JwtTokenFilter();
-        jwtTokenFilter.funcionalidadService = mock(FuncionalidadRemote.class);
+        funcionalidadService = mock(FuncionalidadRemote.class);
+        
+        Field field = JwtTokenFilter.class.getDeclaredField("funcionalidadService");
+        field.setAccessible(true);
+        field.set(jwtTokenFilter, funcionalidadService);
+        
         when(requestContext.getUriInfo()).thenReturn(uriInfo);
-        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(System.getenv("SECRET_KEY"))); // Clave secreta de ejemplo
+        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(System.getenv("SECRET_KEY")));
     }
 
     @Test
@@ -116,7 +123,7 @@ class JwtTokenFilterTest {
         perfil.setId(1L);
         perfil.setEstado(Estados.ACTIVO);
         funcionalidadDto.setPerfiles(List.of(perfil));
-        when(jwtTokenFilter.funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidadDto));
+        when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidadDto));
 
         jwtTokenFilter.filter(requestContext);
 
@@ -209,7 +216,7 @@ class JwtTokenFilterTest {
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
         when(uriInfo.getPath()).thenReturn("/usuarios/listar");
-        doThrow(new RuntimeException("Unexpected exception")).when(jwtTokenFilter.funcionalidadService).obtenerTodas();
+        doThrow(new RuntimeException("Unexpected exception")).when(funcionalidadService).obtenerTodas();
 
         jwtTokenFilter.filter(requestContext);
 

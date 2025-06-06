@@ -5,21 +5,21 @@ import codigocreativo.uy.servidorapp.jwt.JacksonConfig;
 import codigocreativo.uy.servidorapp.jwt.JwtTokenFilter;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Tag(name = "API Principal", description = "Configuración y punto de entrada para todos los recursos de la API")
 @ApplicationPath("/api")
 public class MiApp extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new HashSet<>();
+        // Filtros
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
         resources.add(JwtTokenFilter.class);
 
+        // Recursos
         resources.add(UsuarioResource.class);
         resources.add(EquipoResource.class);
         resources.add(ProveedoresResource.class);
@@ -32,6 +32,7 @@ public class MiApp extends Application {
         resources.add(TipoIntervencionesResource.class);
         resources.add(FuncionalidadResource.class);
         resources.add(UbicacionesResource.class);
+        resources.add(MenuWS.class);
         return resources;
     }
 }
