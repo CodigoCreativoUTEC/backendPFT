@@ -14,4 +14,11 @@
   <component name="ProjectType">
     <option name="id" value="jpab" />
   </component>
+  <component name="com.alibaba.oneapi2.generator">
+    <option name="env" value="online" />
+    <option name="appKey" value="" />
+    <option name="appSecret" value="" />
+    <option name="expertConfig" value="" />
+    <option name="debug" value="false" />
+  </component>
 </project>

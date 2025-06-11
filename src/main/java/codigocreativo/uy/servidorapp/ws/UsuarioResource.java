@@ -73,17 +73,80 @@ public class UsuarioResource {
 
     @PUT
     @Path("/modificar")
-    @Operation(summary = "Modificar un usuario", description = "Modifica los datos de un usuario existente", tags = { "Usuarios" })
+    @Operation(summary = "Modificar un usuario", description = "Modifica los datos de un usuario existente. Solo para administradores.", tags = { "Usuarios" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "403", description = "No autorizado - Solo administradores pueden modificar usuarios", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public Response modificarUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario) {
+    @SecurityRequirement(name = "BearerAuth")
+    public Response modificarUsuario(
+            @Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario,
+            @Parameter(description = "Token Bearer de autorización", required = true)
+            @HeaderParam("Authorization") String authorizationHeader) {
         try {
+            // Verificar que el token pertenece a un administrador
+            String token = authorizationHeader.substring(BEARER.length()).trim();
+            Claims claims = jwtService.parseToken(token);
+            String emailSolicitante = claims.getSubject();
+            String perfilSolicitante = claims.get("perfil", String.class);
+
+            if (!perfilSolicitante.equals("Administrador")) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"error\":\"Solo los administradores pueden modificar usuarios\"}")
+                        .build();
+            }
+
+            // Obtener el usuario actual de la base de datos
+            UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
+            if (usuarioActual == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
+
+            // Verificar que no se está intentando modificar a sí mismo
+            if (usuarioActual.getEmail().equals(emailSolicitante)) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"error\":\"No puedes modificar tu propio usuario desde este endpoint. Usa el endpoint de modificación propia.\"}")
+                        .build();
+            }
+
+            // Mantener la contraseña actual si no se proporciona una nueva
+            if (usuario.getContrasenia() == null || usuario.getContrasenia().isEmpty()) {
+                usuario.setContrasenia(usuarioActual.getContrasenia());
+            } else {
+                // Validar el formato de la nueva contraseña
+                if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity("{\"error\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}")
+                            .build();
+                }
+                // Generar el hash de la nueva contraseña
+                String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+                usuario.setContrasenia(saltedHash);
+            }
+
+            // Asegurar que los campos críticos estén presentes
+            if (usuario.getIdPerfil() == null) {
+                usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            }
+            if (usuario.getIdInstitucion() == null) {
+                usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
+            }
+            if (usuario.getEstado() == null) {
+                usuario.setEstado(usuarioActual.getEstado());
+            }
+
             this.er.modificarUsuario(usuario);
-            return Response.status(200).build();
+            return Response.status(200)
+                    .entity("{\"message\":\"Usuario modificado correctamente\"}")
+                    .build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al modificar el usuario: " + e.getMessage() + "\"}")
+                    .build();
         }
     }
 
@@ -103,17 +166,24 @@ public class UsuarioResource {
             String correoDelToken = claims.getSubject();
 
             if (!Objects.equals(correoDelToken, usuario.getEmail())) {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"message\":\"No autorizado para modificar este usuario\"}").build();
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\":\"No autorizado para modificar este usuario\"}")
+                        .build();
             }
 
             UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
             if (usuarioActual == null) {
-                return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Usuario no encontrado\"}").build();
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
             }
 
+            // Solo procesar la contraseña si se proporciona una nueva
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
                 if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-                    return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}").build();
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity("{\"error\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}")
+                            .build();
                 }
                 String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
                 usuario.setContrasenia(saltedHash);
@@ -121,15 +191,20 @@ public class UsuarioResource {
                 usuario.setContrasenia(usuarioActual.getContrasenia());
             }
 
+            // Mantener campos que no deberían modificarse
             usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
             usuario.setIdPerfil(usuarioActual.getIdPerfil());
             usuario.setEstado(usuarioActual.getEstado());
             usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
 
             er.modificarUsuario(usuario);
-            return Response.status(200).entity("{\"message\":\"Usuario modificado correctamente\"}").build();
+            return Response.status(200)
+                    .entity("{\"message\":\"Usuario modificado correctamente\"}")
+                    .build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al modificar el usuario: " + e.getMessage() + "\"}")
+                    .build();
         }
     }
 
