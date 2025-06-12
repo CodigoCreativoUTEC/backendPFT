@@ -32,7 +32,12 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         "/usuarios/google-login",
         "/swagger-ui",
         "/usuarios/crear",
-        "/menu"  
+        "/menu",
+        "/api/login",
+        "/api/openapi.json",
+        "/api/swagger-ui",
+        "/openapi.json",
+        "/swagger-ui/index.html"
     );
 
     @EJB

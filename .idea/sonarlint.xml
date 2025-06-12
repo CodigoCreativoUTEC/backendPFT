@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SonarLintProjectSettings">
+    <option name="bindingEnabled" value="true" />
+    <option name="projectKey" value="CodigoCreativoUTEC_backendPFT_182e862c-b890-4f3f-8ad3-b0277c87bcc5" />
+    <option name="serverId" value="http://codigocreativo.ddns.net:9000" />
+  </component>
+</project>

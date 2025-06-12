@@ -78,6 +78,7 @@ class IntervencionBeanTest {
         Intervencion intervencionEntity = new Intervencion();
         List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT i FROM Intervencion i", Intervencion.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(intervenciones);
