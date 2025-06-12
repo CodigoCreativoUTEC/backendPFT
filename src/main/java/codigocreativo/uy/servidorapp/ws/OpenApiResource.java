@@ -1,31 +1,26 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import codigocreativo.uy.servidorapp.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-@Path("/openapi")
+@Path("/openapi.json")
+@Tag(name = "OpenAPI", description = "Endpoint que sirve la especificación OpenAPI en formato JSON para Swagger UI y otras herramientas.")
 public class OpenApiResource {
-    
+    private final OpenApiConfig config = new OpenApiConfig();
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+        summary = "Obtener especificación OpenAPI",
+        description = "Devuelve el JSON de la especificación OpenAPI de la API para ser consumido por Swagger UI u otras herramientas."
+    )
     public Response getOpenApi() {
-        OpenAPI openAPI = new OpenAPI()
-            .info(new Info()
-                .title("API de Gestión de Equipos")
-                .description("API para la gestión de equipos, intervenciones y usuarios")
-                .version("1.0"))
-            .schemaRequirement("bearerAuth", 
-                new SecurityScheme()
-                    .type(SecurityScheme.Type.HTTP)
-                    .scheme("bearer")
-                    .bearerFormat("JWT"));
-        
-        return Response.ok(openAPI).build();
+        return Response.ok(config.customOpenAPI()).build();
     }
 } 

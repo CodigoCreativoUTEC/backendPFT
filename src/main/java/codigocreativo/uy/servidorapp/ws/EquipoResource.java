@@ -25,7 +25,6 @@ import java.util.Map;
 @Tag(name = "Equipos", description = "Gestión de equipos")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@SecurityRequirement(name = "BearerAuth")
 public class EquipoResource {
     @EJB
     private EquipoRemote er;
@@ -71,10 +70,12 @@ public class EquipoResource {
 
     @GET
     @Path("/listar")
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Listar equipos", description = "Obtiene una lista de todos los equipos", tags = { "Equipos" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de equipos obtenida correctamente", content = @Content(schema = @Schema(implementation = EquipoDto.class)))
-    })
+            @ApiResponse(responseCode = "200", description = "Lista de equipos obtenida correctamente", content = @Content(schema = @Schema(implementation = EquipoDto.class))),
+    @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(schema = @Schema(implementation = String.class)))
+        })
     public List<EquipoDto> obtenerTodosLosEquipos() {
         return this.er.listarEquipos();
     }
