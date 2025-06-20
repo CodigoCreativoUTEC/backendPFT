@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.UsuarioMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;

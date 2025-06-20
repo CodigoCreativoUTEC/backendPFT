@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.TiposIntervencioneDto;
-import codigocreativo.uy.servidorapp.dtomappers.TiposIntervencioneMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.TiposIntervencioneMapper;
 import codigocreativo.uy.servidorapp.entidades.TiposIntervencione;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;

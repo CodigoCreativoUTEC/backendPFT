@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.dtomappers;
+package codigocreativo.uy.servidorapp.dtos.dtomappers;
 
 import codigocreativo.uy.servidorapp.entidades.Equipo;
 import codigocreativo.uy.servidorapp.dtos.EquipoDto;

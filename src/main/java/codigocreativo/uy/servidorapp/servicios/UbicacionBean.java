@@ -2,8 +2,9 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
-import codigocreativo.uy.servidorapp.dtomappers.EquipoMapper;
-import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.EquipoMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
@@ -62,7 +63,7 @@ public class UbicacionBean implements UbicacionRemote {
     public void moverEquipoDeUbicacion(EquipoDto equipo, UbicacionDto ubicacion) throws ServiciosException {
         try {
             equipo.setIdUbicacion(ubicacion);
-            em.merge(equipoMapper.toEntity(equipo, new codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext()));
+            em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
             em.flush();
         } catch (Exception e) {
             throw new ServiciosException("No se pudo mover el equipo");

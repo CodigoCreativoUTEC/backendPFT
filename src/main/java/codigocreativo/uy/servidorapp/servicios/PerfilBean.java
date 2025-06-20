@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
-import codigocreativo.uy.servidorapp.dtomappers.PerfilMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.PerfilMapper;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;

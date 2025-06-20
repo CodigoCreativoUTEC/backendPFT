@@ -1,8 +1,9 @@
 package codigocreativo.uy.servidorapp.ws;
 
-import codigocreativo.uy.servidorapp.CORSFilter;
-import codigocreativo.uy.servidorapp.jwt.JacksonConfig;
-import codigocreativo.uy.servidorapp.jwt.JwtTokenFilter;
+import codigocreativo.uy.servidorapp.filtros.CORSFilter;
+import codigocreativo.uy.servidorapp.config.JacksonConfig;
+import codigocreativo.uy.servidorapp.filtros.JwtTokenFilter;
+import codigocreativo.uy.servidorapp.filtros.AuditoriaFilter;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
@@ -34,6 +35,7 @@ public class MiApp extends Application {
         resources.add(OpenApiResource.class);
         
         // Filtros y configuraciones
+        resources.add(AuditoriaFilter.class);
         resources.add(JwtTokenFilter.class);
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);

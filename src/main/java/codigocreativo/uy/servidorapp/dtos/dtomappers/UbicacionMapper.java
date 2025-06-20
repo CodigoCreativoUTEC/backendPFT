@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.dtomappers;
+package codigocreativo.uy.servidorapp.dtos.dtomappers;
 
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;

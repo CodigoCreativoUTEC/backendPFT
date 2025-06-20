@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.PaisDto;
-import codigocreativo.uy.servidorapp.dtomappers.PaisMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.PaisMapper;
 import codigocreativo.uy.servidorapp.entidades.Pais;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;

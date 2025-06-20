@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.dtomappers;
+package codigocreativo.uy.servidorapp.dtos.dtomappers;
 
 import codigocreativo.uy.servidorapp.entidades.Intervencion;
 import codigocreativo.uy.servidorapp.dtos.IntervencionDto;

@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp;
+package codigocreativo.uy.servidorapp.filtros;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;

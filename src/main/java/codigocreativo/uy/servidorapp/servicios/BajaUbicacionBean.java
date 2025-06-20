@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtomappers.BajaUbicacionMapper;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.BajaUbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.entidades.BajaUbicacion;

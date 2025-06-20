@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.dtomappers;
+package codigocreativo.uy.servidorapp.dtos.dtomappers;
 
 import java.util.IdentityHashMap;
 import java.util.Map;

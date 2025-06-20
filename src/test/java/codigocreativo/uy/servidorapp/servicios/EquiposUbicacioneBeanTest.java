@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.EquiposUbicacioneDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.EquiposUbicacioneMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.EquiposUbicacioneMapper;
 import codigocreativo.uy.servidorapp.entidades.EquiposUbicacione;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

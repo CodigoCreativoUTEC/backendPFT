@@ -2,8 +2,8 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.EquipoDto;
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
-import codigocreativo.uy.servidorapp.dtomappers.EquipoMapper;
-import codigocreativo.uy.servidorapp.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.EquipoMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;

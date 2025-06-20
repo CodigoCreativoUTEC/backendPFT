@@ -1,4 +1,4 @@
-package codigocreativo.uy.servidorapp.jwt;
+package codigocreativo.uy.servidorapp.filtros;
 
 import java.security.Key;
 import java.util.Base64;
@@ -27,6 +27,13 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     private static final Logger LOGGER = Logger.getLogger(JwtTokenFilter.class.getName());
     private static final String SECRET_KEY = System.getenv("SECRET_KEY");
+
+    public static class TokenValidationException extends Exception {
+        public TokenValidationException(String message) {
+            super(message);
+        }
+    }
+
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/usuarios/login",
         "/usuarios/google-login",
@@ -139,7 +146,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         return authorizationHeader.substring("Bearer".length()).trim();
     }
 
-    private Claims validateToken(String token) {
+    private Claims validateToken(String token) throws TokenValidationException {
         try {
             Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
             return Jwts.parserBuilder()
@@ -150,7 +157,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         } catch (Exception e) {
             String errorMsg = "Token inválido: " + e.getMessage();
             LOGGER.log(Level.SEVERE, errorMsg, e);
-            throw new RuntimeException(errorMsg);
+            throw new TokenValidationException(errorMsg);
         }
     }
 
@@ -164,7 +171,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                             String perfil) {
         requestContext.setProperty("email", email);
         requestContext.setProperty("perfil", perfil);
-        LOGGER.info("Información de usuario almacenada en el contexto - Email: " + email + ", Perfil: " + perfil);
     }
 
     private boolean isPublicEndpoint(String path) {
@@ -173,14 +179,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     private boolean hasPermission(String perfil, String path) {
         if (perfil == null || perfil.isEmpty()) {
-            LOGGER.warning("Intento de acceso con perfil nulo o vacío para el path: " + path);
             return false;
         }
 
         // Verificar permisos en la base de datos
         List<FuncionalidadDto> funcionalidades = funcionalidadService.obtenerTodas();
-        LOGGER.info("Verificando permisos para perfil: " + perfil + " en path: " + path);
-        LOGGER.info("Funcionalidades disponibles: " + funcionalidades.size());
 
         // Verificar si es una modificación de usuario
         if (path.equals("/usuarios/modificar")) {
@@ -190,7 +193,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 LOGGER.info("Usuario con perfil Administrador intentando modificar - Permitiendo acceso");
                 return true;
             } else {
-                LOGGER.warning("Usuario con perfil " + perfil + " intentando modificar - Acceso denegado");
+                LOGGER.log(Level.WARNING, "Usuario con perfil {0} intentando modificar - Acceso denegado", perfil);
                 return false;
             }
         }
@@ -210,7 +213,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 });
 
         if (!hasPermission) {
-            LOGGER.warning("Permiso denegado - Perfil: " + perfil + ", Path: " + path);
+            LOGGER.log(Level.WARNING, "Permiso denegado - Perfil: {0}, Path: {1}", new Object[]{perfil, path});
         }
 
         return hasPermission;
