@@ -18,6 +18,9 @@ public class JwtService {
 
     public String generateToken(String email, String nombrePerfil) {
         try {
+            if (email == null || nombrePerfil == null) {
+                return null;  // Retornar null si email o perfil son nulos
+            }
             return Jwts.builder()
                     .setSubject(email)
                     .claim("perfil", nombrePerfil)

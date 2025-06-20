@@ -57,7 +57,7 @@ public class UsuarioResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
         }
         Validator validator = new Validator();
-        if (validator.validateCi(usuario.getCedula())) {
+        if (!validator.validateCi(usuario.getCedula())) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
         }
 

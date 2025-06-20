@@ -146,7 +146,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         return authorizationHeader.substring("Bearer".length()).trim();
     }
 
-    private Claims validateToken(String token) throws TokenValidationException {
+    protected Claims validateToken(String token) throws TokenValidationException {
         try {
             Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
             return Jwts.parserBuilder()
@@ -161,7 +161,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         }
     }
 
-    private boolean isValidUserInfo(String email, String perfil) {
+    protected boolean isValidUserInfo(String email, String perfil) {
         return email != null && !email.isEmpty() &&
                perfil != null && !perfil.isEmpty();
     }
@@ -177,7 +177,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
-    private boolean hasPermission(String perfil, String path) {
+    protected boolean hasPermission(String perfil, String path) {
         if (perfil == null || perfil.isEmpty()) {
             return false;
         }

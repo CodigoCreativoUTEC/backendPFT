@@ -31,7 +31,8 @@ public class IntervencionesResource {
 
     @POST
     @Path("/crear")
-    @Operation(summary = "Crear una intervención", description = "Crea una nueva intervención en la base de datos", tags = { "Intervenciones" })
+    @Operation(summary = "Crear una intervención", description = "Crea una nueva intervención en la base de datos", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Intervención creada correctamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
@@ -43,26 +44,23 @@ public class IntervencionesResource {
 
     @PUT
     @Path("/modificar")
-    @Operation(summary = "Modificar una intervención", description = "Modifica una intervención existente en la base de datos", tags = { "Intervenciones" })
+    @Operation(summary = "Modificar una intervención", description = "Modifica una intervención existente en la base de datos", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Intervención modificada correctamente"),
             @ApiResponse(responseCode = "404", description = "Intervención no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response modificar(
-        @RequestBody(
-            description = "Datos de la intervención a modificar",
-            required = true,
-            content = @Content(schema = @Schema(implementation = IntervencionDto.class))
-        )
-        IntervencionDto p
-    ) throws ServiciosException {
+            @RequestBody(description = "Datos de la intervención a modificar", required = true, content = @Content(schema = @Schema(implementation = IntervencionDto.class))) IntervencionDto p)
+            throws ServiciosException {
         this.er.actualizar(p);
         return Response.status(200).build();
     }
 
     @GET
     @Path("/listar")
-    @Operation(summary = "Listar intervenciones", description = "Obtiene una lista de todas las intervenciones", tags = { "Intervenciones" })
+    @Operation(summary = "Listar intervenciones", description = "Obtiene una lista de todas las intervenciones", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de intervenciones obtenida correctamente", content = @Content(schema = @Schema(implementation = IntervencionDto.class)))
     })
@@ -72,18 +70,22 @@ public class IntervencionesResource {
 
     @GET
     @Path("/buscar/{id}")
-    @Operation(summary = "Buscar una intervención por ID", description = "Obtiene la información de una intervención específica por su ID", tags = { "Intervenciones" })
+    @Operation(summary = "Buscar una intervención por ID", description = "Obtiene la información de una intervención específica por su ID", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Intervención encontrada", content = @Content(schema = @Schema(implementation = IntervencionDto.class))),
             @ApiResponse(responseCode = "204", description = "Intervención no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public IntervencionDto buscarPorId(@Parameter(description = "ID de la intervención a buscar", required = true) @PathParam("id") Long id) throws ServiciosException {
+    public IntervencionDto buscarPorId(
+            @Parameter(description = "ID de la intervención a buscar", required = true) @PathParam("id") Long id)
+            throws ServiciosException {
         return this.er.buscarId(id);
     }
 
     @GET
     @Path("/reportePorFechas")
-    @Operation(summary = "Obtener intervenciones por rango de fechas", description = "Obtiene una lista de intervenciones en un rango de fechas especificado", tags = { "Intervenciones" })
+    @Operation(summary = "Obtener intervenciones por rango de fechas", description = "Obtiene una lista de intervenciones en un rango de fechas especificado", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de intervenciones obtenida correctamente", content = @Content(schema = @Schema(implementation = IntervencionDto.class)))
     })
@@ -98,14 +100,16 @@ public class IntervencionesResource {
 
     @GET
     @Path("/reportePorTipo")
-    @Operation(summary = "Obtener cantidad de intervenciones por tipo", description = "Obtiene un reporte de la cantidad de intervenciones por tipo en un rango de fechas especificado", tags = { "Intervenciones" })
+    @Operation(summary = "Obtener cantidad de intervenciones por tipo", description = "Obtiene un reporte de la cantidad de intervenciones por tipo en un rango de fechas especificado", tags = {
+            "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reporte obtenido correctamente", content = @Content(schema = @Schema(implementation = Map.class)))
     })
     public Map<String, Long> obtenerCantidadPorTipo(
             @Parameter(description = "Fecha desde en formato ISO8601") @QueryParam("fechaDesde") String fechaDesde,
             @Parameter(description = "Fecha hasta en formato ISO8601") @QueryParam("fechaHasta") String fechaHasta,
-            @Parameter(description = "ID del tipo de intervención") @QueryParam("idTipo") Long idTipo) throws ServiciosException {
+            @Parameter(description = "ID del tipo de intervención") @QueryParam("idTipo") Long idTipo)
+            throws ServiciosException {
         LocalDateTime desde = fechaDesde != null ? LocalDateTime.parse(fechaDesde) : null;
         LocalDateTime hasta = fechaHasta != null ? LocalDateTime.parse(fechaHasta) : null;
         return this.er.obtenerCantidadPorTipo(desde, hasta, idTipo);

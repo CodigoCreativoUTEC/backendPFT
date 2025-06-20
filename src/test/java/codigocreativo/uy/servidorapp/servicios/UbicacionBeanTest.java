@@ -23,6 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 
 class UbicacionBeanTest {
 
@@ -148,5 +149,36 @@ class UbicacionBeanTest {
         assertEquals(Estados.INACTIVO, ubicacionEntity.getEstado());
         verify(em).merge(ubicacionEntity);
         verify(em).flush();
+    }
+
+    @Test
+    void testCrearUbicacionThrows() {
+        doThrow(new RuntimeException()).when(em).persist(any());
+        assertThrows(ServiciosException.class, () -> ubicacionBean.crearUbicacion(new UbicacionDto()));
+    }
+
+    @Test
+    void testModificarUbicacionThrows() {
+        doThrow(new RuntimeException()).when(em).merge(any());
+        assertThrows(ServiciosException.class, () -> ubicacionBean.modificarUbicacion(new UbicacionDto()));
+    }
+
+    @Test
+    void testBorrarUbicacionThrows() {
+        doThrow(new RuntimeException()).when(em).createQuery(anyString());
+        assertThrows(ServiciosException.class, () -> ubicacionBean.borrarUbicacion(1L));
+    }
+
+    @Test
+    void testMoverEquipoDeUbicacionThrows() {
+        doThrow(new RuntimeException()).when(em).merge(any());
+        assertThrows(ServiciosException.class, () -> ubicacionBean.moverEquipoDeUbicacion(new EquipoDto(), new UbicacionDto()));
+    }
+
+    @Test
+    void testBajaLogicaUbicacionThrows() {
+        doThrow(new RuntimeException()).when(em).merge(any());
+        UbicacionDto dto = new UbicacionDto();
+        assertThrows(ServiciosException.class, () -> ubicacionBean.bajaLogicaUbicacion(dto));
     }
 }

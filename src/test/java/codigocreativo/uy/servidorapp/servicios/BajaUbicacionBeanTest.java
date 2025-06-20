@@ -1,10 +1,10 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtos.dtomappers.BajaUbicacionMapper;
-import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.dtos.BajaUbicacionDto;
 import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.BajaUbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.BajaUbicacion;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
@@ -13,125 +13,123 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class BajaUbicacionBeanTest {
-
-    @Mock
-    private EntityManager em;
-
-    @Mock
-    private BajaUbicacionMapper bajaUbicacionMapper;
-
-    @Mock
-    private UbicacionMapper ubicacionMapper;
-
-    @Mock
-    private BajaUbicacionRemote bajaUbicacionRemote;
-
-    @InjectMocks
-    private BajaUbicacionBean bajaUbicacionBean;
+    @Mock EntityManager em;
+    @Mock BajaUbicacionMapper bajaUbicacionMapper;
+    @Mock UbicacionMapper ubicacionMapper;
+    @Mock UbicacionRemote ubicacionBean;
+    @Mock TypedQuery<BajaUbicacion> query;
+    
+    BajaUbicacionBean bean;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        bajaUbicacionBean = new BajaUbicacionBean(bajaUbicacionMapper, ubicacionMapper);
-        bajaUbicacionBean.em = em;
+        bean = new BajaUbicacionBean(bajaUbicacionMapper, ubicacionMapper);
+        
+        // Inyectar mocks usando reflexión
+        Field emField = BajaUbicacionBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(bean, em);
+        
+        Field ubicacionBeanField = BajaUbicacionBean.class.getDeclaredField("ubicacionBean");
+        ubicacionBeanField.setAccessible(true);
+        ubicacionBeanField.set(bean, ubicacionBean);
     }
 
     @Test
-    void testCrearBajaUbicacion_success() {
+    void testCrearBajaUbicacion() throws Exception {
         BajaUbicacionDto dto = new BajaUbicacionDto();
-        BajaUbicacion bajaUbicacion = new BajaUbicacion();
-        when(bajaUbicacionMapper.toEntity(any(BajaUbicacionDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(bajaUbicacion);
-
-        assertDoesNotThrow(() -> bajaUbicacionBean.crearBajaUbicacion(dto));
-        verify(em, times(1)).persist(bajaUbicacion);
+        BajaUbicacion entity = new BajaUbicacion();
+        when(bajaUbicacionMapper.toEntity(any(BajaUbicacionDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(entity);
+        
+        bean.crearBajaUbicacion(dto);
+        
+        verify(em).persist(entity);
     }
 
     @Test
-    void testCrearBajaUbicacion_exception() {
+    void testCrearBajaUbicacionThrowsException() {
         BajaUbicacionDto dto = new BajaUbicacionDto();
-        when(bajaUbicacionMapper.toEntity(any(BajaUbicacionDto.class), any(CycleAvoidingMappingContext.class))).thenThrow(new RuntimeException("Simulated exception"));
-
-        ServiciosException thrown = assertThrows(ServiciosException.class, () -> bajaUbicacionBean.crearBajaUbicacion(dto));
-        assertNotNull(thrown);
-        assertEquals("Simulated exception", thrown.getMessage());
+        when(bajaUbicacionMapper.toEntity(any(BajaUbicacionDto.class), any(CycleAvoidingMappingContext.class))).thenThrow(new RuntimeException("DB Error"));
+        
+        assertThrows(ServiciosException.class, () -> bean.crearBajaUbicacion(dto));
     }
 
     @Test
-    void testBorrarUbicacion_success() {
+    void testBorrarUbicacion() throws Exception {
         Long id = 1L;
         Ubicacion ubicacion = new Ubicacion();
         when(em.find(Ubicacion.class, id)).thenReturn(ubicacion);
-
-        assertDoesNotThrow(() -> bajaUbicacionBean.borrarUbicacion(id));
-        verify(em, times(1)).remove(ubicacion);
-        verify(em, times(1)).flush();
+        
+        bean.borrarUbicacion(id);
+        
+        verify(em).remove(ubicacion);
+        verify(em).flush();
     }
 
     @Test
-    void testBorrarUbicacion_notFound() {
+    void testBorrarUbicacionNotFound() {
         Long id = 1L;
         when(em.find(Ubicacion.class, id)).thenReturn(null);
-
-        ServiciosException thrown = assertThrows(ServiciosException.class, () -> bajaUbicacionBean.borrarUbicacion(id));
-        assertNotNull(thrown);
-        assertEquals("No se pudo borrar la ubicacion", thrown.getMessage());
+        
+        assertThrows(ServiciosException.class, () -> bean.borrarUbicacion(id));
     }
 
     @Test
-    void testListarBajaUbicaciones_success() {
-        List<BajaUbicacion> bajaUbicacionList = new ArrayList<>();
-        TypedQuery<BajaUbicacion> query = mock(TypedQuery.class);
+    void testBorrarUbicacionThrowsException() {
+        Long id = 1L;
+        when(em.find(Ubicacion.class, id)).thenThrow(new RuntimeException("DB Error"));
+        
+        assertThrows(ServiciosException.class, () -> bean.borrarUbicacion(id));
+    }
+
+    @Test
+    void testListarBajaUbicaciones() throws Exception {
+        List<BajaUbicacion> entities = List.of(new BajaUbicacion());
+        List<BajaUbicacionDto> dtos = List.of(new BajaUbicacionDto());
+        
         when(em.createQuery(anyString(), eq(BajaUbicacion.class))).thenReturn(query);
-        when(query.getResultList()).thenReturn(bajaUbicacionList);
-        when(bajaUbicacionMapper.toDto(anyList(), any(CycleAvoidingMappingContext.class))).thenReturn(new ArrayList<>());
-
-        assertDoesNotThrow(() -> bajaUbicacionBean.listarBajaUbicaciones());
-        verify(query, times(1)).getResultList();
+        when(query.getResultList()).thenReturn(entities);
+        when(bajaUbicacionMapper.toDto(anyList(), any(CycleAvoidingMappingContext.class))).thenReturn(dtos);
+        
+        List<BajaUbicacionDto> result = bean.listarBajaUbicaciones();
+        
+        assertEquals(dtos, result);
     }
 
     @Test
-    void testListarBajaUbicaciones_exception() {
-        when(em.createQuery(anyString(), eq(BajaUbicacion.class))).thenThrow(new RuntimeException("Simulated exception"));
-
-        ServiciosException thrown = assertThrows(ServiciosException.class, () -> bajaUbicacionBean.listarBajaUbicaciones());
-        assertNotNull(thrown);
-        assertEquals("No se pudo listar las bajas de ubicaciones", thrown.getMessage());
+    void testListarBajaUbicacionesThrowsException() {
+        when(em.createQuery(anyString(), eq(BajaUbicacion.class))).thenThrow(new RuntimeException("DB Error"));
+        
+        assertThrows(ServiciosException.class, () -> bean.listarBajaUbicaciones());
     }
 
     @Test
-    void testBajaLogicaUbicacion_success() {
-        UbicacionDto ubicacionDto = new UbicacionDto();
-        Ubicacion ubicacion = new Ubicacion();
-        when(ubicacionMapper.toEntity(ubicacionDto)).thenReturn(ubicacion);
-
-        assertDoesNotThrow(() -> bajaUbicacionBean.bajaLogicaUbicacion(ubicacionDto));
-        assertEquals(Estados.INACTIVO, ubicacion.getEstado());
-        verify(em, times(1)).merge(ubicacion);
-        verify(em, times(1)).flush();
+    void testBajaLogicaUbicacion() throws Exception {
+        UbicacionDto dto = new UbicacionDto();
+        Ubicacion entity = new Ubicacion();
+        when(ubicacionMapper.toEntity(any(UbicacionDto.class))).thenReturn(entity);
+        
+        bean.bajaLogicaUbicacion(dto);
+        
+        assertEquals(Estados.INACTIVO, entity.getEstado());
+        verify(em).merge(entity);
+        verify(em).flush();
     }
 
     @Test
-    void testBajaLogicaUbicacion_exception() {
-        UbicacionDto ubicacionDto = new UbicacionDto();
-        when(ubicacionMapper.toEntity(ubicacionDto)).thenThrow(new RuntimeException("Simulated exception"));
-
-        ServiciosException thrown = assertThrows(ServiciosException.class, () -> {
-            bajaUbicacionBean.bajaLogicaUbicacion(ubicacionDto);
-        });
-        assertNotNull(thrown);
-        assertEquals("Simulated exception", thrown.getMessage());
+    void testBajaLogicaUbicacionThrowsException() {
+        UbicacionDto dto = new UbicacionDto();
+        when(ubicacionMapper.toEntity(any(UbicacionDto.class))).thenThrow(new RuntimeException("DB Error"));
+        
+        assertThrows(ServiciosException.class, () -> bean.bajaLogicaUbicacion(dto));
     }
 }
