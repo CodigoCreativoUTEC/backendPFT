@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
-import codigocreativo.uy.servidorapp.dtomappers.BajaEquipoMapper;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.BajaEquipoMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.BajaEquipo;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;

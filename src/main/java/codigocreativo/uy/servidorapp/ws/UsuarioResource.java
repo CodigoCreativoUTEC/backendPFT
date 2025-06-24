@@ -57,7 +57,7 @@ public class UsuarioResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
         }
         Validator validator = new Validator();
-        if (validator.validateCi(usuario.getCedula())) {
+        if (!validator.validateCi(usuario.getCedula())) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
         }
 
@@ -232,7 +232,7 @@ public class UsuarioResource {
                     content = @Content(schema = @Schema(implementation = String.class))
             )
     })
-    @SecurityRequirement(name = "BearerAuth")
+    
     public Response inactivarUsuario(
             @Parameter(description = "Datos del usuario a inactivar", required = true)
             UsuarioDto usuario,
@@ -367,7 +367,7 @@ public class UsuarioResource {
 
     @POST
     @Path("/login")
-    @Operation(summary = "Iniciar sesión", description = "Permite a un usuario iniciar sesión en el sistema", tags = { "Usuarios" })
+    @Operation(summary = "Iniciar sesión", description = "Permite a un usuario iniciar sesión en el sistema, debes extraer el jwt para usarlo en swagger", tags = { "Usuarios" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),

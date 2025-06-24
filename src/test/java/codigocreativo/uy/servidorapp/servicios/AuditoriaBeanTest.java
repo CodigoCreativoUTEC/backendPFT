@@ -1,6 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtomappers.AuditoriaMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.AuditoriaMapper;
 import codigocreativo.uy.servidorapp.dtos.AuditoriaDto;
 import codigocreativo.uy.servidorapp.entidades.Auditoria;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;

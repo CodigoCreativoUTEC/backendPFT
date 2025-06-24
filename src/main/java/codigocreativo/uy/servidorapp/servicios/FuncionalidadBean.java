@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
-import codigocreativo.uy.servidorapp.dtomappers.FuncionalidadMapper;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.FuncionalidadMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;

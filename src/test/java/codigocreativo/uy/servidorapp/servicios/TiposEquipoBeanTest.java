@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.TiposEquipoDto;
-import codigocreativo.uy.servidorapp.dtomappers.TiposEquipoMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.TiposEquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.TiposEquipo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

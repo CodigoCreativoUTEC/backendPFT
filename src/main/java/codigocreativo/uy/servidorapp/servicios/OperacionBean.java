@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.OperacionDto;
-import codigocreativo.uy.servidorapp.dtomappers.OperacionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.OperacionMapper;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;

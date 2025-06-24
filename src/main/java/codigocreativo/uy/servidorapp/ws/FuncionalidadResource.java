@@ -75,9 +75,10 @@ public class FuncionalidadResource {
     @Operation(summary = "Buscar una funcionalidad por ID", description = "Obtiene la información de una funcionalidad específica por su ID", tags = { "Funcionalidades" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Funcionalidad encontrada", content = @Content(schema = @Schema(implementation = FuncionalidadDto.class))),
-            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "204", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public FuncionalidadDto buscarPorId(@Parameter(description = "ID de la funcionalidad a buscar", required = true) @PathParam("id") Long id) {
         return this.funcionalidadRemote.buscarPorId(id);
+        //TODO> cuando se coloca un ID que no existe devuelve un 204 sin nada.
     }
 }

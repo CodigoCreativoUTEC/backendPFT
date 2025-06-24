@@ -2,7 +2,7 @@ package codigocreativo.uy.servidorapp.jwt;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
-import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.filtros.JwtTokenFilter;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

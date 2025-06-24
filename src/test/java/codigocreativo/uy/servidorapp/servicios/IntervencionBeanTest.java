@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.IntervencionDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.IntervencionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.IntervencionMapper;
 import codigocreativo.uy.servidorapp.entidades.Intervencion;
 import codigocreativo.uy.servidorapp.entidades.TiposIntervencione;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
@@ -78,6 +78,7 @@ class IntervencionBeanTest {
         Intervencion intervencionEntity = new Intervencion();
         List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT i FROM Intervencion i", Intervencion.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(intervenciones);

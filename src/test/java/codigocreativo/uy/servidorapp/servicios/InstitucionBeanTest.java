@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.InstitucionDto;
-import codigocreativo.uy.servidorapp.dtomappers.InstitucionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.InstitucionMapper;
 import codigocreativo.uy.servidorapp.entidades.Institucion;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

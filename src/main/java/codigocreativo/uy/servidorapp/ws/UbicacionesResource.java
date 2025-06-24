@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
 
@@ -38,5 +39,16 @@ public class UbicacionesResource {
         } catch (ServiciosException e) {
             throw new ServiciosException("Error al listar ubicaciones");
         }
+    }
+
+    @GET
+    @Path("/seleccionar")
+    @Operation(summary = "Buscar una ubicación por ID", description = "Obtiene la información de una ubicación específica por su ID", tags = { "Ubicaciones" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ubicación encontrada", content = @Content(schema = @Schema(implementation = UbicacionDto.class))),
+            @ApiResponse(responseCode = "404", description = "Ubicación no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public UbicacionDto buscarPorId(@Parameter(description = "ID de la ubicación a buscar", required = true) @QueryParam("id") Long id) throws ServiciosException {
+        return this.er.obtenerUbicacionPorId(id);
     }
 }

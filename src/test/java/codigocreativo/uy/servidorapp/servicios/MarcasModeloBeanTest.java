@@ -1,6 +1,6 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtomappers.MarcasModeloMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.MarcasModeloMapper;
 import codigocreativo.uy.servidorapp.dtos.MarcasModeloDto;
 import codigocreativo.uy.servidorapp.entidades.MarcasModelo;
 import jakarta.persistence.EntityManager;
