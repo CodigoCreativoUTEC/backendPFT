@@ -37,6 +37,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/usuarios/login",
         "/usuarios/google-login",
+        "/perfiles/listar",
         "/swagger-ui",
         "/usuarios/crear",
         "/menu",
