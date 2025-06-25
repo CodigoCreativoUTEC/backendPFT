@@ -2,12 +2,13 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 
 import java.util.List;
 import java.util.Map;
 
 public interface UsuarioRemote {
-    void crearUsuario(UsuarioDto u);
+    void crearUsuario(UsuarioDto u) throws ServiciosException;
     void modificarUsuario(UsuarioDto u);
     void eliminarUsuario(UsuarioDto u);
     UsuarioDto obtenerUsuario(Long id);

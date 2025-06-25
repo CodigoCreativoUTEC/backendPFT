@@ -1,8 +1,10 @@
 package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.PasswordUtils;
+import codigocreativo.uy.servidorapp.dtos.InstitucionDto;
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
 import com.fabdelgado.ciuy.Validator;
@@ -57,6 +59,8 @@ public class UsuarioResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
         }
         Validator validator = new Validator();
+        System.out.println("Validando cédula: " + usuario.getCedula());
+        System.out.println("Cedula válida?: " + validator.validateCi(usuario.getCedula()));
         if (!validator.validateCi(usuario.getCedula())) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
         }
@@ -64,10 +68,21 @@ public class UsuarioResource {
         try {
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
             usuario.setContrasenia(saltedHash);
+            InstitucionDto institucion = new InstitucionDto();
+            institucion.setId(1L); // Asignar una institución por defecto
+            usuario.setIdInstitucion(institucion);
             this.er.crearUsuario(usuario);
             return Response.status(201).entity("{\"message\":\"Usuario creado correctamente\"}").build();
+        } catch (ServiciosException e) {
+            // Capturar específicamente las excepciones de validación y devolver el mensaje específico
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"" + e.getMessage() + "\"}")
+                    .build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"message\":\"Error al crear el usuario\"}").build();
+            // Para otros errores, devolver un mensaje genérico
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"message\":\"Error al crear el usuario: " + e.getMessage() + "\"}")
+                    .build();
         }
     }
 
