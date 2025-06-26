@@ -35,6 +35,11 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public void crearUsuario(UsuarioDto u) throws ServiciosException {
+        // Validar que el usuario no sea nulo
+        if (u == null) {
+            throw new ServiciosException("Usuario nulo");
+        }
+        
         // Validar que el usuario sea mayor de edad
         validarMayorDeEdad(u.getFechaNacimiento());
         

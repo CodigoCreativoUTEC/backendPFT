@@ -53,18 +53,10 @@ public class UsuarioResource {
     })
     public Response crearUsuario(@Parameter(description = "Datos del usuario a crear", required = true) UsuarioDto usuario) {
         if (usuario == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Usuario nulo\"}").build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"Usuario nulo\"}")
+                    .build();
         }
-        if (usuario.getEmail() == null || usuario.getEmail().isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"El email es obligatorio\"}").build();
-        }
-        Validator validator = new Validator();
-        System.out.println("Validando cédula: " + usuario.getCedula());
-        System.out.println("Cedula válida?: " + validator.validateCi(usuario.getCedula()));
-        if (!validator.validateCi(usuario.getCedula())) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"message\":\"Cedula no es válida\"}").build();
-        }
-
         try {
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
             usuario.setContrasenia(saltedHash);

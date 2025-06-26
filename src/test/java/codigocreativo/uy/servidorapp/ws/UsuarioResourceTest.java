@@ -68,8 +68,8 @@ class UsuarioResourceTest {
 
     @Test
     void testCrearUsuarioWithNullUsuario() throws ServiciosException {
+        // Ahora el Resource maneja el usuario nulo tempranamente, sin llamar al Bean
         try (Response response = usuarioResource.crearUsuario(null)) {
-
             assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
             assertEquals("{\"message\":\"Usuario nulo\"}", response.getEntity());
         }
@@ -81,13 +81,14 @@ class UsuarioResourceTest {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setCedula("12345678");
         usuario.setContrasenia("password123");
+        // El email nulo se valida en el Bean
+        doThrow(new ServiciosException("El email es obligatorio")).when(usuarioRemote).crearUsuario(any(UsuarioDto.class));
 
         try (Response response = usuarioResource.crearUsuario(usuario)) {
-
             assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
             assertEquals("{\"message\":\"El email es obligatorio\"}", response.getEntity());
         }
-        verify(usuarioRemote, never()).crearUsuario(any(UsuarioDto.class));
+        verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
     }
 
     @Test
@@ -96,59 +97,46 @@ class UsuarioResourceTest {
         usuario.setEmail("");
         usuario.setCedula("12345678");
         usuario.setContrasenia("password123");
+        // El email vacío se valida en el Bean
+        doThrow(new ServiciosException("El email es obligatorio")).when(usuarioRemote).crearUsuario(any(UsuarioDto.class));
 
         try (Response response = usuarioResource.crearUsuario(usuario)) {
-
             assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
             assertEquals("{\"message\":\"El email es obligatorio\"}", response.getEntity());
         }
-        verify(usuarioRemote, never()).crearUsuario(any(UsuarioDto.class));
+        verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
     }
 
     @Test
     void testCrearUsuarioWithInvalidCedula() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setEmail("test@example.com");
-        usuario.setCedula("5555575"); // This is an invalid cedula
+        usuario.setCedula("5555575"); // Cédula inválida
+        usuario.setContrasenia("password123");
+        // La cédula inválida se valida en el Bean
+        doThrow(new ServiciosException("La cédula no es válida: 5555575")).when(usuarioRemote).crearUsuario(any(UsuarioDto.class));
 
         try (Response response = usuarioResource.crearUsuario(usuario)) {
-
-            // The validator might throw an exception for invalid cedulas, resulting in 500 status
-            // or return false, resulting in 400 status
-            if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
-                assertEquals("{\"message\":\"Cedula no es válida\"}", response.getEntity());
-                verify(usuarioRemote, never()).crearUsuario(any(UsuarioDto.class));
-            } else if (response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
-                assertEquals("{\"message\":\"Error al crear el usuario\"}", response.getEntity());
-                verify(usuarioRemote, never()).crearUsuario(any(UsuarioDto.class));
-            } else {
-                fail("Unexpected response status: " + response.getStatus());
-            }
+            assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+            assertEquals("{\"message\":\"La cédula no es válida: 5555575\"}", response.getEntity());
         }
+        verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
     }
 
     @Test
     void testCrearUsuarioThrowsException() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setEmail("test@example.com");
-        usuario.setCedula("87654321"); // Use a different valid cedula
+        usuario.setCedula("87654321");
         usuario.setContrasenia("password123");
 
         doThrow(new RuntimeException("Database error")).when(usuarioRemote).crearUsuario(any(UsuarioDto.class));
 
         try (Response response = usuarioResource.crearUsuario(usuario)) {
-
-            // Check if the response is either INTERNAL_SERVER_ERROR (exception thrown) or BAD_REQUEST (cedula validation failed)
-            if (response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
-                assertEquals("{\"message\":\"Error al crear el usuario\"}", response.getEntity());
-                verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
-            } else if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
-                assertEquals("{\"message\":\"Cedula no es válida\"}", response.getEntity());
-                verify(usuarioRemote, never()).crearUsuario(any(UsuarioDto.class));
-            } else {
-                fail("Unexpected response status: " + response.getStatus());
-            }
+            assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+            assertEquals("{\"message\":\"Error al crear el usuario: Database error\"}", response.getEntity());
         }
+        verify(usuarioRemote, times(1)).crearUsuario(any(UsuarioDto.class));
     }
 
     @Test

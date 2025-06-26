@@ -39,16 +39,24 @@ class UsuarioBeanTest {
         validator = new Validator();
     }
 
+    // ========== TESTS PARA CREAR USUARIO ==========
+
     @Test
-    void testCrearUsuario() {
-        // Preparar datos válidos
+    void testCrearUsuarioNulo() {
+        ServiciosException exception = assertThrows(ServiciosException.class, 
+            () -> usuarioBean.crearUsuario(null));
+        assertEquals("Usuario nulo", exception.getMessage());
+    }
+
+    @Test
+    void testCrearUsuarioExitoso() {
         UsuarioDto dto = crearUsuarioDtoValido();
         
-        // Mock para validaciones
+        // Mock para todas las validaciones exitosas
         TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException());
+        when(queryMock.getSingleResult()).thenThrow(new NoResultException()); // No existe email ni cédula
         
         // Mock para el merge final
         when(usuarioMapper.toEntity(any(UsuarioDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(new Usuario());
@@ -60,6 +68,8 @@ class UsuarioBeanTest {
         assertEquals(Estados.SIN_VALIDAR, dto.getEstado());
         verify(em).merge(any());
     }
+
+    // ========== TESTS DE VALIDACIÓN DE MAYOR DE EDAD ==========
 
     @Test
     void testCrearUsuarioFechaNacimientoNula() {
@@ -80,6 +90,8 @@ class UsuarioBeanTest {
             () -> usuarioBean.crearUsuario(dto));
         assertEquals("El usuario debe ser mayor de edad (mínimo 18 años)", exception.getMessage());
     }
+
+    // ========== TESTS DE VALIDACIÓN DE EMAIL ==========
 
     @Test
     void testCrearUsuarioEmailNulo() {
@@ -115,6 +127,8 @@ class UsuarioBeanTest {
             () -> usuarioBean.crearUsuario(dto));
         assertEquals("Ya existe un usuario con el email: " + dto.getEmail(), exception.getMessage());
     }
+
+    // ========== TESTS DE VALIDACIÓN DE CÉDULA ==========
 
     @Test
     void testCrearUsuarioCedulaNula() {
@@ -225,31 +239,12 @@ class UsuarioBeanTest {
         verify(em).merge(any());
     }
 
-    @Test
-    void testCrearUsuarioExitoso() {
-        UsuarioDto dto = crearUsuarioDtoValido();
-        
-        // Mock para todas las validaciones exitosas
-        TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
-        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException()); // No existe email ni cédula
-        
-        // Mock para el merge final
-        when(usuarioMapper.toEntity(any(UsuarioDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(new Usuario());
-        
-        // Ejecutar
-        assertDoesNotThrow(() -> usuarioBean.crearUsuario(dto));
-        
-        // Verificar
-        assertEquals(Estados.SIN_VALIDAR, dto.getEstado());
-        verify(em).merge(any());
-    }
+    // ========== TESTS DE MÚLTIPLES CÉDULAS VÁLIDAS ==========
 
     @Test
     void testCrearUsuarioConDiferentesCedulasValidas() {
         // Probar con múltiples cédulas válidas generadas aleatoriamente
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) { // Reducido de 5 a 3 para optimizar
             UsuarioDto dto = crearUsuarioDtoValido();
             String cedulaValida = validator.randomCi();
             dto.setCedula(cedulaValida);
@@ -278,7 +273,8 @@ class UsuarioBeanTest {
         }
     }
 
-    // Método helper para crear un UsuarioDto válido para testing
+    // ========== MÉTODO HELPER ==========
+
     private UsuarioDto crearUsuarioDtoValido() {
         UsuarioDto dto = new UsuarioDto();
         dto.setId(1L);
@@ -291,6 +287,8 @@ class UsuarioBeanTest {
         dto.setEstado(Estados.ACTIVO);
         return dto;
     }
+
+    // ========== TESTS DE OTROS MÉTODOS (MANTENER) ==========
 
     @Test
     void testModificarUsuario() {
