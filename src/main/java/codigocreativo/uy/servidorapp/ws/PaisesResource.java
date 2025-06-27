@@ -55,7 +55,7 @@ public class PaisesResource {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de países obtenida correctamente", content = @Content(schema = @Schema(implementation = PaisDto.class)))
     })
-    public List<PaisDto> listarProveedores() {
+    public List<PaisDto> listarPaises() {
         return this.er.obtenerpais();
     }
 }

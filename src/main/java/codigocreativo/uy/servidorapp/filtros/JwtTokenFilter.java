@@ -27,6 +27,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     private static final Logger LOGGER = Logger.getLogger(JwtTokenFilter.class.getName());
     private static final String SECRET_KEY = System.getenv("SECRET_KEY");
+    private static final String ERROR_JSON_FORMAT = "{\"error\":\"%s\"}";
 
     public static class TokenValidationException extends Exception {
         public TokenValidationException(String message) {
@@ -54,7 +55,9 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        LOGGER.info("Procesando petición para el path: " + path);
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Procesando petición para el path: " + path);
+        }
 
         // Verificar si es un endpoint público
         if (isPublicEndpoint(path)) {
@@ -62,6 +65,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             return;
         }
 
+        // Procesar autenticación y autorización
+        processAuthenticationAndAuthorization(requestContext, path);
+    }
+
+    private void processAuthenticationAndAuthorization(ContainerRequestContext requestContext, String path) {
         // Verificar autenticación
         String token = extractAndValidateToken(requestContext);
         if (token == null) {
@@ -75,59 +83,71 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                 return;
             }
 
-            // Extraer información del token
-            String email = claims.get("email", String.class);
-            String perfil = claims.get("perfil", String.class);
-            LOGGER.info("Token válido para usuario: " + email + " con perfil: " + perfil);
-
-            // Validar información requerida
-            if (!isValidUserInfo(email, perfil)) {
-                String errorMsg = "Token inválido: información de usuario incompleta - Email: " + 
-                                (email == null ? "null" : email) + 
-                                ", Perfil: " + (perfil == null ? "null" : perfil);
-                LOGGER.warning(errorMsg);
-                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"error\":\"" + errorMsg + "\"}")
-                    .build());
-                return;
-            }
-
-            // Almacenar información en el contexto
-            storeUserInfo(requestContext, email, perfil);
-
-            try {
-                // Verificar permisos basados en el rol
-                if (!hasPermission(perfil, path)) {
-                    String errorMsg;
-                    if (path.equals("/usuarios/modificar")) {
-                        errorMsg = "No tiene permisos para modificar usuarios. Solo los administradores pueden realizar esta acción.";
-                    } else {
-                        errorMsg = String.format(
-                            "Acceso denegado - Usuario: %s, Perfil: %s, Path: %s - No tiene los permisos necesarios",
-                            email, perfil, path
-                        );
-                    }
-                    LOGGER.warning(errorMsg);
-                    requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"" + errorMsg + "\"}")
-                        .build());
-                } else {
-                    LOGGER.info("Permisos validados correctamente para el usuario: " + email);
-                }
-            } catch (Exception e) {
-                String errorMsg = "Error al verificar permisos: " + e.getMessage();
-                LOGGER.log(Level.SEVERE, errorMsg, e);
-                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"error\":\"" + errorMsg + "\"}")
-                    .build());
-            }
+            // Procesar información del usuario
+            processUserInfo(requestContext, claims, path);
 
         } catch (Exception e) {
             String errorMsg = "Error al procesar el token: " + e.getMessage();
             LOGGER.log(Level.SEVERE, errorMsg, e);
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                .entity("{\"error\":\"" + errorMsg + "\"}")
+                .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
                 .build());
+        }
+    }
+
+    private void processUserInfo(ContainerRequestContext requestContext, Claims claims, String path) {
+        // Extraer información del token
+        String email = claims.get("email", String.class);
+        String perfil = claims.get("perfil", String.class);
+        LOGGER.log(Level.INFO, "Token válido para usuario: {0} con perfil: {1}", new Object[]{email, perfil});
+
+        // Validar información requerida
+        if (!isValidUserInfo(email, perfil)) {
+            String errorMsg = "Token inválido: información de usuario incompleta - Email: " + 
+                            (email == null ? "null" : email) + 
+                            ", Perfil: " + (perfil == null ? "null" : perfil);
+            LOGGER.warning(errorMsg);
+            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
+                .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
+                .build());
+            return;
+        }
+
+        // Almacenar información en el contexto
+        storeUserInfo(requestContext, email, perfil);
+
+        // Verificar permisos
+        validatePermissions(requestContext, email, perfil, path);
+    }
+
+    private void validatePermissions(ContainerRequestContext requestContext, String email, String perfil, String path) {
+        try {
+            // Verificar permisos basados en el rol
+            if (!hasPermission(perfil, path)) {
+                String errorMsg = getPermissionErrorMessage(path, email, perfil);
+                LOGGER.warning(errorMsg);
+                requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
+                    .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
+                    .build());
+            } else {
+                LOGGER.log(Level.INFO, "Permisos validados correctamente para el usuario: {0}", email);
+            }
+        } catch (Exception e) {
+            String errorMsg = "Error al verificar permisos: " + e.getMessage();
+            LOGGER.log(Level.SEVERE, errorMsg, e);
+            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
+                .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
+                .build());
+        }
+    }
+
+    private String getPermissionErrorMessage(String path, String email, String perfil) {
+        if (path.equals("/usuarios/modificar")) {
+            return "No tiene permisos para modificar usuarios. Solo los administradores pueden realizar esta acción.";
+        } else {
+            LOGGER.log(Level.WARNING, "Acceso denegado - Usuario: {0}, Perfil: {1}, Path: {2} - No tiene los permisos necesarios", 
+                    new Object[]{email, perfil, path});
+            return "Acceso denegado - No tiene los permisos necesarios";
         }
     }
 
@@ -139,7 +159,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                             (authorizationHeader == null ? "null" : authorizationHeader);
             LOGGER.warning(errorMsg);
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                .entity("{\"error\":\"" + errorMsg + "\"}")
+                .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
                 .build());
             return null;
         }
@@ -163,8 +183,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     }
 
     protected boolean isValidUserInfo(String email, String perfil) {
-        return email != null && !email.isEmpty() &&
-               perfil != null && !perfil.isEmpty();
+        return  email != null && !email.isEmpty() &&
+                perfil != null && !perfil.isEmpty();
     }
 
     private void storeUserInfo(ContainerRequestContext requestContext, 

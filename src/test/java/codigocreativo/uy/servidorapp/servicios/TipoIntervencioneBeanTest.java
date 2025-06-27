@@ -49,6 +49,7 @@ class TipoIntervencioneBeanTest {
         List<TiposIntervencione> tiposIntervenciones = new ArrayList<>();
         tiposIntervenciones.add(new TiposIntervencione()); // Add a mock entity to the list
         List<TiposIntervencioneDto> tiposIntervencionesDto = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<TiposIntervencione> query = mock(TypedQuery.class);
 
         when(em.createQuery("SELECT t FROM TiposIntervencione t WHERE t.estado = 'ACTIVO'", TiposIntervencione.class)).thenReturn(query);

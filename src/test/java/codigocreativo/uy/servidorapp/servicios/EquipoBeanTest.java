@@ -92,6 +92,7 @@ class EquipoBeanTest {
         when(em.find(Equipo.class, 1L)).thenReturn(equipoEntity);
 
         // Mockear TypedQuery correctamente
+        @SuppressWarnings("unchecked")
         TypedQuery<Equipo> mockedQuery = mock(TypedQuery.class);
         when(em.createQuery("UPDATE Equipo equipo SET equipo.estado = 'INACTIVO' WHERE equipo.id = :id")).thenReturn(mockedQuery);
         when(mockedQuery.setParameter("id", 1L)).thenReturn(mockedQuery);
@@ -111,6 +112,7 @@ class EquipoBeanTest {
         filtros.put("nombre", "test");
 
         StringBuilder queryStr = new StringBuilder("SELECT e FROM Equipo e WHERE 1=1 AND LOWER(e.nombre) LIKE LOWER(:nombre)");
+        @SuppressWarnings("unchecked")
         TypedQuery<Equipo> query = mock(TypedQuery.class);
 
         when(em.createQuery(queryStr.toString(), Equipo.class)).thenReturn(query);
@@ -145,6 +147,7 @@ class EquipoBeanTest {
         List<Equipo> equiposEntityList = Collections.singletonList(new Equipo());
         List<EquipoDto> equiposDtoList = Collections.singletonList(new EquipoDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Equipo> mockedQuery = mock(TypedQuery.class);
         when(em.createQuery("SELECT equipo FROM Equipo equipo", Equipo.class)).thenReturn(mockedQuery);
         when(mockedQuery.getResultList()).thenReturn(equiposEntityList);

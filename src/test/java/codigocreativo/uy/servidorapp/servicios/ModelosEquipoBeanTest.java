@@ -81,6 +81,7 @@ class ModelosEquipoBeanTest {
     @Test
     void testListarModelos_success() {
         List<ModelosEquipo> modelosEquipoList = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<ModelosEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(ModelosEquipo.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(modelosEquipoList);
@@ -95,7 +96,8 @@ class ModelosEquipoBeanTest {
     @Test
     void testEliminarModelos_success() {
         Long id = 1L;
-        TypedQuery query = mock(TypedQuery.class);
+        @SuppressWarnings("unchecked")
+        TypedQuery<ModelosEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString())).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);
 

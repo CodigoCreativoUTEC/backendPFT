@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.PerfilRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -18,12 +19,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+
 @Path("/perfiles")
 @Tag(name = "Perfiles", description = "Gestión de perfiles de usuario")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SecurityRequirement(name = "BearerAuth")
 public class PerfilResource {
+    private static final String ERROR_JSON_FORMAT = "{\"error\":\"%s\"}";
+    private static final String MSG_JSON_FORMAT = "{\"message\":\"%s\"}";
 
     @EJB
     private PerfilRemote perfilRemote;
@@ -32,40 +36,86 @@ public class PerfilResource {
     @Path("/crear")
     @Operation(summary = "Crear un perfil", description = "Crea un nuevo perfil de usuario", tags = { "Perfiles" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Perfil creado correctamente"),
+            @ApiResponse(responseCode = "201", description = "Perfil creado correctamente", content = @Content(schema = @Schema(implementation = PerfilDto.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response crearPerfil(PerfilDto perfil) {
-        perfilRemote.crearPerfil(perfil);
-        return Response.status(Response.Status.CREATED).build();
+        if (perfil == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(String.format(ERROR_JSON_FORMAT, "El perfil no puede ser null"))
+                    .build();
+        }
+
+        try {
+            PerfilDto perfilCreado = perfilRemote.crearPerfil(perfil);
+            return Response.status(Response.Status.CREATED)
+                    .entity(perfilCreado)
+                    .build();
+        } catch (ServiciosException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(String.format(ERROR_JSON_FORMAT, e.getMessage()))
+                    .build();
+        }
     }
+
 
     @PUT
     @Path("/modificar")
     @Operation(summary = "Modificar un perfil", description = "Modifica un perfil existente", tags = { "Perfiles" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil modificado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Perfil no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response modificarPerfil(PerfilDto perfil) {
-        perfilRemote.modificarPerfil(perfil);
-        return Response.ok().build();
+        if (perfil == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"El perfil no puede ser null\"}")
+                    .build();
+        }
+
+        try {
+            perfilRemote.modificarPerfil(perfil);
+            return Response.ok().build();
+        } catch (ServiciosException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                    .build();
+        }
     }
 
-    @DELETE
+    @PUT
     @Path("/inactivar")
     @Operation(summary = "Inactivar un perfil", description = "Inactiva un perfil existente", tags = { "Perfiles" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil inactivado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Perfil no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response eliminarPerfil(@Parameter(description = "ID del perfil a inactivar", required = true) @QueryParam("id") Long id) {
-        PerfilDto perfil = perfilRemote.obtenerPerfil(id);
-        if (perfil != null) {
-            perfilRemote.eliminarPerfil(perfil);
-            return Response.ok().build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        // Validar que el ID no sea null
+        if (id == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(String.format(ERROR_JSON_FORMAT, "El ID del perfil es obligatorio"))
+                    .build();
+        }
+
+        try {
+            PerfilDto perfil = perfilRemote.obtenerPerfil(id);
+            if (perfil != null) {
+                perfilRemote.eliminarPerfil(perfil);
+                return Response.ok()
+                        .entity(String.format(MSG_JSON_FORMAT, "Perfil inactivado correctamente"))
+                        .build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(String.format(ERROR_JSON_FORMAT, "Perfil no encontrado con ID: " + id))
+                        .build();
+            }
+        } catch (ServiciosException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(String.format(ERROR_JSON_FORMAT, e.getMessage()))
+                    .build();
         }
     }
 

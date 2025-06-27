@@ -1,8 +1,6 @@
 package codigocreativo.uy.servidorapp.enumerados;
 
-import java.io.Serializable;
-
-public enum Sectores implements Serializable {
+public enum Sectores{
     POLICLINICO("Policlínico"),
     INTERNACION("Internación"),
     EMERGENCIA("Emergencia"),

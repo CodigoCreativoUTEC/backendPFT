@@ -58,6 +58,7 @@ import static org.mockito.Mockito.*;
     @Test
      void testObtenerusuariosTelefono() {
         List<UsuariosTelefono> expectedList = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<UsuariosTelefono> query = mock(TypedQuery.class);
 
         when(em.createQuery("SELECT UsuariosTelefono FROM UsuariosTelefono usuariosTelefono", UsuariosTelefono.class)).thenReturn(query);

@@ -13,6 +13,7 @@ import java.util.List;
     private Estados estado;
     private List<FuncionalidadesPerfiles> funcionalidadesPerfiles;
 
+    @SuppressWarnings("unchecked")
     @BeforeEach
     public void setUp() {
         estado = Estados.ACTIVO;  // Asumimos un estado como ejemplo
@@ -49,6 +50,7 @@ import java.util.List;
         assertEquals(Estados.INACTIVO, funcionalidad.getEstado());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
      void testGetAndSetFuncionalidadesPerfiles() {
         List<FuncionalidadesPerfiles> newFuncionalidades = Mockito.mock(List.class);

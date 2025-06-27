@@ -33,7 +33,7 @@ class BajaEquipoBeanTest {
     private BajaEquipoBean bajaEquipoBean;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         bajaEquipoBean = new BajaEquipoBean(bajaEquipoMapper);
 
@@ -69,6 +69,7 @@ class BajaEquipoBeanTest {
     @Test
     void testObtenerBajasEquipos_success() {
         List<BajaEquipo> bajaEquipoList = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<BajaEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(BajaEquipo.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(bajaEquipoList);

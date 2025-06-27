@@ -21,6 +21,7 @@ public class CycleAvoidingMappingContext {
     private Map<Object, Object> knownInstances = new IdentityHashMap<>();
 
     @BeforeMapping
+    @SuppressWarnings("unchecked")
     public <T> T getMappedInstance(Object source, @TargetType Class<T> targetType) {
         return (T) knownInstances.get( source );
     }

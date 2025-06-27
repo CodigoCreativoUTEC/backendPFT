@@ -61,6 +61,7 @@ class EquiposUbicacioneBeanTest {
         List<EquiposUbicacione> equiposUbicacioneList = Collections.singletonList(new EquiposUbicacione());
         List<EquiposUbicacioneDto> equiposUbicacioneDtoList = Collections.singletonList(new EquiposUbicacioneDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<EquiposUbicacione> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT equiposUbicacione FROM EquiposUbicacione equiposUbicacione", EquiposUbicacione.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(equiposUbicacioneList);
@@ -79,6 +80,7 @@ class EquiposUbicacioneBeanTest {
         List<EquiposUbicacione> equiposUbicacioneList = Collections.singletonList(new EquiposUbicacione());
         List<EquiposUbicacioneDto> equiposUbicacioneDtoList = Collections.singletonList(new EquiposUbicacioneDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<EquiposUbicacione> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT equiposUbicacione FROM EquiposUbicacione equiposUbicacione WHERE equiposUbicacione.idEquipo.id = :id", EquiposUbicacione.class)).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);

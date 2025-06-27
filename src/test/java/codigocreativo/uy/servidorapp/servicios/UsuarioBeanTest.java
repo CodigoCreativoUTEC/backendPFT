@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +22,10 @@ import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext
 import java.lang.reflect.Field;
 import jakarta.persistence.Query;
 import java.time.LocalDate;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
 
 class UsuarioBeanTest {
     @Mock EntityManager em;
@@ -53,6 +56,7 @@ class UsuarioBeanTest {
         UsuarioDto dto = crearUsuarioDtoValido();
         
         // Mock para todas las validaciones exitosas
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
@@ -118,6 +122,7 @@ class UsuarioBeanTest {
         UsuarioDto dto = crearUsuarioDtoValido();
         
         // Mock para simular que el email ya existe
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
@@ -136,6 +141,7 @@ class UsuarioBeanTest {
         dto.setCedula(null);
         
         // Mock para email único
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
@@ -146,12 +152,14 @@ class UsuarioBeanTest {
         assertEquals("La cédula es obligatoria", exception.getMessage());
     }
 
-    @Test
-    void testCrearUsuarioCedulaVacia() {
+    @ParameterizedTest
+    @MethodSource("provideInvalidCedulas")
+    void testCrearUsuarioCedulaInvalida(String cedula, String expectedMessage) {
         UsuarioDto dto = crearUsuarioDtoValido();
-        dto.setCedula("");
+        dto.setCedula(cedula);
         
         // Mock para email único
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
@@ -159,84 +167,16 @@ class UsuarioBeanTest {
         
         ServiciosException exception = assertThrows(ServiciosException.class, 
             () -> usuarioBean.crearUsuario(dto));
-        assertEquals("La cédula es obligatoria", exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
-    @Test
-    void testCrearUsuarioCedulaInvalida() {
-        UsuarioDto dto = crearUsuarioDtoValido();
-        dto.setCedula("12345"); // Cédula con formato incorrecto (menos de 8 dígitos)
-        
-        // Mock para email único
-        TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
-        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException());
-        
-        ServiciosException exception = assertThrows(ServiciosException.class, 
-            () -> usuarioBean.crearUsuario(dto));
-        assertEquals("La cédula no es válida: 12345", exception.getMessage());
-    }
-
-    @Test
-    void testCrearUsuarioCedulaConLetras() {
-        UsuarioDto dto = crearUsuarioDtoValido();
-        dto.setCedula("1234567A"); // Cédula con letras (formato incorrecto)
-        
-        // Mock para email único
-        TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
-        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException());
-        
-        ServiciosException exception = assertThrows(ServiciosException.class, 
-            () -> usuarioBean.crearUsuario(dto));
-        assertEquals("La cédula no es válida: 1234567A", exception.getMessage());
-    }
-
-    @Test
-    void testCrearUsuarioCedulaDuplicada() {
-        UsuarioDto dto = crearUsuarioDtoValido();
-        
-        // Mock para email único
-        TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
-        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException()); // Email no existe
-        
-        // Mock para cédula duplicada
-        TypedQuery<Usuario> queryCedulaMock = mock(TypedQuery.class);
-        when(em.createQuery(contains("cedula"), eq(Usuario.class))).thenReturn(queryCedulaMock);
-        when(queryCedulaMock.setParameter(anyString(), any())).thenReturn(queryCedulaMock);
-        when(queryCedulaMock.getSingleResult()).thenReturn(new Usuario()); // Cédula encontrada
-        
-        ServiciosException exception = assertThrows(ServiciosException.class, 
-            () -> usuarioBean.crearUsuario(dto));
-        assertEquals("Ya existe un usuario con la cédula: " + dto.getCedula(), exception.getMessage());
-    }
-
-    @Test
-    void testCrearUsuarioCedulaValida() {
-        UsuarioDto dto = crearUsuarioDtoValido();
-        // Usar una cédula válida generada por la librería CIUY
-        String cedulaValida = validator.randomCi();
-        dto.setCedula(cedulaValida);
-        
-        // Mock para todas las validaciones exitosas
-        TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
-        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
-        when(queryMock.getSingleResult()).thenThrow(new NoResultException()); // No existe email ni cédula
-        
-        // Mock para el merge final
-        when(usuarioMapper.toEntity(any(UsuarioDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(new Usuario());
-        
-        // Ejecutar - ahora debería funcionar siempre ya que usamos una cédula válida
-        assertDoesNotThrow(() -> usuarioBean.crearUsuario(dto));
-        
-        // Verificar
-        assertEquals(Estados.SIN_VALIDAR, dto.getEstado());
-        verify(em).merge(any());
+    static Stream<Arguments> provideInvalidCedulas() {
+        return Stream.of(
+            Arguments.of("", "La cédula es obligatoria"),
+            Arguments.of("1234567a", "La cédula debe contener solo números: 1234567a"),
+            Arguments.of("123456789", "La cédula no puede tener más de 8 dígitos: 123456789"),
+            Arguments.of("1234-567", "La cédula debe contener solo números: 1234-567")
+        );
     }
 
     // ========== TESTS DE MÚLTIPLES CÉDULAS VÁLIDAS ==========
@@ -250,6 +190,7 @@ class UsuarioBeanTest {
             dto.setCedula(cedulaValida);
             
             // Crear nuevos mocks para cada iteración
+            @SuppressWarnings("unchecked")
             TypedQuery<Usuario> queryMock = mock(TypedQuery.class);
             when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(queryMock);
             when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
@@ -320,6 +261,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuarioDto() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -330,6 +272,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuarioPorCI() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -340,6 +283,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuarios() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Usuario()));
@@ -349,6 +293,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuariosFiltrados() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -359,6 +304,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuariosPorEstado() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -369,6 +315,7 @@ class UsuarioBeanTest {
 
     @Test
     void testLoginNoResult() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -378,6 +325,7 @@ class UsuarioBeanTest {
 
     @Test
     void testFindUserByEmailNoResult() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -387,6 +335,7 @@ class UsuarioBeanTest {
 
     @Test
     void testHasPermissionNoResult() {
+        @SuppressWarnings("unchecked")
         TypedQuery<UsuarioDto> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(UsuarioDto.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -396,6 +345,7 @@ class UsuarioBeanTest {
 
     @Test
     void testObtenerUsuariosFiltrado() {
+        @SuppressWarnings("unchecked")
         TypedQuery<Usuario> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Usuario.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);

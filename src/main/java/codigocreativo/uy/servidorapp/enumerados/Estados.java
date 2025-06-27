@@ -1,8 +1,6 @@
 package codigocreativo.uy.servidorapp.enumerados;
 
-import java.io.Serializable;
-
-public enum Estados implements Serializable {
+public enum Estados {
     ACTIVO("Activo"),
     INACTIVO("Inactivo"),
     SIN_VALIDAR("Sin validar");

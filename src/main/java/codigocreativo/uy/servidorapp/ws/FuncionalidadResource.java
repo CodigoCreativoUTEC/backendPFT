@@ -28,36 +28,61 @@ public class FuncionalidadResource {
     @Path("/crear")
     @Operation(summary = "Crear una funcionalidad", description = "Crea una nueva funcionalidad en la base de datos", tags = { "Funcionalidades" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Funcionalidad creada correctamente"),
+            @ApiResponse(responseCode = "201", description = "Funcionalidad creada correctamente", content = @Content(schema = @Schema(implementation = FuncionalidadDto.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response crear(FuncionalidadDto funcionalidad) {
-        this.funcionalidadRemote.crear(funcionalidad);
-        return Response.status(201).build();
+        FuncionalidadDto funcionalidadCreada = this.funcionalidadRemote.crear(funcionalidad);
+        return Response.status(Response.Status.CREATED)
+                .entity(funcionalidadCreada)
+                .build();
     }
 
     @PUT
     @Path("/modificar")
     @Operation(summary = "Modificar una funcionalidad", description = "Modifica una funcionalidad existente en la base de datos", tags = { "Funcionalidades" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Funcionalidad modificada correctamente"),
-            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "200", description = "Funcionalidad modificada correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response modificar(FuncionalidadDto funcionalidad) {
-        this.funcionalidadRemote.actualizar(funcionalidad);
-        return Response.status(200).build();
+        try {
+            FuncionalidadDto funcionalidadActualizada = this.funcionalidadRemote.actualizar(funcionalidad);
+            if (funcionalidadActualizada == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"message\": \"Funcionalidad no encontrada\"}")
+                        .build();
+            }
+            return Response.status(Response.Status.OK)
+                    .entity("{\"message\": \"Funcionalidad modificada correctamente\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\": \"Error al modificar la funcionalidad: " + e.getMessage() + "\"}")
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/eliminar/{id}")
     @Operation(summary = "Eliminar una funcionalidad", description = "Elimina una funcionalidad existente por su ID", tags = { "Funcionalidades" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Funcionalidad eliminada correctamente"),
-            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "200", description = "Funcionalidad eliminada correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Error al eliminar", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response eliminar(@Parameter(description = "ID de la funcionalidad a eliminar", required = true) @PathParam("id") Long id) {
-        this.funcionalidadRemote.eliminar(id);
-        return Response.status(200).build();
+        try {
+            this.funcionalidadRemote.eliminar(id);
+            return Response.status(Response.Status.OK)
+                    .entity("{\"message\": \"Funcionalidad eliminada correctamente\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\": \"Error al eliminar la funcionalidad: " + e.getMessage() + "\"}")
+                    .build();
+        }
     }
 
     @GET
@@ -71,14 +96,21 @@ public class FuncionalidadResource {
     }
 
     @GET
-    @Path("/buscar/{id}")
+    @Path("/seleccionar/{id}")
     @Operation(summary = "Buscar una funcionalidad por ID", description = "Obtiene la información de una funcionalidad específica por su ID", tags = { "Funcionalidades" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Funcionalidad encontrada", content = @Content(schema = @Schema(implementation = FuncionalidadDto.class))),
-            @ApiResponse(responseCode = "204", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public FuncionalidadDto buscarPorId(@Parameter(description = "ID de la funcionalidad a buscar", required = true) @PathParam("id") Long id) {
-        return this.funcionalidadRemote.buscarPorId(id);
-        //TODO> cuando se coloca un ID que no existe devuelve un 204 sin nada.
+    public Response buscarPorId(@Parameter(description = "ID de la funcionalidad a buscar", required = true) @PathParam("id") Long id) {
+        FuncionalidadDto funcionalidad = this.funcionalidadRemote.buscarPorId(id);
+        if (funcionalidad == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("{\"message\": \"Funcionalidad no encontrada\"}")
+                    .build();
+        }
+        return Response.status(Response.Status.OK)
+                .entity(funcionalidad)
+                .build();
     }
 }

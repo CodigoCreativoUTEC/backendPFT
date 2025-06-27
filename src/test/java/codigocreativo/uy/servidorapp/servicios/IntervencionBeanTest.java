@@ -112,6 +112,7 @@ class IntervencionBeanTest {
         Intervencion intervencionEntity = new Intervencion();
         List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
         when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);
@@ -137,6 +138,7 @@ class IntervencionBeanTest {
         intervencionEntity.setIdTipo(tipoIntervencion);
         List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Intervencion> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
         when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);

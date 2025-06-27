@@ -83,6 +83,7 @@ class MarcasModeloBeanTest {
     @Test
     void testObtenerMarcasLista_success() {
         List<MarcasModelo> marcasModeloList = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<MarcasModelo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(MarcasModelo.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(marcasModeloList);
@@ -97,7 +98,8 @@ class MarcasModeloBeanTest {
     @Test
     void testEliminarMarca_success() {
         Long id = 1L;
-        TypedQuery query = mock(TypedQuery.class);
+        @SuppressWarnings("unchecked")
+        TypedQuery<MarcasModelo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString())).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);
 

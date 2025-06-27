@@ -9,7 +9,7 @@ import static org.mockito.Mockito.*;
 
 class AuditoriaFilterTest {
     @Test
-    void testFilterRequest() throws IOException {
+    void testFilterRequest() {
         AuditoriaFilter filter = new AuditoriaFilter();
         ContainerRequestContext reqCtx = mock(ContainerRequestContext.class);
         when(reqCtx.getMethod()).thenReturn("GET");
@@ -20,7 +20,7 @@ class AuditoriaFilterTest {
     }
 
     @Test
-    void testFilterResponse() throws IOException {
+    void testFilterResponse() {
         AuditoriaFilter filter = new AuditoriaFilter();
         ContainerRequestContext reqCtx = mock(ContainerRequestContext.class);
         ContainerResponseContext respCtx = mock(ContainerResponseContext.class);

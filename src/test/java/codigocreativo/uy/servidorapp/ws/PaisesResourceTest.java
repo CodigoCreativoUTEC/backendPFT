@@ -51,11 +51,11 @@ class PaisesResourceTest {
     }
 
     @Test
-    void testListarProveedores() {
+    void testListarPaises() {
         List<PaisDto> expectedList = List.of(paisDto);
         when(er.obtenerpais()).thenReturn(expectedList);
 
-        List<PaisDto> result = paisesResource.listarProveedores();
+        List<PaisDto> result = paisesResource.listarPaises();
 
         assertNotNull(result);
         assertEquals(1, result.size());

@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -33,26 +34,47 @@ class FuncionalidadResourceTest {
     @Test
     void testCrearFuncionalidad() {
         FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        FuncionalidadDto funcionalidadCreada = new FuncionalidadDto();
+        funcionalidadCreada.setId(1L);
+        funcionalidadCreada.setNombreFuncionalidad("Nueva Funcionalidad");
 
-        // No es necesario hacer doNothing() para un método void
-        // Simplemente llamamos a when con el método en cuestión
-        when(funcionalidadRemote.crear(any(FuncionalidadDto.class))).thenReturn(null);
+        when(funcionalidadRemote.crear(any(FuncionalidadDto.class))).thenReturn(funcionalidadCreada);
 
         Response response = funcionalidadResource.crear(funcionalidadDto);
 
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertEquals(funcionalidadCreada, response.getEntity());
         verify(funcionalidadRemote, times(1)).crear(any(FuncionalidadDto.class));
     }
 
     @Test
     void testModificarFuncionalidad() {
         FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(1L);
+        funcionalidadDto.setNombreFuncionalidad("Funcionalidad Modificada");
+
+        when(funcionalidadRemote.actualizar(any(FuncionalidadDto.class))).thenReturn(funcionalidadDto);
+
+        Response response = funcionalidadResource.modificar(funcionalidadDto);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Funcionalidad modificada correctamente"));
+        verify(funcionalidadRemote, times(1)).actualizar(any(FuncionalidadDto.class));
+    }
+
+    @Test
+    void testModificarFuncionalidadNoEncontrada() {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(999L);
 
         when(funcionalidadRemote.actualizar(any(FuncionalidadDto.class))).thenReturn(null);
 
         Response response = funcionalidadResource.modificar(funcionalidadDto);
 
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Funcionalidad no encontrada"));
         verify(funcionalidadRemote, times(1)).actualizar(any(FuncionalidadDto.class));
     }
 
@@ -63,6 +85,20 @@ class FuncionalidadResourceTest {
         Response response = funcionalidadResource.eliminar(1L);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Funcionalidad eliminada correctamente"));
+        verify(funcionalidadRemote, times(1)).eliminar(anyLong());
+    }
+
+    @Test
+    void testEliminarFuncionalidadConError() {
+        doThrow(new RuntimeException("Error de base de datos")).when(funcionalidadRemote).eliminar(anyLong());
+
+        Response response = funcionalidadResource.eliminar(1L);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Error al eliminar la funcionalidad"));
         verify(funcionalidadRemote, times(1)).eliminar(anyLong());
     }
 
@@ -84,10 +120,24 @@ class FuncionalidadResourceTest {
         funcionalidadDto.setId(1L);
         when(funcionalidadRemote.buscarPorId(1L)).thenReturn(funcionalidadDto);
 
-        FuncionalidadDto result = funcionalidadResource.buscarPorId(1L);
+        Response response = funcionalidadResource.buscarPorId(1L);
 
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        FuncionalidadDto result = (FuncionalidadDto) response.getEntity();
         assertNotNull(result);
         assertEquals(1L, result.getId());
+        verify(funcionalidadRemote, times(1)).buscarPorId(anyLong());
+    }
+
+    @Test
+    void testBuscarFuncionalidadPorIdNoEncontrada() {
+        when(funcionalidadRemote.buscarPorId(999L)).thenReturn(null);
+
+        Response response = funcionalidadResource.buscarPorId(999L);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Funcionalidad no encontrada"));
         verify(funcionalidadRemote, times(1)).buscarPorId(anyLong());
     }
 }

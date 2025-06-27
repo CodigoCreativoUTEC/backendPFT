@@ -1,8 +1,11 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.InstitucionDto;
+import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
 import codigocreativo.uy.servidorapp.dtos.dtomappers.InstitucionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Institucion;
+import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +29,9 @@ class InstitucionBeanTest {
     @Mock
     private InstitucionMapper institucionMapper;
 
+    @Mock
+    private UbicacionMapper ubicacionMapper;
+
     @InjectMocks
     private InstitucionBean institucionBean;
 
@@ -33,7 +39,7 @@ class InstitucionBeanTest {
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
 
-        institucionBean = new InstitucionBean(institucionMapper);
+        institucionBean = new InstitucionBean(institucionMapper, ubicacionMapper);
 
         // Inyectar el EntityManager usando reflexión
         Field emField = InstitucionBean.class.getDeclaredField("em");
@@ -82,14 +88,18 @@ class InstitucionBeanTest {
 
     @Test
     void testObtenerUbicaciones() {
-        TypedQuery<Object> query = mock(TypedQuery.class);
-        when(em.createQuery("SELECT Ubicacion FROM Institucion i, Institucion.class")).thenReturn(query);
-        when(query.getResultList()).thenReturn(Collections.singletonList("Ubicacion 1"));
+        List<Ubicacion> ubicaciones = Collections.singletonList(new Ubicacion());
+        List<UbicacionDto> ubicacionesDto = Collections.singletonList(new UbicacionDto());
 
-        List<Object> result = institucionBean.obtenerUbicaciones();
+        @SuppressWarnings("unchecked")
+        TypedQuery<Ubicacion> query = mock(TypedQuery.class);
+        when(em.createQuery("SELECT u FROM Ubicacion u", Ubicacion.class)).thenReturn(query);
+        when(query.getResultList()).thenReturn(ubicaciones);
+        when(ubicacionMapper.toDto(ubicaciones)).thenReturn(ubicacionesDto);
 
-        assertEquals(1, result.size());
-        assertEquals("Ubicacion 1", result.get(0));
+        List<UbicacionDto> result = institucionBean.obtenerUbicaciones();
+
+        assertEquals(ubicacionesDto, result);
         verify(query).getResultList();
     }
 
@@ -98,6 +108,7 @@ class InstitucionBeanTest {
         List<Institucion> instituciones = Collections.singletonList(new Institucion());
         List<InstitucionDto> institucionesDto = Collections.singletonList(new InstitucionDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Institucion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT i FROM Institucion i", Institucion.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(instituciones);
@@ -115,6 +126,7 @@ class InstitucionBeanTest {
         Institucion institucion = new Institucion();
         InstitucionDto institucionDto = new InstitucionDto();
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Institucion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT i FROM Institucion i WHERE i.nombre = :nombre", Institucion.class)).thenReturn(query);
         when(query.setParameter("nombre", nombre)).thenReturn(query);
@@ -132,6 +144,7 @@ class InstitucionBeanTest {
         Institucion institucion = new Institucion();
         InstitucionDto institucionDto = new InstitucionDto();
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Institucion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT i FROM Institucion i WHERE i.id = :id", Institucion.class)).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);

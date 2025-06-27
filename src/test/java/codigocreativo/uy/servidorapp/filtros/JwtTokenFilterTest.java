@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.filtros;
 
-import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import io.jsonwebtoken.Claims;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -9,9 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.util.Collections;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class JwtTokenFilterTest {

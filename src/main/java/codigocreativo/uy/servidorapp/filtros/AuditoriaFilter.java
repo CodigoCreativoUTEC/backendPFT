@@ -5,6 +5,8 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 @Provider
 public class AuditoriaFilter implements ContainerRequestFilter, ContainerResponseFilter {
     
+    private static final Logger logger = LoggerFactory.getLogger(AuditoriaFilter.class);
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
@@ -25,15 +28,17 @@ public class AuditoriaFilter implements ContainerRequestFilter, ContainerRespons
         }
         String userAgent = requestContext.getHeaderString("User-Agent");
 
-        StringBuilder logMessage = new StringBuilder();
-        logMessage.append("=== AUDITORIA DE SOLICITUD ===\n");
-        logMessage.append("Timestamp: ").append(timestamp).append("\n");
-        logMessage.append("Método: ").append(method).append("\n");
-        logMessage.append("URI: ").append(uri).append("\n");
-        logMessage.append("IP Cliente: ").append(clientIP).append("\n");
-        logMessage.append("User-Agent: ").append(userAgent);
+        if (logger.isInfoEnabled()) {
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append("=== AUDITORIA DE SOLICITUD ===\n");
+            logMessage.append("Timestamp: ").append(timestamp).append("\n");
+            logMessage.append("Método: ").append(method).append("\n");
+            logMessage.append("URI: ").append(uri).append("\n");
+            logMessage.append("IP Cliente: ").append(clientIP).append("\n");
+            logMessage.append("User-Agent: ").append(userAgent);
 
-        System.out.println(logMessage.toString());
+            logger.info(logMessage.toString());
+        }
     }
 
     @Override
@@ -41,11 +46,13 @@ public class AuditoriaFilter implements ContainerRequestFilter, ContainerRespons
         String timestamp = LocalDateTime.now().format(formatter);
         int status = responseContext.getStatus();
         
-        StringBuilder logMessage = new StringBuilder();
-        logMessage.append("=== AUDITORIA DE RESPUESTA ===\n");
-        logMessage.append("Timestamp: ").append(timestamp).append("\n");
-        logMessage.append("Status: ").append(status);
+        if (logger.isInfoEnabled()) {
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append("=== AUDITORIA DE RESPUESTA ===\n");
+            logMessage.append("Timestamp: ").append(timestamp).append("\n");
+            logMessage.append("Status: ").append(status);
 
-        System.out.println(logMessage.toString());
+            logger.info(logMessage.toString());
+        }
     }
 } 

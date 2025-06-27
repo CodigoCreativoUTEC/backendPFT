@@ -100,6 +100,7 @@ class TiposEquipoBeanTest {
         List<TiposEquipo> tiposEquiposEntity = Collections.singletonList(new TiposEquipo());
         List<TiposEquipoDto> tiposEquiposDto = Collections.singletonList(new TiposEquipoDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT t FROM TiposEquipo t", TiposEquipo.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(tiposEquiposEntity);

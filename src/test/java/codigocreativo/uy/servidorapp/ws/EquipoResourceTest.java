@@ -97,6 +97,7 @@ class EquipoResourceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void testFiltrarEquipos() {
         List<EquipoDto> equipos = List.of(new EquipoDto(), new EquipoDto());
         when(equipoRemote.obtenerEquiposFiltrado(any(Map.class))).thenReturn(equipos);

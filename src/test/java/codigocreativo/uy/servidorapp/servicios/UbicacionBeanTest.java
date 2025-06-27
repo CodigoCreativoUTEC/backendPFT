@@ -108,7 +108,8 @@ class UbicacionBeanTest {
         Ubicacion ubicacionEntity = new Ubicacion();
         List<Ubicacion> ubicaciones = Collections.singletonList(ubicacionEntity);
 
-        TypedQuery<Ubicacion> query = mock(TypedQuery.class);
+        @SuppressWarnings("unchecked")
+		TypedQuery<Ubicacion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.estado = 'ACTIVO'", Ubicacion.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(ubicaciones);
         when(ubicacionMapper.toDto(ubicaciones)).thenReturn(Collections.singletonList(new UbicacionDto()));
@@ -125,6 +126,7 @@ class UbicacionBeanTest {
         Ubicacion ubicacionEntity = new Ubicacion();
         UbicacionDto ubicacionDto = new UbicacionDto();
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Ubicacion> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT u FROM Ubicacion u WHERE u.id = :id", Ubicacion.class)).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);

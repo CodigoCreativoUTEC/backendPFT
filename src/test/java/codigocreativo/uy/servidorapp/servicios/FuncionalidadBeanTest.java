@@ -49,6 +49,7 @@ class FuncionalidadBeanTest {
         List<Funcionalidad> funcionalidades = Collections.singletonList(new Funcionalidad());
         List<FuncionalidadDto> funcionalidadesDto = Collections.singletonList(new FuncionalidadDto());
 
+        @SuppressWarnings("unchecked")
         TypedQuery<Funcionalidad> query = mock(TypedQuery.class);
         when(em.createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(funcionalidades);

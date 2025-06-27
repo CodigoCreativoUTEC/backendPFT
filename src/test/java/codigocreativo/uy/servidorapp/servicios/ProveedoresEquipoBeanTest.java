@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.util.Collections;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -59,6 +58,7 @@ class ProveedoresEquipoBeanTest {
 
     @Test
     void testObtenerProveedores() {
+        @SuppressWarnings("unchecked")
         TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new ProveedoresEquipo()));
@@ -79,6 +79,7 @@ class ProveedoresEquipoBeanTest {
 
     @Test
     void testBuscarProveedores() {
+        @SuppressWarnings("unchecked")
         TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);

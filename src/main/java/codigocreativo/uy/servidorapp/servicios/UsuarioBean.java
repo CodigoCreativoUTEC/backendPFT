@@ -99,11 +99,30 @@ public class UsuarioBean implements UsuarioRemote {
         }
         
         String cedulaLimpia = cedula.trim();
+        
+        // Validar que la cédula solo contenga dígitos
+        if (!cedulaLimpia.matches("\\d+")) {
+            throw new ServiciosException("La cédula debe contener solo números: " + cedula);
+        }
+        
+        // Validar que la cédula no exceda 8 dígitos
+        if (cedulaLimpia.length() > 8) {
+            throw new ServiciosException("La cédula no puede tener más de 8 dígitos: " + cedula);
+        }
+        
         Validator validator = new Validator();
         
-        // Usar la librería CIUY para validar la cédula uruguaya
-        if (!validator.validateCi(cedulaLimpia)) {
-            throw new ServiciosException("La cédula no es válida: " + cedula);
+        try {
+            // Usar la librería CIUY para validar la cédula uruguaya
+            if (!validator.validateCi(cedulaLimpia)) {
+                throw new ServiciosException("La cédula no es válida: " + cedula);
+            }
+        } catch (StringIndexOutOfBoundsException e) {
+            // Capturar la excepción específica de la librería CIUY
+            throw new ServiciosException("La cédula tiene un formato inválido: " + cedula);
+        } catch (Exception e) {
+            // Capturar cualquier otra excepción de la librería
+            throw new ServiciosException("Error al validar la cédula: " + cedula);
         }
     }
 

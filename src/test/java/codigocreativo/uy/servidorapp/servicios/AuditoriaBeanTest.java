@@ -33,7 +33,7 @@ class AuditoriaBeanTest {
     private AuditoriaBean auditoriaBean;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         auditoriaBean = new AuditoriaBean(auditoriaMapper);
 
@@ -65,6 +65,7 @@ class AuditoriaBeanTest {
     @Test
     void testObtenerTodas_success() {
         List<Auditoria> auditoriaList = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<Auditoria> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(Auditoria.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(auditoriaList);

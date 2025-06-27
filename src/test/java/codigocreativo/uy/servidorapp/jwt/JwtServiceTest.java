@@ -1,11 +1,8 @@
 package codigocreativo.uy.servidorapp.jwt;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.security.Key;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
