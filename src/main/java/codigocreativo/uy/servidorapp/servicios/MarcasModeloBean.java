@@ -43,7 +43,18 @@ public class MarcasModeloBean implements MarcasModeloRemote{
 
     @Override
     public List<MarcasModeloDto> obtenerMarcasLista() {
-        return marcasModeloMapper.toDto(em.createQuery("SELECT marcasModelo FROM MarcasModelo marcasModelo", MarcasModelo.class).getResultList());
+        return marcasModeloMapper.toDto(
+            em.createQuery("SELECT marcasModelo FROM MarcasModelo marcasModelo ORDER BY marcasModelo.id DESC", MarcasModelo.class)
+                .getResultList()
+        );
+    }
+
+    public List<MarcasModeloDto> obtenerMarcasPorEstadoLista(Estados estado) {
+        return marcasModeloMapper.toDto(
+            em.createQuery("SELECT marcasModelo FROM MarcasModelo marcasModelo WHERE marcasModelo.estado = :estado ORDER BY marcasModelo.id DESC", MarcasModelo.class)
+                .setParameter("estado", estado.name())
+                .getResultList()
+        );
     }
 
     @Override

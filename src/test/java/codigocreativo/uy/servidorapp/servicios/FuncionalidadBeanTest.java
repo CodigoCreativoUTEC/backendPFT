@@ -5,7 +5,9 @@ import codigocreativo.uy.servidorapp.dtos.dtomappers.FuncionalidadMapper;
 import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
 import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
+import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,14 +53,14 @@ class FuncionalidadBeanTest {
 
         @SuppressWarnings("unchecked")
         TypedQuery<Funcionalidad> query = mock(TypedQuery.class);
-        when(em.createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class)).thenReturn(query);
+        when(em.createQuery("SELECT f FROM Funcionalidad f ORDER BY f.ruta", Funcionalidad.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(funcionalidades);
         when(funcionalidadMapper.toDto(anyList(), any(CycleAvoidingMappingContext.class))).thenReturn(funcionalidadesDto);
 
         List<FuncionalidadDto> result = funcionalidadBean.obtenerTodas();
 
         assertEquals(funcionalidadesDto, result);
-        verify(em).createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class);
+        verify(em).createQuery("SELECT f FROM Funcionalidad f ORDER BY f.ruta", Funcionalidad.class);
         verify(query).getResultList();
     }
 
@@ -109,16 +111,53 @@ class FuncionalidadBeanTest {
     }
 
     @Test
-    void testEliminar() {
+    void testEliminar_Success() throws ServiciosException {
         Funcionalidad funcionalidad = new Funcionalidad();
         funcionalidad.setId(1L);
+        funcionalidad.setFuncionalidadesPerfiles(Collections.emptyList());
 
         when(em.find(Funcionalidad.class, funcionalidad.getId())).thenReturn(funcionalidad);
 
-        funcionalidadBean.eliminar(funcionalidad.getId());
+        assertDoesNotThrow(() -> funcionalidadBean.eliminar(funcionalidad.getId()));
 
         verify(em).remove(funcionalidad);
         verify(em).flush();
+    }
+
+    @Test
+    void testEliminar_WithNullId() {
+        assertThrows(ServiciosException.class, () -> funcionalidadBean.eliminar(null));
+        verify(em, never()).remove(any());
+        verify(em, never()).flush();
+    }
+
+    @Test
+    void testEliminar_FuncionalidadNotFound() {
+        Long id = 999L;
+        when(em.find(Funcionalidad.class, id)).thenReturn(null);
+
+        assertThrows(ServiciosException.class, () -> funcionalidadBean.eliminar(id));
+        verify(em, never()).remove(any());
+        verify(em, never()).flush();
+    }
+
+    @Test
+    void testEliminar_WithAssociatedProfiles() {
+        Funcionalidad funcionalidad = new Funcionalidad();
+        funcionalidad.setId(1L);
+        
+        // Crear una lista con perfiles asociados
+        FuncionalidadesPerfiles perfilAsociado = new FuncionalidadesPerfiles();
+        funcionalidad.setFuncionalidadesPerfiles(Collections.singletonList(perfilAsociado));
+
+        when(em.find(Funcionalidad.class, funcionalidad.getId())).thenReturn(funcionalidad);
+
+        ServiciosException exception = assertThrows(ServiciosException.class, 
+            () -> funcionalidadBean.eliminar(funcionalidad.getId()));
+        
+        assertEquals("No se puede eliminar la funcionalidad porque tiene perfiles asociados", exception.getMessage());
+        verify(em, never()).remove(any());
+        verify(em, never()).flush();
     }
 
     @Test

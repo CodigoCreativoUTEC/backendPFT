@@ -8,6 +8,7 @@ import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfilesId;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -18,6 +19,9 @@ import java.util.List;
 
 @Stateless
 public class FuncionalidadBean implements FuncionalidadRemote {
+    private static final String ERROR_FUNCIONALIDAD_NO_ENCONTRADA = "Funcionalidad no encontrada con ID: ";
+    private static final String ERROR_FUNCIONALIDAD_CON_PERFILES = "No se puede eliminar la funcionalidad porque tiene perfiles asociados";
+    
     @PersistenceContext(unitName = "default")
     private EntityManager em;
     private final FuncionalidadMapper funcionalidadMapper;
@@ -30,7 +34,7 @@ public class FuncionalidadBean implements FuncionalidadRemote {
     @Override
     public List<FuncionalidadDto> obtenerTodas() {
         return funcionalidadMapper.toDto(
-                em.createQuery("SELECT f FROM Funcionalidad f", Funcionalidad.class).getResultList(),
+                em.createQuery("SELECT f FROM Funcionalidad f ORDER BY f.ruta", Funcionalidad.class).getResultList(),
                 new CycleAvoidingMappingContext()
         );
     }
@@ -81,12 +85,26 @@ public class FuncionalidadBean implements FuncionalidadRemote {
     }
 
     @Override
-    public void eliminar(Long id) {
-        Funcionalidad funcionalidad = em.find(Funcionalidad.class, id);
-        if (funcionalidad != null) {
-            em.remove(funcionalidad);
-            em.flush();
+    public void eliminar(Long id) throws ServiciosException {
+        // Validar que el ID no sea null
+        if (id == null) {
+            throw new ServiciosException("El ID de la funcionalidad es obligatorio para la eliminación");
         }
+
+        // Buscar la funcionalidad
+        Funcionalidad funcionalidad = em.find(Funcionalidad.class, id);
+        if (funcionalidad == null) {
+            throw new ServiciosException(ERROR_FUNCIONALIDAD_NO_ENCONTRADA + id);
+        }
+
+        // Verificar si tiene perfiles asociados
+        if (funcionalidad.getFuncionalidadesPerfiles() != null && !funcionalidad.getFuncionalidadesPerfiles().isEmpty()) {
+            throw new ServiciosException(ERROR_FUNCIONALIDAD_CON_PERFILES);
+        }
+
+        // Si no tiene perfiles asociados, proceder con la eliminación
+        em.remove(funcionalidad);
+        em.flush();
     }
 
     @Override

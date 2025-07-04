@@ -3,7 +3,6 @@ package codigocreativo.uy.servidorapp.filtros;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import org.junit.jupiter.api.Test;
-import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

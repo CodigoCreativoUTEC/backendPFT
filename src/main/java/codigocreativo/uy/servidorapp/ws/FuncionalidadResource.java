@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -64,23 +65,27 @@ public class FuncionalidadResource {
         }
     }
 
-    @DELETE
-    @Path("/eliminar/{id}")
+    @PUT
+    @Path("/eliminar")
     @Operation(summary = "Eliminar una funcionalidad", description = "Elimina una funcionalidad existente por su ID", tags = { "Funcionalidades" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Funcionalidad eliminada correctamente", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "400", description = "Error al eliminar", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public Response eliminar(@Parameter(description = "ID de la funcionalidad a eliminar", required = true) @PathParam("id") Long id) {
+    public Response eliminar(@Parameter(description = "ID de la funcionalidad a eliminar", required = true) @QueryParam("id") Long id) {
         try {
             this.funcionalidadRemote.eliminar(id);
             return Response.status(Response.Status.OK)
                     .entity("{\"message\": \"Funcionalidad eliminada correctamente\"}")
                     .build();
-        } catch (Exception e) {
+        } catch (ServiciosException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\": \"Error al eliminar la funcionalidad: " + e.getMessage() + "\"}")
+                    .entity("{\"message\": \"" + e.getMessage() + "\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"message\": \"Error interno del servidor: " + e.getMessage() + "\"}")
                     .build();
         }
     }

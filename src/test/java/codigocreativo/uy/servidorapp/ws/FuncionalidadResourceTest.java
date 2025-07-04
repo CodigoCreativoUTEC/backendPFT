@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class FuncionalidadResourceTest {
     }
 
     @Test
-    void testEliminarFuncionalidad() {
+    void testEliminarFuncionalidad() throws ServiciosException {
         doNothing().when(funcionalidadRemote).eliminar(anyLong());
 
         Response response = funcionalidadResource.eliminar(1L);
@@ -91,14 +92,40 @@ class FuncionalidadResourceTest {
     }
 
     @Test
-    void testEliminarFuncionalidadConError() {
-        doThrow(new RuntimeException("Error de base de datos")).when(funcionalidadRemote).eliminar(anyLong());
+    void testEliminarFuncionalidadConPerfilesAsociados() throws ServiciosException {
+        doThrow(new ServiciosException("No se puede eliminar la funcionalidad porque tiene perfiles asociados"))
+                .when(funcionalidadRemote).eliminar(anyLong());
 
         Response response = funcionalidadResource.eliminar(1L);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
-        assertTrue(responseBody.contains("Error al eliminar la funcionalidad"));
+        assertTrue(responseBody.contains("No se puede eliminar la funcionalidad porque tiene perfiles asociados"));
+        verify(funcionalidadRemote, times(1)).eliminar(anyLong());
+    }
+
+    @Test
+    void testEliminarFuncionalidadNoEncontrada() throws ServiciosException {
+        doThrow(new ServiciosException("Funcionalidad no encontrada con ID: 999"))
+                .when(funcionalidadRemote).eliminar(anyLong());
+
+        Response response = funcionalidadResource.eliminar(1L);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Funcionalidad no encontrada con ID: 999"));
+        verify(funcionalidadRemote, times(1)).eliminar(anyLong());
+    }
+
+    @Test
+    void testEliminarFuncionalidadConErrorInterno() throws ServiciosException {
+        doThrow(new RuntimeException("Error de base de datos")).when(funcionalidadRemote).eliminar(anyLong());
+
+        Response response = funcionalidadResource.eliminar(1L);
+
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("Error interno del servidor"));
         verify(funcionalidadRemote, times(1)).eliminar(anyLong());
     }
 

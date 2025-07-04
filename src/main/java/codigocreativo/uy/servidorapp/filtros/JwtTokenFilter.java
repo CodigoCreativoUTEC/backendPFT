@@ -55,9 +55,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Procesando petición para el path: " + path);
-        }
+        LOGGER.info("Procesando petición para el path: " + path);
 
         // Verificar si es un endpoint público
         if (isPublicEndpoint(path)) {
@@ -65,6 +63,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             return;
         }
 
+        LOGGER.info("Endpoint requiere autenticación, procesando token JWT");
         // Procesar autenticación y autorización
         processAuthenticationAndAuthorization(requestContext, path);
     }
@@ -190,8 +189,10 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private void storeUserInfo(ContainerRequestContext requestContext, 
                             String email, 
                             String perfil) {
+        LOGGER.info("Almacenando información del usuario en el contexto - Email: " + email + ", Perfil: " + perfil);
         requestContext.setProperty("email", email);
         requestContext.setProperty("perfil", perfil);
+        LOGGER.info("Información del usuario almacenada correctamente");
     }
 
     private boolean isPublicEndpoint(String path) {

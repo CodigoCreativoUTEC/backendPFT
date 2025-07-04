@@ -41,6 +41,8 @@ public class UsuarioResource {
 
     private static final String EMAIL = "email";
     private static final String BEARER = "bearer";
+    private static final String PERFIL = "perfil";
+    private static final String ADMINISTRADOR = "Administrador";
 
     @POST
     @Path("/crear")
@@ -96,9 +98,9 @@ public class UsuarioResource {
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String emailSolicitante = claims.getSubject();
-            String perfilSolicitante = claims.get("perfil", String.class);
+            String perfilSolicitante = claims.get(PERFIL, String.class);
 
-            if (!perfilSolicitante.equals("Administrador")) {
+            if (!perfilSolicitante.equals(ADMINISTRADOR)) {
                 return Response.status(Response.Status.FORBIDDEN)
                         .entity("{\"error\":\"Solo los administradores pueden modificar usuarios\"}")
                         .build();
@@ -248,9 +250,9 @@ public class UsuarioResource {
         String token = authorizationHeader.substring(BEARER.length()).trim();
         Claims claims = jwtService.parseToken(token);
         String emailSolicitante = claims.getSubject();
-        String perfilSolicitante = claims.get("perfil", String.class);
+        String perfilSolicitante = claims.get(PERFIL, String.class);
 
-        if (!perfilSolicitante.equals("Administrador")) {
+        if (!perfilSolicitante.equals(ADMINISTRADOR)) {
             return Response.status(Response.Status.FORBIDDEN)
                     .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
         }
@@ -266,7 +268,7 @@ public class UsuarioResource {
                     .entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
         }
 
-        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals("Administrador")) {
+        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
             return Response.status(Response.Status.FORBIDDEN)
                     .entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
         }
@@ -489,7 +491,7 @@ public class UsuarioResource {
             }
 
             String email = claims.get(EMAIL, String.class);
-            String perfil = claims.get("perfil", String.class);
+            String perfil = claims.get(PERFIL, String.class);
 
             String nuevoToken = jwtService.generateToken(email, perfil);
 

@@ -13,7 +13,7 @@ public interface BajaEquipoMapper {
     BajaEquipoDto toDto(BajaEquipo bajaEquipo, @Context CycleAvoidingMappingContext context);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    BajaEquipo partialUpdate(BajaEquipoDto bajaEquipoDto, @MappingTarget BajaEquipo bajaEquipo);
+    BajaEquipo partialUpdate(BajaEquipoDto bajaEquipoDto, @MappingTarget BajaEquipo bajaEquipo, @Context CycleAvoidingMappingContext context);
 
     List<BajaEquipo> toEntity(List<BajaEquipoDto> bajaEquipoDto, @Context CycleAvoidingMappingContext context);
 

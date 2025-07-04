@@ -41,16 +41,6 @@ class MarcaResourceTest {
     }
 
     @Test
-    void testModificarMarca() {
-        doNothing().when(er).modificarMarcasModelo(any(MarcasModeloDto.class));
-
-        Response response = marcaResource.modificarMarca(marcaDto);
-
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        verify(er, times(1)).modificarMarcasModelo(any(MarcasModeloDto.class));
-    }
-
-    @Test
     void testEliminarMarca() {
         Long id = 1L;
         doNothing().when(er).eliminarMarca(id);

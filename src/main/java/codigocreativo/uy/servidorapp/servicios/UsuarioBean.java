@@ -32,6 +32,7 @@ public class UsuarioBean implements UsuarioRemote {
     private static final String EMAIL = "email";
     private static final String ESTADO = "estado";
     private static final int EDAD_MINIMA = 18;
+    private static final String QUERY_USUARIO_POR_EMAIL = "SELECT u FROM Usuario u WHERE u.email = :email";
 
     @Override
     public void crearUsuario(UsuarioDto u) throws ServiciosException {
@@ -81,7 +82,7 @@ public class UsuarioBean implements UsuarioRemote {
         }
         
         try {
-            em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
+            em.createQuery(QUERY_USUARIO_POR_EMAIL, Usuario.class)
                     .setParameter(EMAIL, email.trim())
                     .getSingleResult();
             throw new ServiciosException("Ya existe un usuario con el email: " + email);
@@ -207,7 +208,7 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public UsuarioDto findUserByEmail(String email) {
         try {
-            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
+            return usuarioMapper.toDto(em.createQuery(QUERY_USUARIO_POR_EMAIL, Usuario.class)
                     .setParameter(EMAIL, email)
                     .getSingleResult(), new CycleAvoidingMappingContext());
         } catch (NoResultException e) {
@@ -218,7 +219,7 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public boolean hasPermission(String email, String requiredRole) {
         try {
-            UsuarioDto usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", UsuarioDto.class)
+            UsuarioDto usuario = em.createQuery(QUERY_USUARIO_POR_EMAIL, UsuarioDto.class)
                     .setParameter(EMAIL, email)
                     .getSingleResult();
             return usuario.getIdPerfil().getNombrePerfil().equals(requiredRole);

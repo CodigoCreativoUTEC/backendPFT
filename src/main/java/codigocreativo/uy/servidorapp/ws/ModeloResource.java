@@ -52,7 +52,7 @@ public class ModeloResource {
         return Response.status(200).build();
     }
 
-    @DELETE
+    @PUT
     @Path("/inactivar")
     @Operation(summary = "Inactivar un modelo", description = "Inactiva un modelo en la base de datos", tags = { "Modelos" })
     @ApiResponses(value = {

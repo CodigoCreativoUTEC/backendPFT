@@ -2,10 +2,10 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.dtos.EquipoDto;
-import codigocreativo.uy.servidorapp.dtos.dtomappers.BajaEquipoMapper;
 import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.dtos.dtomappers.EquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.Equipo;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -18,22 +18,102 @@ import java.util.Map;
 
 @Stateless
 public class EquipoBean implements EquipoRemote {
+    private static final String ERROR_EQUIPO_NULL = "El equipo no puede ser null";
+    private static final String ERROR_NOMBRE_OBLIGATORIO = "El nombre del equipo es obligatorio";
+    private static final String ERROR_TIPO_OBLIGATORIO = "El tipo de equipo es obligatorio";
+    private static final String ERROR_MARCA_OBLIGATORIO = "La marca del equipo es obligatoria";
+    private static final String ERROR_MODELO_OBLIGATORIO = "El modelo del equipo es obligatorio";
+    private static final String ERROR_NUMERO_SERIE_OBLIGATORIO = "El número de serie es obligatorio";
+    private static final String ERROR_GARANTIA_OBLIGATORIO = "La garantía es obligatoria";
+    private static final String ERROR_PAIS_OBLIGATORIO = "El país de origen es obligatorio";
+    private static final String ERROR_PROVEEDOR_OBLIGATORIO = "El proveedor es obligatorio";
+    private static final String ERROR_FECHA_ADQUISICION_OBLIGATORIO = "La fecha de adquisición es obligatoria";
+    private static final String ERROR_IDENTIFICACION_INTERNA_OBLIGATORIO = "La identificación interna es obligatoria";
+    private static final String ERROR_UBICACION_OBLIGATORIO = "La ubicación es obligatoria";
+    private static final String ERROR_IMAGEN_OBLIGATORIO = "La imagen del equipo es obligatoria";
+    private static final String ERROR_IDENTIFICACION_INTERNA_DUPLICADA = "Ya existe un equipo con la identificación interna: ";
+    private static final String ERROR_NUMERO_SERIE_DUPLICADO = "Ya existe un equipo con el número de serie: ";
+    
     @PersistenceContext(unitName = "default")
     private EntityManager em;
 
     private final EquipoMapper equipoMapper;
-    private final BajaEquipoMapper bajaEquipoMapper;
 
     @Inject
-    public EquipoBean(EquipoMapper equipoMapper, BajaEquipoMapper bajaEquipoMapper) {
+    public EquipoBean(EquipoMapper equipoMapper) {
         this.equipoMapper = equipoMapper;
-        this.bajaEquipoMapper = bajaEquipoMapper;
     }
 
     @Override
-    public void crearEquipo(EquipoDto equipo) {
+    public void crearEquipo(EquipoDto equipo) throws ServiciosException {
+        // Validar que el equipo no sea null
+        if (equipo == null) {
+            throw new ServiciosException(ERROR_EQUIPO_NULL);
+        }
+
+        // Validar campos obligatorios
+        validarCampoObligatorio(equipo.getNombre(), ERROR_NOMBRE_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdTipo(), ERROR_TIPO_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdModelo(), ERROR_MARCA_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdModelo(), ERROR_MODELO_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getNroSerie(), ERROR_NUMERO_SERIE_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getGarantia(), ERROR_GARANTIA_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdPais(), ERROR_PAIS_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdProveedor(), ERROR_PROVEEDOR_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getFechaAdquisicion(), ERROR_FECHA_ADQUISICION_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdInterno(), ERROR_IDENTIFICACION_INTERNA_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getIdUbicacion(), ERROR_UBICACION_OBLIGATORIO);
+        validarCampoObligatorio(equipo.getImagen(), ERROR_IMAGEN_OBLIGATORIO);
+
+        // Validar que la identificación interna sea única
+        validarIdentificacionInternaUnica(equipo.getIdInterno());
+        
+        // Validar que el número de serie sea único
+        validarNumeroSerieUnico(equipo.getNroSerie());
+
         em.persist(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
         em.flush();
+    }
+
+    /**
+     * Valida que un campo no sea null o vacío
+     */
+    private void validarCampoObligatorio(Object campo, String mensajeError) throws ServiciosException {
+        if (campo == null) {
+            throw new ServiciosException(mensajeError);
+        }
+        
+        if (campo instanceof String string && string.trim().isEmpty()) {
+            throw new ServiciosException(mensajeError);
+        }
+    }
+
+    /**
+     * Valida que la identificación interna sea única en la base de datos
+     */
+    private void validarIdentificacionInternaUnica(String idInterno) throws ServiciosException {
+        try {
+            em.createQuery("SELECT e FROM Equipo e WHERE e.idInterno = :idInterno", Equipo.class)
+                    .setParameter("idInterno", idInterno.trim())
+                    .getSingleResult();
+            throw new ServiciosException(ERROR_IDENTIFICACION_INTERNA_DUPLICADA + idInterno);
+        } catch (jakarta.persistence.NoResultException e) {
+            // La identificación interna no existe, es válida
+        }
+    }
+
+    /**
+     * Valida que el número de serie sea único en la base de datos
+     */
+    private void validarNumeroSerieUnico(String nroSerie) throws ServiciosException {
+        try {
+            em.createQuery("SELECT e FROM Equipo e WHERE e.nroSerie = :nroSerie", Equipo.class)
+                    .setParameter("nroSerie", nroSerie.trim())
+                    .getSingleResult();
+            throw new ServiciosException(ERROR_NUMERO_SERIE_DUPLICADO + nroSerie);
+        } catch (jakarta.persistence.NoResultException e) {
+            // El número de serie no existe, es válido
+        }
     }
 
     @Override
@@ -44,7 +124,7 @@ public class EquipoBean implements EquipoRemote {
 
     @Override
     public void eliminarEquipo(BajaEquipoDto bajaEquipo) {
-        em.merge(bajaEquipoMapper.toEntity(bajaEquipo, new CycleAvoidingMappingContext()));
+        // Solo actualizar el estado del equipo a INACTIVO
         em.createQuery("UPDATE Equipo equipo SET equipo.estado = 'INACTIVO' WHERE equipo.id = :id")
                 .setParameter("id", bajaEquipo.getIdEquipo().getId())
                 .executeUpdate();
@@ -102,7 +182,16 @@ public class EquipoBean implements EquipoRemote {
 
     @Override
     public EquipoDto obtenerEquipo(Long id) {
-        return equipoMapper.toDto(em.find(Equipo.class, id), new CycleAvoidingMappingContext());
+        if (id == null) {
+            return null;
+        }
+        
+        Equipo equipo = em.find(Equipo.class, id);
+        if (equipo == null) {
+            return null;
+        }
+        
+        return equipoMapper.toDto(equipo, new CycleAvoidingMappingContext());
     }
 
     @Override

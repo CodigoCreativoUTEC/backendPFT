@@ -1,6 +1,5 @@
 package codigocreativo.uy.servidorapp.entidades;
 
-import codigocreativo.uy.servidorapp.enumerados.Estados;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +25,7 @@ import java.time.LocalDate;
         bajaEquipo.setIdEquipo(equipo);
         bajaEquipo.setRazon("Razón de la baja");
         bajaEquipo.setFecha(fecha);
-        bajaEquipo.setEstado(Estados.ACTIVO); // Suponiendo un valor de ejemplo para el Enum Estados
+        bajaEquipo.setEstado("ACTIVO");
         bajaEquipo.setComentarios("Comentario sobre la baja");
     }
 
@@ -65,8 +64,8 @@ import java.time.LocalDate;
 
     @Test
      void testGetAndSetEstado() {
-        bajaEquipo.setEstado(Estados.INACTIVO); // Suponiendo otro valor de ejemplo para el Enum Estados
-        assertEquals(Estados.INACTIVO, bajaEquipo.getEstado());
+        bajaEquipo.setEstado("INACTIVO");
+        assertEquals("INACTIVO", bajaEquipo.getEstado());
     }
 
     @Test
