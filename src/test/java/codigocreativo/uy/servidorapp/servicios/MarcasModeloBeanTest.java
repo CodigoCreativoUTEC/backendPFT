@@ -58,12 +58,53 @@ class MarcasModeloBeanTest {
     @Test
     void testModificarMarcasModelo_success() {
         MarcasModeloDto marcasModeloDto = new MarcasModeloDto();
+        marcasModeloDto.setId(1L);
+        marcasModeloDto.setNombre("Marca1");
+        marcasModeloDto.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
         MarcasModelo marcasModeloEntity = new MarcasModelo();
-        when(marcasModeloMapper.toEntity(any(MarcasModeloDto.class))).thenReturn(marcasModeloEntity);
+        marcasModeloEntity.setId(1L);
+        marcasModeloEntity.setNombre("Marca1");
+        marcasModeloEntity.setEstado("INACTIVO");
+        when(em.find(MarcasModelo.class, 1L)).thenReturn(marcasModeloEntity);
 
         assertDoesNotThrow(() -> marcasModeloBean.modificarMarcasModelo(marcasModeloDto));
+        assertEquals("ACTIVO", marcasModeloEntity.getEstado());
         verify(em, times(1)).merge(marcasModeloEntity);
         verify(em, times(1)).flush();
+    }
+
+    @Test
+    void testModificarMarcasModelo_modificaSoloEstado() {
+        MarcasModeloDto dto = new MarcasModeloDto();
+        dto.setId(1L);
+        dto.setNombre("Marca1");
+        dto.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
+        MarcasModelo actual = new MarcasModelo();
+        actual.setId(1L);
+        actual.setNombre("Marca1");
+        actual.setEstado("INACTIVO");
+        when(em.find(MarcasModelo.class, 1L)).thenReturn(actual);
+
+        assertDoesNotThrow(() -> marcasModeloBean.modificarMarcasModelo(dto));
+        assertEquals("ACTIVO", actual.getEstado());
+        verify(em, times(1)).merge(actual);
+        verify(em, times(1)).flush();
+    }
+
+    @Test
+    void testModificarMarcasModelo_nombreNoPermitido() {
+        MarcasModeloDto dto = new MarcasModeloDto();
+        dto.setId(1L);
+        dto.setNombre("MarcaNueva"); // nombre diferente
+        dto.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
+        MarcasModelo actual = new MarcasModelo();
+        actual.setId(1L);
+        actual.setNombre("MarcaOriginal");
+        actual.setEstado("ACTIVO");
+        when(em.find(MarcasModelo.class, 1L)).thenReturn(actual);
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> marcasModeloBean.modificarMarcasModelo(dto));
+        assertTrue(ex.getMessage().contains("No se permite modificar el nombre"));
     }
 
     @Test

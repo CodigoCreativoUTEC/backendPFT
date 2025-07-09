@@ -67,8 +67,8 @@ public class MarcaResource {
             if (actual == null) {
                 return Response.status(404).entity(java.util.Map.of("error", "Marca no encontrada")).build();
             }
-            if (!actual.getNombre().equals(p.getNombre()) || !actual.getEstado().equals(p.getEstado())) {
-                return Response.status(400).entity(java.util.Map.of("error", "No se permite modificar el nombre ni el estado de la marca.")).build();
+            if (!actual.getNombre().equals(p.getNombre())) {
+                return Response.status(400).entity(java.util.Map.of("error", "No se permite modificar el nombre de la marca.")).build();
             }
             this.er.modificarMarcasModelo(p);
             return Response.ok(java.util.Map.of(MESSAGE, "Marca modificada correctamente")).build();
@@ -77,7 +77,7 @@ public class MarcaResource {
         }
     }
 
-    @DELETE
+    @PUT
     @Path("/inactivar")
     @Operation(summary = "Inactivar una marca", description = "Inactiva una marca en la base de datos", tags = { "Marcas" })
     @ApiResponses(value = {

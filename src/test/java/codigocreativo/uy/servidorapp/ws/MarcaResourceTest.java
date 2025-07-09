@@ -85,4 +85,35 @@ class MarcaResourceTest {
         assertEquals(null, result);
         verify(er, times(1)).obtenerMarca(id);
     }
+
+    @Test
+    void testModificarMarca_estadoPermitido() {
+        marcaDto.setId(1L);
+        marcaDto.setNombre("Marca1");
+        marcaDto.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
+        MarcasModeloDto actual = new MarcasModeloDto();
+        actual.setId(1L);
+        actual.setNombre("Marca1");
+        actual.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.INACTIVO);
+        when(er.obtenerMarca(1L)).thenReturn(actual);
+        doNothing().when(er).modificarMarcasModelo(any(MarcasModeloDto.class));
+
+        Response response = marcaResource.modificarMarca(marcaDto);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void testModificarMarca_nombreNoPermitido() {
+        marcaDto.setId(1L);
+        marcaDto.setNombre("MarcaNueva"); // nombre diferente
+        marcaDto.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
+        MarcasModeloDto actual = new MarcasModeloDto();
+        actual.setId(1L);
+        actual.setNombre("MarcaOriginal");
+        actual.setEstado(codigocreativo.uy.servidorapp.enumerados.Estados.ACTIVO);
+        when(er.obtenerMarca(1L)).thenReturn(actual);
+
+        Response response = marcaResource.modificarMarca(marcaDto);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
 }

@@ -31,7 +31,16 @@ public class MarcasModeloBean implements MarcasModeloRemote{
 
     @Override
     public void modificarMarcasModelo(MarcasModeloDto marcasModelo) {
-        em.merge(marcasModeloMapper.toEntity(marcasModelo));
+        MarcasModelo actual = em.find(MarcasModelo.class, marcasModelo.getId());
+        if (actual == null) {
+            throw new IllegalArgumentException("Marca no encontrada");
+        }
+        if (!actual.getNombre().equals(marcasModelo.getNombre())) {
+            throw new IllegalArgumentException("No se permite modificar el nombre de la marca.");
+        }
+        // Solo se permite modificar el estado (u otros campos permitidos)
+        actual.setEstado(marcasModelo.getEstado().name());
+        em.merge(actual);
         em.flush();
     }
 

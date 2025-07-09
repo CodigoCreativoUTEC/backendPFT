@@ -22,31 +22,81 @@ class ProveedoresEquipoBeanTest {
     @Mock ProveedoresEquipoMapper proveedoresEquipoMapper;
     @InjectMocks ProveedoresEquipoBean bean;
 
+    private ProveedoresEquipoDto dto;
+
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         Field emField = bean.getClass().getDeclaredField("em");
         emField.setAccessible(true);
         emField.set(bean, em);
+        
+        dto = new ProveedoresEquipoDto();
+        dto.setNombre("Proveedor Test");
+        dto.setEstado(Estados.ACTIVO);
     }
 
     @Test
-    void testCrearProveedor() {
-        ProveedoresEquipoDto dto = new ProveedoresEquipoDto();
+    void testCrearProveedor_success() {
         when(proveedoresEquipoMapper.toEntity(dto)).thenReturn(new ProveedoresEquipo());
+        TypedQuery<Long> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(0L);
+        
         bean.crearProveedor(dto);
+        
         assertEquals(Estados.ACTIVO, dto.getEstado());
         verify(em).persist(any());
         verify(em).flush();
     }
 
     @Test
-    void testModificarProveedor() {
-        ProveedoresEquipoDto dto = new ProveedoresEquipoDto();
+    void testCrearProveedor_nombreNulo() {
+        dto.setNombre(null);
+        
+        assertThrows(IllegalArgumentException.class, () -> bean.crearProveedor(dto), "El nombre del proveedor no puede ser nulo ni vacío");
+    }
+
+    @Test
+    void testCrearProveedor_nombreVacio() {
+        dto.setNombre("");
+        
+        assertThrows(IllegalArgumentException.class, () -> bean.crearProveedor(dto), "El nombre del proveedor no puede ser nulo ni vacío");
+    }
+
+    @Test
+    void testCrearProveedor_nombreDuplicado() {
+        TypedQuery<Long> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(1L);
+        
+        assertThrows(IllegalArgumentException.class, () -> bean.crearProveedor(dto), "Ya existe un proveedor con ese nombre");
+    }
+
+    @Test
+    void testModificarProveedor_success() {
         when(proveedoresEquipoMapper.toEntity(dto)).thenReturn(new ProveedoresEquipo());
+        TypedQuery<Long> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(0L);
+        
         bean.modificarProveedor(dto);
+        
         verify(em).merge(any());
         verify(em).flush();
+    }
+
+    @Test
+    void testModificarProveedor_nombreDuplicado() {
+        TypedQuery<Long> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(1L);
+        
+        assertThrows(IllegalArgumentException.class, () -> bean.modificarProveedor(dto), "Ya existe otro proveedor con ese nombre");
     }
 
     @Test
@@ -67,24 +117,93 @@ class ProveedoresEquipoBeanTest {
     }
 
     @Test
-    void testEliminarProveedor() {
+    void testEliminarProveedor_success() {
         Query queryMock = mock(Query.class);
         when(em.createQuery(anyString())).thenReturn(queryMock);
         when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
         when(queryMock.executeUpdate()).thenReturn(1);
+        
         bean.eliminarProveedor(1L);
+        
         verify(em).createQuery(anyString());
         verify(em).flush();
     }
 
     @Test
-    void testBuscarProveedores() {
+    void testEliminarProveedor_noEncontrado() {
+        Query queryMock = mock(Query.class);
+        when(em.createQuery(anyString())).thenReturn(queryMock);
+        when(queryMock.setParameter(anyString(), any())).thenReturn(queryMock);
+        when(queryMock.executeUpdate()).thenReturn(0);
+        
+        assertThrows(IllegalArgumentException.class, () -> bean.eliminarProveedor(1L), "Proveedor no encontrado");
+    }
+
+    @Test
+    void testFiltrarProveedores_soloEstado() {
         @SuppressWarnings("unchecked")
         TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
         when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new ProveedoresEquipo()));
         when(proveedoresEquipoMapper.toDto(anyList())).thenReturn(List.of(new ProveedoresEquipoDto()));
-        assertNotNull(bean.buscarProveedores("nombre", Estados.ACTIVO));
+        
+        List<ProveedoresEquipoDto> result = bean.filtrarProveedores(null, "ACTIVO");
+        
+        assertNotNull(result);
+        verify(query).setParameter("estado", "ACTIVO");
+    }
+
+    @Test
+    void testFiltrarProveedores_soloNombre() {
+        @SuppressWarnings("unchecked")
+        TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProveedoresEquipo()));
+        when(proveedoresEquipoMapper.toDto(anyList())).thenReturn(List.of(new ProveedoresEquipoDto()));
+        
+        List<ProveedoresEquipoDto> result = bean.filtrarProveedores("test", null);
+        
+        assertNotNull(result);
+        verify(query).setParameter("nombre", "%test%");
+    }
+
+    @Test
+    void testFiltrarProveedores_estadoYNombre() {
+        @SuppressWarnings("unchecked")
+        TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProveedoresEquipo()));
+        when(proveedoresEquipoMapper.toDto(anyList())).thenReturn(List.of(new ProveedoresEquipoDto()));
+        
+        List<ProveedoresEquipoDto> result = bean.filtrarProveedores("test", "ACTIVO");
+        
+        assertNotNull(result);
+        verify(query).setParameter("estado", "ACTIVO");
+        verify(query).setParameter("nombre", "%test%");
+    }
+
+    @Test
+    void testFiltrarProveedores_sinFiltros() {
+        @SuppressWarnings("unchecked")
+        TypedQuery<ProveedoresEquipo> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(ProveedoresEquipo.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProveedoresEquipo()));
+        when(proveedoresEquipoMapper.toDto(anyList())).thenReturn(List.of(new ProveedoresEquipoDto()));
+        
+        List<ProveedoresEquipoDto> result = bean.filtrarProveedores(null, null);
+        
+        assertNotNull(result);
+        // Verifica que se llama al método obtenerProveedores() (sin filtro)
+        verify(em).createQuery("SELECT p FROM ProveedoresEquipo p ORDER BY p.nombre ASC", ProveedoresEquipo.class);
+    }
+
+    @Test
+    void testFiltrarProveedores_estadoInvalido() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            bean.filtrarProveedores(null, "ESTADO_INVALIDO");
+        });
     }
 } 
