@@ -27,7 +27,8 @@ create table PAISES
     ID_PAIS NUMBER generated as identity
         constraint PK_PAISES
             primary key,
-    NOMBRE  VARCHAR2(50) not null
+    NOMBRE  VARCHAR2(50) not null,
+    ESTADO  VARCHAR2(20) default 'ACTIVO' not null
 )
 /
 
