@@ -6,6 +6,7 @@ import codigocreativo.uy.servidorapp.dtos.dtomappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
+import codigocreativo.uy.servidorapp.PasswordUtils;
 import com.fabdelgado.ciuy.Validator;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -13,11 +14,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 
 @Stateless
 public class UsuarioBean implements UsuarioRemote {
@@ -54,6 +56,17 @@ public class UsuarioBean implements UsuarioRemote {
         
         // Validar que la cédula sea única
         validarCedulaUnica(u.getCedula());
+        
+        // Validar y hashear la contraseña
+        if (u.getContrasenia() != null && !u.getContrasenia().trim().isEmpty()) {
+            validarContrasenia(u.getContrasenia());
+            try {
+                String hashedPassword = PasswordUtils.generateSaltedHash(u.getContrasenia());
+                u.setContrasenia(hashedPassword);
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                throw new ServiciosException("Error al procesar la contraseña: " + e.getMessage());
+            }
+        }
         
         u.setEstado(Estados.SIN_VALIDAR);
         em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
@@ -198,11 +211,21 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public UsuarioDto login(String usuario, String password) {
         try {
-            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario AND u.contrasenia = :password", Usuario.class)
+            // Buscar usuario por email
+            Usuario user = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario", Usuario.class)
                     .setParameter("usuario", usuario)
-                    .setParameter("password", password)
-                    .getSingleResult(), new CycleAvoidingMappingContext());
-        } catch (NoResultException e) {
+                    .getSingleResult();
+            
+            // Verificar la contraseña
+            if (user.getContrasenia() != null && PasswordUtils.verifyPassword(password, user.getContrasenia())) {
+                UsuarioDto userDto = usuarioMapper.toDto(user, new CycleAvoidingMappingContext());
+                // Por seguridad, no devolver la contraseña hasheada
+                userDto.setContrasenia(null);
+                return userDto;
+            }
+            
+            return null;
+        } catch (NoResultException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             return null;
         }
     }
@@ -244,9 +267,21 @@ public class UsuarioBean implements UsuarioRemote {
         if (filtros.containsKey(EMAIL)) {
             queryBuilder.append(" AND LOWER(u.email) LIKE LOWER(:email)");
         }
+        
+        // Check if estado is valid before adding to query
+        boolean estadoValido = false;
+        Estados estadoEnum = null;
         if (filtros.containsKey("estado")) {
-            queryBuilder.append(" AND u.estado = :estado");
+            try {
+                String estadoStr = filtros.get("estado");
+                estadoEnum = Estados.valueOf(estadoStr.toUpperCase());
+                queryBuilder.append(" AND u.estado = :estado");
+                estadoValido = true;
+            } catch (IllegalArgumentException e) {
+                // Invalid estado value, skip this filter
+            }
         }
+        
         if (filtros.containsKey("tipoUsuario")) {
             queryBuilder.append(" AND u.idPerfil.nombrePerfil = :tipoUsuario");
         }
@@ -265,8 +300,8 @@ public class UsuarioBean implements UsuarioRemote {
         if (filtros.containsKey(EMAIL)) {
             query.setParameter(EMAIL, "%" + filtros.get(EMAIL) + "%");
         }
-        if (filtros.containsKey("estado")) {
-            query.setParameter("estado", filtros.get("estado"));
+        if (estadoValido) {
+            query.setParameter("estado", estadoEnum);
         }
         if (filtros.containsKey("tipoUsuario")) {
             query.setParameter("tipoUsuario", filtros.get("tipoUsuario"));
