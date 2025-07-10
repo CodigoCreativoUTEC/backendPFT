@@ -42,15 +42,15 @@ public class ModelosEquipoBean implements ModelosEquipoRemote {
             throw new ServiciosException("La marca del modelo es obligatoria");
         }
         
+        // Validar que la marca existe en la base de datos
+        MarcasModelo marca = em.find(MarcasModelo.class, modelosEquipo.getIdMarca().getId());
+        if (marca == null) {
+            throw new ServiciosException("La marca especificada no existe");
+        }
+        
         try {
             // Validar que no exista un modelo con el mismo nombre (case-insensitive)
             validarNombreUnico(modelosEquipo.getNombre().trim());
-            
-            // Validar que la marca existe en la base de datos
-            MarcasModelo marca = em.find(MarcasModelo.class, modelosEquipo.getIdMarca().getId());
-            if (marca == null) {
-                throw new ServiciosException("La marca especificada no existe");
-            }
             
             // Estado por defecto
             modelosEquipo.setEstado(Estados.ACTIVO);
