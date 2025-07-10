@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 
 import java.util.List;
+import java.util.Map;
 
 @Path("/marca")
 @Tag(name = "Marcas", description = "Gestión de marcas de modelos")
@@ -25,6 +26,8 @@ import java.util.List;
 @SecurityRequirement(name = "BearerAuth")
 public class MarcaResource {
     private static final String MESSAGE = "message";
+    private static final String ERROR = "error";
+    
     @EJB
     private MarcasModeloRemote er;
 
@@ -35,17 +38,17 @@ public class MarcaResource {
         @ApiResponse(responseCode = "201", description = "Marca creada correctamente",
             content = @Content(schema = @Schema(example = "{\"message\": \"Marca creada correctamente\"}"))),
         @ApiResponse(responseCode = "400", description = "Solicitud inválida",
-            content = @Content(schema = @Schema(example = "{\"message\": \"Error al crear la marca\"}")))
+            content = @Content(schema = @Schema(example = "{\"error\": \"Error al crear la marca\"}")))
     })
     public Response crearMarca(MarcasModeloDto p) {
         try {
             this.er.crearMarcasModelo(p);
             return Response.status(201)
-                .entity(java.util.Map.of(MESSAGE, "Marca creada correctamente"))
+                .entity(Map.of(MESSAGE, "Marca creada correctamente"))
                 .build();
         } catch (Exception e) {
             return Response.status(400)
-                .entity(java.util.Map.of(MESSAGE, "Error al crear la marca: " + e.getMessage()))
+                .entity(Map.of(ERROR, e.getMessage()))
                 .build();
         }
     }
@@ -56,24 +59,15 @@ public class MarcaResource {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Marca modificada correctamente",
             content = @Content(schema = @Schema(example = "{\"message\": \"Marca modificada correctamente\"}"))),
-        @ApiResponse(responseCode = "400", description = "No se permite modificar el nombre ni el estado",
-            content = @Content(schema = @Schema(example = "{\"error\": \"No se permite modificar el nombre ni el estado de la marca."))),
-        @ApiResponse(responseCode = "404", description = "Marca no encontrada",
-            content = @Content(schema = @Schema(example = "{\"error\": \"Marca no encontrada")))
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida",
+            content = @Content(schema = @Schema(example = "{\"error\": \"Error al modificar la marca\"}")))
     })
     public Response modificarMarca(MarcasModeloDto p) {
         try {
-            MarcasModeloDto actual = er.obtenerMarca(p.getId());
-            if (actual == null) {
-                return Response.status(404).entity(java.util.Map.of("error", "Marca no encontrada")).build();
-            }
-            if (!actual.getNombre().equals(p.getNombre())) {
-                return Response.status(400).entity(java.util.Map.of("error", "No se permite modificar el nombre de la marca.")).build();
-            }
             this.er.modificarMarcasModelo(p);
-            return Response.ok(java.util.Map.of(MESSAGE, "Marca modificada correctamente")).build();
+            return Response.ok(Map.of(MESSAGE, "Marca modificada correctamente")).build();
         } catch (Exception e) {
-            return Response.status(400).entity(java.util.Map.of("error", "Error al modificar la marca: " + e.getMessage())).build();
+            return Response.status(400).entity(Map.of(ERROR, e.getMessage())).build();
         }
     }
 
@@ -83,16 +77,16 @@ public class MarcaResource {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Marca inactivada correctamente",
             content = @Content(schema = @Schema(example = "{\"message\": \"Marca inactivada correctamente\"}"))),
-        @ApiResponse(responseCode = "404", description = "Marca no encontrada",
-            content = @Content(schema = @Schema(example = "{\"message\": \"Marca no encontrada\"}")))
+        @ApiResponse(responseCode = "400", description = "Error al inactivar la marca",
+            content = @Content(schema = @Schema(example = "{\"error\": \"Error al inactivar la marca\"}")))
     })
     public Response eliminarMarca(@Parameter(description = "ID de la marca a inactivar", required = true) @QueryParam("id") Long id) {
         try {
             this.er.eliminarMarca(id);
-            return Response.ok(java.util.Map.of(MESSAGE, "Marca inactivada correctamente")).build();
+            return Response.ok(Map.of(MESSAGE, "Marca inactivada correctamente")).build();
         } catch (Exception e) {
-            return Response.status(404)
-                .entity(java.util.Map.of(MESSAGE, "Marca no encontrada: " + e.getMessage()))
+            return Response.status(400)
+                .entity(Map.of(ERROR, e.getMessage()))
                 .build();
         }
     }
@@ -112,10 +106,15 @@ public class MarcaResource {
     @Operation(summary = "Buscar una marca por ID", description = "Obtiene la información de una marca específica por su ID", tags = { "Marcas" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Marca encontrada", content = @Content(schema = @Schema(implementation = MarcasModeloDto.class))),
-            @ApiResponse(responseCode = "404", description = "Marca no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = "Error al buscar la marca", content = @Content(schema = @Schema(example = "{\"error\": \"Error al buscar la marca\"}")))
     })
-    public MarcasModeloDto buscarPorId(@Parameter(description = "ID de la marca a buscar", required = true) @QueryParam("id") Long id) {
-        return this.er.obtenerMarca(id);
+    public Response buscarPorId(@Parameter(description = "ID de la marca a buscar", required = true) @QueryParam("id") Long id) {
+        try {
+            MarcasModeloDto marca = this.er.obtenerMarca(id);
+            return Response.ok(marca).build();
+        } catch (Exception e) {
+            return Response.status(400).entity(Map.of(ERROR, e.getMessage())).build();
+        }
     }
 
     @GET
@@ -130,7 +129,7 @@ public class MarcaResource {
             Estados estadoEnum = Estados.valueOf(estado);
             return Response.ok(er.obtenerMarcasPorEstadoLista(estadoEnum)).build();
         } catch (Exception e) {
-            return Response.status(400).entity(java.util.Map.of("error", "Estado inválido: " + e.getMessage())).build();
+            return Response.status(400).entity(Map.of(ERROR, e.getMessage())).build();
         }
     }
 }

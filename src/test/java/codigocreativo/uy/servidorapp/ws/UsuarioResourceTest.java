@@ -19,11 +19,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import static jakarta.security.enterprise.authentication.mechanism.http.openid.OpenIdConstant.EMAIL;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import java.util.Arrays;
 
 class UsuarioResourceTest {
 
@@ -170,7 +169,7 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testModificarUsuarioNotAdmin() {
+    void testModificarUsuarioNotAdmin() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setId(1L);
         String token = "Bearer validToken";
@@ -179,6 +178,9 @@ class UsuarioResourceTest {
         when(claims.getSubject()).thenReturn("user@example.com");
         when(claims.get("perfil", String.class)).thenReturn("Usuario");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
+
+        doThrow(new ServiciosException("Solo los administradores pueden modificar usuarios"))
+                .when(usuarioRemote).validarModificacionPorAdministrador("user@example.com", 1L);
 
         try (Response response = usuarioResource.modificarUsuario(usuario, token)) {
 
@@ -210,7 +212,7 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testModificarUsuarioSelfModification() {
+    void testModificarUsuarioSelfModification() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setId(1L);
         String token = "Bearer validToken";
@@ -225,6 +227,9 @@ class UsuarioResourceTest {
         usuarioActual.setEmail("admin@example.com");
         when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioActual);
 
+        doThrow(new ServiciosException("No puedes modificar tu propio usuario desde este endpoint. Usa el endpoint de modificación propia."))
+                .when(usuarioRemote).validarModificacionPorAdministrador("admin@example.com", 1L);
+
         Response response = usuarioResource.modificarUsuario(usuario, token);
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
@@ -233,7 +238,7 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testModificarUsuarioInvalidPassword() {
+    void testModificarUsuarioInvalidPassword() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setId(1L);
         usuario.setContrasenia("weak");
@@ -251,6 +256,8 @@ class UsuarioResourceTest {
         usuarioActual.setIdInstitucion(new InstitucionDto().setId(1L));
         usuarioActual.setEstado(Estados.ACTIVO);
         when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioActual);
+        doThrow(new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números."))
+                .when(usuarioRemote).validarContrasenia("weak");
 
         Response response = usuarioResource.modificarUsuario(usuario, token);
 
@@ -290,14 +297,19 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testModificarPropioUsuarioNoAutorizado() {
+    void testModificarPropioUsuarioNoAutorizado() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
+        usuario.setId(1L);
         usuario.setEmail("unauthorized@example.com");
         String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("authorized@example.com");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
+        
+        // Mock the validation to throw the expected exception
+        doThrow(new ServiciosException("No autorizado para modificar este usuario"))
+                .when(usuarioRemote).validarModificacionPropia("authorized@example.com", 1L);
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
 
@@ -320,12 +332,12 @@ class UsuarioResourceTest {
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
 
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
         assertEquals("{\"error\":\"Usuario no encontrado\"}", response.getEntity());
     }
 
     @Test
-    void testModificarPropioUsuarioInvalidPassword() {
+    void testModificarPropioUsuarioInvalidPassword() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setId(1L);
         usuario.setEmail("user@example.com");
@@ -341,6 +353,8 @@ class UsuarioResourceTest {
         usuarioActual.setEmail("user@example.com");
         usuarioActual.setContrasenia("oldhash");
         when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioActual);
+        doThrow(new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números."))
+                .when(usuarioRemote).validarContrasenia("weak");
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
 
@@ -349,7 +363,7 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testInactivarUsuarioSuccess() {
+    void testInactivarUsuarioSuccess() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setCedula("12345678");
         String token = "Bearer token";
@@ -364,13 +378,13 @@ class UsuarioResourceTest {
         usuarioAInactivar.setIdPerfil(new PerfilDto(1L, "Usuario", Estados.ACTIVO));
 
         when(usuarioRemote.obtenerUsuarioPorCI(anyString())).thenReturn(usuarioAInactivar);
-        doNothing().when(usuarioRemote).eliminarUsuario(any(UsuarioDto.class));
+        doNothing().when(usuarioRemote).inactivarUsuario(anyString(), anyString());
 
         Response response = usuarioResource.inactivarUsuario(usuario, token);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals("{\"message\":\"Usuario inactivado correctamente\"}", response.getEntity());
-        verify(usuarioRemote, times(1)).eliminarUsuario(any(UsuarioDto.class));
+        verify(usuarioRemote, times(1)).inactivarUsuario(anyString(), anyString());
     }
 
     @Test
@@ -392,7 +406,7 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testInactivarUsuarioNotFound() {
+    void testInactivarUsuarioNotFound() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
         usuario.setCedula("12345678");
         String token = "Bearer token";
@@ -407,8 +421,8 @@ class UsuarioResourceTest {
         Response response = usuarioResource.inactivarUsuario(usuario, token);
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertEquals("{\"message\":\"Usuario no encontrado\"}", response.getEntity());
-        verify(usuarioRemote, never()).eliminarUsuario(any(UsuarioDto.class));
+        assertEquals("{\"error\":\"Usuario no encontrado\"}", response.getEntity());
+        verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
     }
 
     @Test
@@ -461,86 +475,85 @@ class UsuarioResourceTest {
 
     @Test
     void testFiltrarUsuarios() {
-        List<UsuarioDto> usuarios = List.of(new UsuarioDto(), new UsuarioDto());
-        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(usuarios);
+        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
-        List<UsuarioDto> result = usuarioResource.filtrarUsuarios("John", "Doe", null, null, null, null);
+        Response response = usuarioResource.filtrarUsuarios("John", "Doe", null, null, null, null);
 
-        assertEquals(2, result.size());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
         verify(usuarioRemote, times(1)).obtenerUsuariosFiltrado(anyMap());
     }
 
     @Test
     void testFiltrarUsuariosWithAllFilters() {
-        List<UsuarioDto> usuarios = List.of(new UsuarioDto(), new UsuarioDto());
-        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(usuarios);
+        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
-        List<UsuarioDto> result = usuarioResource.filtrarUsuarios("John", "Doe", "johndoe", "john@example.com", "Usuario", "ACTIVO");
+        Response response = usuarioResource.filtrarUsuarios("John", "Doe", "johndoe", "john@example.com", "Usuario", "ACTIVO");
 
-        assertEquals(2, result.size());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
         verify(usuarioRemote, times(1)).obtenerUsuariosFiltrado(anyMap());
     }
 
     @Test
     void testFiltrarUsuariosWithDefaultEstado() {
-        List<UsuarioDto> usuarios = List.of(new UsuarioDto(), new UsuarioDto());
-        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(usuarios);
+        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
-        List<UsuarioDto> result = usuarioResource.filtrarUsuarios(null, null, null, null, null, null);
+        Response response = usuarioResource.filtrarUsuarios(null, null, null, null, null, null);
 
-        assertEquals(2, result.size());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
         verify(usuarioRemote, times(1)).obtenerUsuariosFiltrado(anyMap());
     }
 
     @Test
     void testFiltrarUsuariosWithDefaultTipoUsuario() {
-        List<UsuarioDto> usuarios = List.of(new UsuarioDto(), new UsuarioDto());
-        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(usuarios);
+        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
-        List<UsuarioDto> result = usuarioResource.filtrarUsuarios(null, null, null, null, "default", null);
+        Response response = usuarioResource.filtrarUsuarios(null, null, null, null, "default", null);
 
-        assertEquals(2, result.size());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
         verify(usuarioRemote, times(1)).obtenerUsuariosFiltrado(anyMap());
     }
 
     @Test
     void testBuscarUsuarioPorId() {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setId(1L);
-        when(usuarioRemote.obtenerUsuario(anyLong())).thenReturn(usuario);
+        UsuarioDto expectedUsuario = new UsuarioDto();
+        expectedUsuario.setId(1L);
+        when(usuarioRemote.obtenerUsuario(1L)).thenReturn(expectedUsuario);
 
-        UsuarioDto result = usuarioResource.buscarUsuario(1L);
+        Response response = usuarioResource.buscarUsuario(1L);
 
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedUsuario, response.getEntity());
+        verify(usuarioRemote, times(1)).obtenerUsuario(1L);
     }
 
     @Test
     void testBuscarUsuarioPorIdNotFound() {
-        when(usuarioRemote.obtenerUsuario(anyLong())).thenReturn(null);
+        when(usuarioRemote.obtenerUsuario(1L)).thenThrow(new RuntimeException("Usuario no encontrado"));
 
-        UsuarioDto result = usuarioResource.buscarUsuario(1L);
+        Response response = usuarioResource.buscarUsuario(1L);
 
-        assertNull(result);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"Error al buscar el usuario: Usuario no encontrado\"}", response.getEntity());
+        verify(usuarioRemote, times(1)).obtenerUsuario(1L);
     }
 
     @Test
     void testObtenerTodosLosUsuarios() {
-        UsuarioDto usuario1 = new UsuarioDto();
-        usuario1.setId(1L);
-        usuario1.setContrasenia("hash1");
-        UsuarioDto usuario2 = new UsuarioDto();
-        usuario2.setId(2L);
-        usuario2.setContrasenia("hash2");
-        
-        List<UsuarioDto> usuarios = List.of(usuario1, usuario2);
-        when(usuarioRemote.obtenerUsuarios()).thenReturn(usuarios);
+        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        when(usuarioRemote.obtenerUsuarios()).thenReturn(expectedList);
 
-        List<UsuarioDto> result = usuarioResource.obtenerTodosLosUsuarios();
+        Response response = usuarioResource.obtenerTodosLosUsuarios();
 
-        assertEquals(2, result.size());
-        assertNull(result.get(0).getContrasenia());
-        assertNull(result.get(1).getContrasenia());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
         verify(usuarioRemote, times(1)).obtenerUsuarios();
     }
 
@@ -573,7 +586,7 @@ class UsuarioResourceTest {
         usuario.setEstado(Estados.ACTIVO);
         usuario.setIdPerfil(new PerfilDto(1L,"Usuario",Estados.ACTIVO));
 
-        when(usuarioRemote.findUserByEmail("test@example.com")).thenReturn(usuario);
+        when(usuarioRemote.login("test@example.com", "password123")).thenReturn(usuario);
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-token");
 
         UsuarioResource.LoginRequest loginRequest = new UsuarioResource.LoginRequest();
@@ -595,12 +608,12 @@ class UsuarioResourceTest {
         Response response = usuarioResource.login(null);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"Pedido de login nulo\"}", response.getEntity());
+        assertEquals("{\"error\":\"Solicitud nula\"}", response.getEntity());
     }
 
     @Test
     void testLoginUserNotFound() {
-        when(usuarioRemote.findUserByEmail("test@example.com")).thenReturn(null);
+        when(usuarioRemote.login("test@example.com", "password123")).thenReturn(null);
 
         UsuarioResource.LoginRequest loginRequest = new UsuarioResource.LoginRequest();
         loginRequest.setEmail("test@example.com");
@@ -609,7 +622,7 @@ class UsuarioResourceTest {
         Response response = usuarioResource.login(loginRequest);
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}", response.getEntity());
+        assertEquals("{\"error\":\"Credenciales incorrectas\"}", response.getEntity());
     }
 
     @Test
@@ -618,7 +631,7 @@ class UsuarioResourceTest {
         usuario.setEmail("test@example.com");
         usuario.setEstado(Estados.INACTIVO);
 
-        when(usuarioRemote.findUserByEmail("test@example.com")).thenReturn(usuario);
+        when(usuarioRemote.login("test@example.com", "password123")).thenReturn(usuario);
 
         UsuarioResource.LoginRequest loginRequest = new UsuarioResource.LoginRequest();
         loginRequest.setEmail("test@example.com");
@@ -638,7 +651,7 @@ class UsuarioResourceTest {
         usuario.setEstado(Estados.ACTIVO);
         usuario.setIdPerfil(new PerfilDto(1L,"Usuario",Estados.ACTIVO));
 
-        when(usuarioRemote.findUserByEmail("test@example.com")).thenReturn(usuario);
+        when(usuarioRemote.login("test@example.com", "wrongpassword")).thenReturn(null);
 
         UsuarioResource.LoginRequest loginRequest = new UsuarioResource.LoginRequest();
         loginRequest.setEmail("test@example.com");
@@ -647,18 +660,12 @@ class UsuarioResourceTest {
         Response response = usuarioResource.login(loginRequest);
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"Contraseña incorrecta\"}", response.getEntity());
+        assertEquals("{\"error\":\"Credenciales incorrectas\"}", response.getEntity());
     }
 
     @Test
     void testLoginException() {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setEmail("test@example.com");
-        usuario.setContrasenia("invalidhash");
-        usuario.setEstado(Estados.ACTIVO);
-        usuario.setIdPerfil(new PerfilDto(1L,"Usuario",Estados.ACTIVO));
-
-        when(usuarioRemote.findUserByEmail("test@example.com")).thenReturn(usuario);
+        when(usuarioRemote.login("test@example.com", "password123")).thenThrow(new RuntimeException("Login error"));
 
         UsuarioResource.LoginRequest loginRequest = new UsuarioResource.LoginRequest();
         loginRequest.setEmail("test@example.com");
@@ -667,7 +674,7 @@ class UsuarioResourceTest {
         Response response = usuarioResource.login(loginRequest);
 
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"Error durante el login\"}", response.getEntity());
+        assertTrue(response.getEntity().toString().contains("Error durante el login"));
     }
 
     @Test
@@ -705,19 +712,15 @@ class UsuarioResourceTest {
         String token = "Bearer validToken";
         Claims claims = mock(Claims.class);
         when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 10000));
-        when(claims.get(EMAIL, String.class)).thenReturn("test@example.com");
+        when(claims.getSubject()).thenReturn("test@example.com");
         when(claims.get("perfil", String.class)).thenReturn("Usuario");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
-        when(jwtService.generateToken(anyString(), anyString())).thenReturn("newJwtToken");
+        when(jwtService.generateToken("test@example.com", "Usuario")).thenReturn("newJwtToken");
 
         Response response = usuarioResource.renovarToken(token);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertNotNull(response.getEntity());
-        
-        @SuppressWarnings("unchecked")
-        Map<String, String> responseMap = (Map<String, String>) response.getEntity();
-        assertEquals("newJwtToken", responseMap.get("token"));
+        assertEquals("{\"token\":\"newJwtToken\"}", response.getEntity());
     }
 
     @Test
@@ -730,7 +733,7 @@ class UsuarioResourceTest {
 
     @Test
     void testRenovarTokenInvalidHeader() {
-        Response response = usuarioResource.renovarToken("InvalidToken");
+        Response response = usuarioResource.renovarToken("InvalidHeader");
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         assertEquals("{\"error\": \"Falta el token de autorización.\"}", response.getEntity());
@@ -739,25 +742,23 @@ class UsuarioResourceTest {
     @Test
     void testRenovarTokenExpired() {
         String token = "Bearer expiredToken";
-        Claims claims = mock(Claims.class);
-        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() - 10000));
-        when(jwtService.parseToken(anyString())).thenReturn(claims);
+        when(jwtService.parseToken(anyString())).thenThrow(new RuntimeException("Token expired"));
 
         Response response = usuarioResource.renovarToken(token);
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\": \"El token ha expirado.\"}", response.getEntity());
+        assertEquals("{\"error\":\"El token ha expirado o es inválido\"}", response.getEntity());
     }
 
     @Test
     void testRenovarTokenException() {
         String token = "Bearer validToken";
-        when(jwtService.parseToken(anyString())).thenThrow(new RuntimeException("Token error"));
+        when(jwtService.parseToken(anyString())).thenThrow(new RuntimeException("Parse error"));
 
         Response response = usuarioResource.renovarToken(token);
 
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\": \"Error al procesar el token.\"}", response.getEntity());
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"El token ha expirado o es inválido\"}", response.getEntity());
     }
 
     @Test

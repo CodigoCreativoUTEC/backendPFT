@@ -43,6 +43,8 @@ public class UsuarioResource {
     private static final String BEARER = "bearer";
     private static final String PERFIL = "perfil";
     private static final String ADMINISTRADOR = "Administrador";
+    private static final String MESSAGE = "message";
+    private static final String ERROR = "error";
 
     @POST
     @Path("/crear")
@@ -67,12 +69,10 @@ public class UsuarioResource {
             this.er.crearUsuario(usuario);
             return Response.status(201).entity("{\"message\":\"Usuario creado correctamente\"}").build();
         } catch (ServiciosException e) {
-            // Capturar específicamente las excepciones de validación y devolver el mensaje específico
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"message\":\"" + e.getMessage() + "\"}")
                     .build();
         } catch (Exception e) {
-            // Para otros errores, devolver un mensaje genérico
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"message\":\"Error al crear el usuario: " + e.getMessage() + "\"}")
                     .build();
@@ -84,7 +84,8 @@ public class UsuarioResource {
     @Operation(summary = "Modificar un usuario", description = "Modifica los datos de un usuario existente. Solo para administradores.", tags = { "Usuarios" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "No autorizado - Solo administradores pueden modificar usuarios", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "403", description = "No autorizado", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
     })
@@ -94,105 +95,24 @@ public class UsuarioResource {
             @Parameter(description = "Token Bearer de autorización", required = true)
             @HeaderParam("Authorization") String authorizationHeader) {
         try {
-            // Verificar que el token pertenece a un administrador
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String emailSolicitante = claims.getSubject();
-            String perfilSolicitante = claims.get(PERFIL, String.class);
-
-            if (!perfilSolicitante.equals(ADMINISTRADOR)) {
-                return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"Solo los administradores pueden modificar usuarios\"}")
-                        .build();
-            }
-
-            // Obtener el usuario actual de la base de datos
+            
+            // Validar permisos de administrador
+            er.validarModificacionPorAdministrador(emailSolicitante, usuario.getId());
+            
+            // Obtener el usuario actual
             UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
             if (usuarioActual == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("{\"error\":\"Usuario no encontrado\"}")
                         .build();
             }
-
-            // Verificar que no se está intentando modificar a sí mismo
-            if (usuarioActual.getEmail().equals(emailSolicitante)) {
-                return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"No puedes modificar tu propio usuario desde este endpoint. Usa el endpoint de modificación propia.\"}")
-                        .build();
-            }
-
-            // Mantener la contraseña actual si no se proporciona una nueva
-            if (usuario.getContrasenia() == null || usuario.getContrasenia().isEmpty()) {
-                usuario.setContrasenia(usuarioActual.getContrasenia());
-            } else {
-                // Validar el formato de la nueva contraseña
-                if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-                    return Response.status(Response.Status.BAD_REQUEST)
-                            .entity("{\"error\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}")
-                            .build();
-                }
-                // Generar el hash de la nueva contraseña
-                String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
-                usuario.setContrasenia(saltedHash);
-            }
-
-            // Asegurar que los campos críticos estén presentes
-            if (usuario.getIdPerfil() == null) {
-                usuario.setIdPerfil(usuarioActual.getIdPerfil());
-            }
-            if (usuario.getIdInstitucion() == null) {
-                usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
-            }
-            if (usuario.getEstado() == null) {
-                usuario.setEstado(usuarioActual.getEstado());
-            }
-
-            this.er.modificarUsuario(usuario);
-            return Response.status(200)
-                    .entity("{\"message\":\"Usuario modificado correctamente\"}")
-                    .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("{\"error\":\"Error al modificar el usuario: " + e.getMessage() + "\"}")
-                    .build();
-        }
-    }
-
-    @PUT
-    @Path("/modificar-propio-usuario")
-    @Operation(summary = "Modificar el propio usuario", description = "Permite a un usuario modificar sus propios datos", tags = { "Usuarios" })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado para modificar este usuario", content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
-    })
-    @SecurityRequirement(name = "BearerAuth")
-    public Response modificarPropioUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
-        try {
-            String token = authorizationHeader.substring(BEARER.length()).trim();
-            Claims claims = jwtService.parseToken(token);
-            String correoDelToken = claims.getSubject();
-
-            if (!Objects.equals(correoDelToken, usuario.getEmail())) {
-                return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("{\"error\":\"No autorizado para modificar este usuario\"}")
-                        .build();
-            }
-
-            UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
-            if (usuarioActual == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("{\"error\":\"Usuario no encontrado\"}")
-                        .build();
-            }
-
-            // Solo procesar la contraseña si se proporciona una nueva
+            
+            // Validar contraseña si se proporciona una nueva
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
-                if (!usuario.getContrasenia().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-                    return Response.status(Response.Status.BAD_REQUEST)
-                            .entity("{\"error\":\"La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.\"}")
-                            .build();
-                }
+                er.validarContrasenia(usuario.getContrasenia());
                 String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
                 usuario.setContrasenia(saltedHash);
             } else {
@@ -209,6 +129,95 @@ public class UsuarioResource {
             return Response.status(200)
                     .entity("{\"message\":\"Usuario modificado correctamente\"}")
                     .build();
+        } catch (ServiciosException e) {
+            if (e.getMessage().contains("No autorizado") || e.getMessage().contains("no tiene permisos") || e.getMessage().contains("propio usuario") || e.getMessage().contains("Solo los administradores pueden modificar usuarios") || e.getMessage().contains("No puedes modificar tu propio usuario desde este endpoint. Usa el endpoint de modificación propia.")) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            } else if (e.getMessage().contains("no encontrado")) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al modificar el usuario: " + e.getMessage() + "\"}")
+                    .build();
+        }
+    }
+
+    @PUT
+    @Path("/modificar-propio-usuario")
+    @Operation(summary = "Modificar el propio usuario", description = "Permite a un usuario modificar sus propios datos", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario modificado correctamente", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error al modificar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    @SecurityRequirement(name = "BearerAuth")
+    public Response modificarPropioUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(BEARER.length()).trim();
+            Claims claims = jwtService.parseToken(token);
+            String correoDelToken = claims.getSubject();
+
+            if (usuario.getId() == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"El id del usuario es obligatorio para modificar sus datos\"}")
+                        .build();
+            }
+
+            // Validar que el usuario puede modificar sus propios datos
+            er.validarModificacionPropia(correoDelToken, usuario.getId());
+
+            // Obtener el usuario actual
+            UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
+            if (usuarioActual == null) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
+
+            // Solo procesar la contraseña si se proporciona una nueva
+            if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
+                er.validarContrasenia(usuario.getContrasenia());
+                String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
+                usuario.setContrasenia(saltedHash);
+            } else {
+                usuario.setContrasenia(usuarioActual.getContrasenia());
+            }
+
+            // Mantener campos que no deberían modificarse
+            usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
+            usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            usuario.setEstado(usuarioActual.getEstado());
+            usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
+
+            er.modificarUsuario(usuario);
+            return Response.status(200)
+                    .entity("{\"message\":\"Usuario modificado correctamente\"}")
+                    .build();
+        } catch (ServiciosException e) {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("no autorizado") || msg.contains("no puede modificar") || msg.contains("autorizado")) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\":\"No autorizado para modificar este usuario\"}")
+                        .build();
+            } else if (msg.contains("no encontrado")) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\":\"Error al modificar el usuario: " + e.getMessage() + "\"}")
@@ -230,8 +239,13 @@ public class UsuarioResource {
                     content = @Content(schema = @Schema(implementation = String.class))
             ),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Error al inactivar el usuario",
+                    content = @Content(schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
                     responseCode = "403",
-                    description = "Requiere ser Administrador para inactivar usuarios o no puedes inactivar a otro administrador",
+                    description = "No autorizado",
                     content = @Content(schema = @Schema(implementation = String.class))
             ),
             @ApiResponse(
@@ -240,41 +254,69 @@ public class UsuarioResource {
                     content = @Content(schema = @Schema(implementation = String.class))
             )
     })
-    
+    @SecurityRequirement(name = "BearerAuth")
     public Response inactivarUsuario(
             @Parameter(description = "Datos del usuario a inactivar", required = true)
             UsuarioDto usuario,
             @Parameter(description = "Token Bearer de autorización", required = true)
             @HeaderParam("Authorization") String authorizationHeader
     ) {
-        String token = authorizationHeader.substring(BEARER.length()).trim();
-        Claims claims = jwtService.parseToken(token);
-        String emailSolicitante = claims.getSubject();
-        String perfilSolicitante = claims.get(PERFIL, String.class);
+        try {
+            String token = authorizationHeader.substring(BEARER.length()).trim();
+            Claims claims = jwtService.parseToken(token);
+            String emailSolicitante = claims.getSubject();
+            String perfilSolicitante = claims.get(PERFIL, String.class);
 
-        if (!perfilSolicitante.equals(ADMINISTRADOR)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}").build();
+            // Verificar que el usuario es administrador
+            if (!ADMINISTRADOR.equals(perfilSolicitante)) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}")
+                        .build();
+            }
+
+            // Verificar que el usuario existe
+            UsuarioDto usuarioAInactivar = er.obtenerUsuarioPorCI(usuario.getCedula());
+            if (usuarioAInactivar == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
+
+            // Verificar que no se está inactivando a sí mismo
+            if (emailSolicitante.equals(usuarioAInactivar.getEmail())) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}")
+                        .build();
+            }
+
+            // Verificar que no se está inactivando a otro administrador
+            if (ADMINISTRADOR.equals(usuarioAInactivar.getIdPerfil().getNombrePerfil())) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"message\":\"No puedes inactivar a otro administrador\"}")
+                        .build();
+            }
+
+            er.inactivarUsuario(emailSolicitante, usuario.getCedula());
+            return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
+        } catch (ServiciosException e) {
+            if (e.getMessage().contains("No autorizado") || e.getMessage().contains("no tiene permisos")) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            } else if (e.getMessage().contains("no encontrado")) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                        .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al inactivar el usuario: " + e.getMessage() + "\"}")
+                    .build();
         }
-
-        UsuarioDto usuarioAInactivar = this.er.obtenerUsuarioPorCI(usuario.getCedula());
-        if (usuarioAInactivar == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"message\":\"Usuario no encontrado\"}").build();
-        }
-
-        if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}").build();
-        }
-
-        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"No puedes inactivar a otro administrador\"}").build();
-        }
-
-        this.er.eliminarUsuario(usuarioAInactivar);
-        return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
     }
 
     @GET
@@ -284,63 +326,61 @@ public class UsuarioResource {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios filtrada correctamente", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
             @ApiResponse(responseCode = "500", description = "Error al filtrar los usuarios", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public List<UsuarioDto> filtrarUsuarios(@Parameter(description = "Nombre del usuario") @QueryParam("nombre") String nombre,
+    public Response filtrarUsuarios(@Parameter(description = "Nombre del usuario") @QueryParam("nombre") String nombre,
                                             @Parameter(description = "Apellido del usuario") @QueryParam("apellido") String apellido,
                                             @Parameter(description = "Nombre de usuario") @QueryParam("nombreUsuario") String nombreUsuario,
                                             @Parameter(description = "Email del usuario") @QueryParam("email") String email,
                                             @Parameter(description = "Tipo de perfil del usuario") @QueryParam("perfil") String tipoUsuario,
                                             @Parameter(description = "Estado del usuario") @QueryParam("estado") String estado) {
 
-        Map<String, String> filtros = new HashMap<>();
-        if (nombre != null) filtros.put("nombre", nombre);
-        if (apellido != null) filtros.put("apellido", apellido);
-        if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
-        if (email != null) filtros.put(EMAIL, email);
+        try {
+            Map<String, String> filtros = new HashMap<>();
+            if (nombre != null) filtros.put("nombre", nombre);
+            if (apellido != null) filtros.put("apellido", apellido);
+            if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
+            if (email != null) filtros.put(EMAIL, email);
 
-        if (estado == null || estado.isEmpty()) {
-            filtros.put("estado", "ACTIVO");
-        } else if (!estado.equals("default")) {
-            filtros.put("estado", estado);
+            if (estado == null || estado.isEmpty()) {
+                filtros.put("estado", "ACTIVO");
+            } else if (!estado.equals("default")) {
+                filtros.put("estado", estado);
+            }
+            if (tipoUsuario != null && !tipoUsuario.isEmpty() && !tipoUsuario.equals("default")) {
+                filtros.put("tipoUsuario", tipoUsuario);
+            }
+
+            List<UsuarioDto> usuarios = er.obtenerUsuariosFiltrado(filtros);
+            return Response.ok(usuarios).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al filtrar usuarios: " + e.getMessage() + "\"}")
+                    .build();
         }
-        if (tipoUsuario != null && !tipoUsuario.isEmpty() && !tipoUsuario.equals("default")) {
-            filtros.put("tipoUsuario", tipoUsuario);
-        }
-
-        List<UsuarioDto> usuarios = this.er.obtenerUsuariosFiltrado(filtros);
-
-        // Crear una nueva lista de usuarios sin la contraseña
-        List<UsuarioDto> usuariosSinContrasenia = new ArrayList<>();
-        for (UsuarioDto usuario : usuarios) {
-            UsuarioDto usuarioSinContrasenia = new UsuarioDto();
-            usuarioSinContrasenia.setId(usuario.getId());
-            usuarioSinContrasenia.setUsuariosTelefonos(usuario.getUsuariosTelefonos());
-            usuarioSinContrasenia.setNombre(usuario.getNombre());
-            usuarioSinContrasenia.setCedula(usuario.getCedula());
-            usuarioSinContrasenia.setFechaNacimiento(usuario.getFechaNacimiento());
-            usuarioSinContrasenia.setApellido(usuario.getApellido());
-            usuarioSinContrasenia.setNombreUsuario(usuario.getNombreUsuario());
-            usuarioSinContrasenia.setEmail(usuario.getEmail());
-            usuarioSinContrasenia.setEstado(usuario.getEstado());
-            usuarioSinContrasenia.setIdPerfil(usuario.getIdPerfil());
-            usuarioSinContrasenia.setIdInstitucion(usuario.getIdInstitucion());
-
-            // No seteamos la contraseña para que no se incluya en la respuesta
-            usuariosSinContrasenia.add(usuarioSinContrasenia);
-        }
-
-        return usuariosSinContrasenia;
     }
-
 
     @GET
     @Path("/seleccionar")
     @Operation(summary = "Buscar un usuario por ID", description = "Obtiene la información de un usuario específico por su ID", tags = { "Usuarios" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
-            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = "Error al buscar el usuario", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public UsuarioDto buscarUsuario(@Parameter(description = "ID del usuario a buscar", required = true) @QueryParam("id") Long id) {
-        return this.er.obtenerUsuario(id);
+    public Response buscarUsuario(@Parameter(description = "ID del usuario a buscar", required = true) @QueryParam("id") Long id) {
+        try {
+            UsuarioDto usuario = this.er.obtenerUsuario(id);
+            if (usuario != null) {
+                usuario.setContrasenia(null); // No enviar contraseña en la respuesta
+                return Response.ok(usuario).build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"Error al buscar el usuario: " + e.getMessage() + "\"}")
+                    .build();
+        }
     }
 
     @GET
@@ -349,12 +389,15 @@ public class UsuarioResource {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida correctamente", content = @Content(schema = @Schema(implementation = UsuarioDto.class)))
     })
-    public List<UsuarioDto> obtenerTodosLosUsuarios() {
-        List<UsuarioDto> usuarios = this.er.obtenerUsuarios();
-        for (UsuarioDto usuario : usuarios) {
-            usuario.setContrasenia(null); // Eliminar la contraseña de la respuesta
+    public Response obtenerTodosLosUsuarios() {
+        try {
+            List<UsuarioDto> usuarios = er.obtenerUsuarios();
+            return Response.ok(usuarios).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al obtener usuarios: " + e.getMessage() + "\"}")
+                    .build();
         }
-        return usuarios;
     }
 
     @GET
@@ -365,11 +408,20 @@ public class UsuarioResource {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response getUserByEmail(@Parameter(description = "Email del usuario a buscar", required = true) @QueryParam("email") String email) {
-        UsuarioDto user = er.findUserByEmail(email);
-        if (user != null) {
-            return Response.ok(user).build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        try {
+            UsuarioDto user = er.findUserByEmail(email);
+            if (user != null) {
+                user.setContrasenia(null); // No enviar contraseña en la respuesta
+                return Response.ok(user).build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error al buscar el usuario: " + e.getMessage() + "\"}")
+                    .build();
         }
     }
 
@@ -384,29 +436,33 @@ public class UsuarioResource {
     })
     public Response login(@Parameter(description = "Datos de inicio de sesión", required = true) LoginRequest loginRequest) {
         if (loginRequest == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Solicitud nula\"}").build();
         }
 
-        UsuarioDto user = this.er.findUserByEmail(loginRequest.getEmail());
+        if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Email es obligatorio\"}").build();
+        }
 
-        if (user != null && user.getEstado().equals(Estados.ACTIVO)) {
-            try {
-                boolean isValid = PasswordUtils.verifyPassword(loginRequest.getPassword(), user.getContrasenia());
+        if (loginRequest.getPassword() == null || loginRequest.getPassword().trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Contraseña es obligatoria\"}").build();
+        }
 
-                if (!isValid) {
-                    return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Contraseña incorrecta\"}").build();
-                }
-
-                String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
-                user.setContrasenia(null);// No enviar la contraseña en la respuesta
-                LoginResponse loginResponse = new LoginResponse(token, user);
-
-                return Response.ok(loginResponse).build();
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error durante el login\"}").build();
+        try {
+            UsuarioDto user = er.login(loginRequest.getEmail(), loginRequest.getPassword());
+            if (user == null) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Credenciales incorrectas\"}").build();
             }
-        } else {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}").build();
+
+            if (!user.getEstado().equals(Estados.ACTIVO)) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}").build();
+            }
+
+            user.setContrasenia(null);
+            String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+            LoginResponse response = new LoginResponse(token, user);
+            return Response.ok(response).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error durante el login: " + e.getMessage() + "\"}").build();
         }
     }
 
@@ -420,46 +476,38 @@ public class UsuarioResource {
             @ApiResponse(responseCode = "500", description = "Error al procesar el token de Google", content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response googleLogin(@Parameter(description = "Token de Google para iniciar sesión", required = true) GoogleLoginRequest googleLoginRequest) {
-        if (googleLoginRequest.getIdToken() == null) {
+        if (googleLoginRequest == null || googleLoginRequest.getIdToken() == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Token de Google nulo\"}").build();
         }
+
         try {
-            String idTokenString = googleLoginRequest.getIdToken();
-            TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
+            // Verificar el token de Google
+            TokenVerifier verifier = TokenVerifier.newBuilder()
                     .setAudience("103181333646-gp6uip6g6k1rg6p52tsidphj3gt22qut.apps.googleusercontent.com")
                     .build();
 
-            JsonWebSignature idToken = tokenVerifier.verify(idTokenString);
-            if (idToken == null) {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
-            }
+            JsonWebToken token = verifier.verify(googleLoginRequest.getIdToken());
+            String email = token.getPayload().get("email").toString();
 
-            JsonWebToken.Payload payload = idToken.getPayload();
-            String email = (String) payload.get(EMAIL);
-            String name = (String) payload.get("name");
-
+            // Buscar o crear usuario
             UsuarioDto user = er.findUserByEmail(email);
             boolean userNeedsAdditionalInfo = false;
 
             if (user == null) {
+                // Usuario nuevo, necesitará información adicional
+                userNeedsAdditionalInfo = true;
                 user = new UsuarioDto();
                 user.setEmail(email);
-                user.setNombre(name);
-                userNeedsAdditionalInfo = true;
-            } else if (!user.getEstado().equals(Estados.ACTIVO)) {
-                return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
+                user.setEstado(Estados.SIN_VALIDAR);
             }
 
-            String perfilNombre = (user.getIdPerfil() != null) ? user.getIdPerfil().getNombrePerfil() : "Usuario";
-            String token = jwtService.generateToken(email, perfilNombre);
-
-            GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
-            return Response.ok(loginResponse).build();
-
+            String jwtToken = jwtService.generateToken(user.getEmail(), user.getIdPerfil() != null ? user.getIdPerfil().getNombrePerfil() : "Usuario");
+            GoogleLoginResponse response = new GoogleLoginResponse(jwtToken, userNeedsAdditionalInfo, user);
+            return Response.ok(response).build();
         } catch (VerificationException e) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Token de Google inválido\"}").build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google\"}").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Error al procesar el token de Google: " + e.getMessage() + "\"}").build();
         }
     }
 
@@ -474,42 +522,23 @@ public class UsuarioResource {
     })
     @SecurityRequirement(name = "BearerAuth")
     public Response renovarToken(@HeaderParam("Authorization") String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"error\": \"Falta el token de autorización.\"}")
-                    .build();
+        if (authorizationHeader == null || !authorizationHeader.toLowerCase().startsWith("bearer ")) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\": \"Falta el token de autorización.\"}").build();
         }
 
         try {
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
-
-            if (claims.getExpiration().before(new Date())) {
-                return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("{\"error\": \"El token ha expirado.\"}")
-                        .build();
-            }
-
-            String email = claims.get(EMAIL, String.class);
+            String email = claims.getSubject();
             String perfil = claims.get(PERFIL, String.class);
 
-            String nuevoToken = jwtService.generateToken(email, perfil);
-
-            Map<String, String> responseMap = new HashMap<>();
-            responseMap.put("token", nuevoToken);
-
-            return Response.ok(responseMap).build();
+            // Generar nuevo token
+            String newToken = jwtService.generateToken(email, perfil);
+            return Response.ok("{\"token\":\"" + newToken + "\"}").build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("{\"error\": \"Error al procesar el token.\"}")
-                    .build();
+            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"El token ha expirado o es inválido\"}").build();
         }
     }
-
-
-
-
-
 
     public static class LoginRequest {
         @JsonbProperty("email")
@@ -534,7 +563,6 @@ public class UsuarioResource {
             this.password = password;
         }
     }
-
 
     public static class LoginResponse {
         private String token;
@@ -565,7 +593,6 @@ public class UsuarioResource {
     public static class GoogleLoginRequest {
         private String idToken;
 
-        // Getters y setters
         public String getIdToken() {
             return idToken;
         }
@@ -575,20 +602,17 @@ public class UsuarioResource {
         }
     }
 
-
     public static class GoogleLoginResponse {
         private String token;
         private boolean userNeedsAdditionalInfo;
-        private UsuarioDto user; // Añade este campo
+        private UsuarioDto user;
 
-        // Constructor
         public GoogleLoginResponse(String token, boolean userNeedsAdditionalInfo, UsuarioDto user) {
             this.token = token;
             this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
             this.user = user;
         }
 
-        // Getters y setters
         public String getToken() {
             return token;
         }

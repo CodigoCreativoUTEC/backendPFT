@@ -6,6 +6,7 @@ import codigocreativo.uy.servidorapp.servicios.UbicacionRemote;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,6 +24,9 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 @SecurityRequirement(name = "BearerAuth")
 public class UbicacionesResource {
+    private static final String MESSAGE = "message";
+    private static final String ERROR = "error";
+    
     @EJB
     private UbicacionRemote er;
 
@@ -31,13 +35,17 @@ public class UbicacionesResource {
     @Operation(summary = "Listar todas las ubicaciones", description = "Obtiene una lista de todas las ubicaciones disponibles", tags = { "Ubicaciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de ubicaciones obtenida correctamente", content = @Content(schema = @Schema(implementation = UbicacionDto.class))),
-            @ApiResponse(responseCode = "500", description = "Error al listar ubicaciones", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "500", description = "Error al listar ubicaciones", 
+                content = @Content(schema = @Schema(example = "{\"error\": \"Error al listar ubicaciones\"}")))
     })
-    public List<UbicacionDto> listarUbicaciones() throws ServiciosException {
+    public Response listarUbicaciones() {
         try {
-            return this.er.listarUbicaciones();
+            List<UbicacionDto> ubicaciones = this.er.listarUbicaciones();
+            return Response.ok(ubicaciones).build();
         } catch (ServiciosException e) {
-            throw new ServiciosException("Error al listar ubicaciones");
+            return Response.status(500)
+                .entity(java.util.Map.of(ERROR, e.getMessage()))
+                .build();
         }
     }
 
@@ -46,9 +54,17 @@ public class UbicacionesResource {
     @Operation(summary = "Buscar una ubicación por ID", description = "Obtiene la información de una ubicación específica por su ID", tags = { "Ubicaciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Ubicación encontrada", content = @Content(schema = @Schema(implementation = UbicacionDto.class))),
-            @ApiResponse(responseCode = "404", description = "Ubicación no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = "Error al buscar la ubicación", 
+                content = @Content(schema = @Schema(example = "{\"error\": \"Error al buscar la ubicación\"}")))
     })
-    public UbicacionDto buscarPorId(@Parameter(description = "ID de la ubicación a buscar", required = true) @QueryParam("id") Long id) throws ServiciosException {
-        return this.er.obtenerUbicacionPorId(id);
+    public Response buscarPorId(@Parameter(description = "ID de la ubicación a buscar", required = true) @QueryParam("id") Long id) {
+        try {
+            UbicacionDto ubicacion = this.er.obtenerUbicacionPorId(id);
+            return Response.ok(ubicacion).build();
+        } catch (ServiciosException e) {
+            return Response.status(400)
+                .entity(java.util.Map.of(ERROR, e.getMessage()))
+                .build();
+        }
     }
 }
