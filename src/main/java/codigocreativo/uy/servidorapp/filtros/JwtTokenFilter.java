@@ -55,15 +55,14 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        LOGGER.info("Procesando petición para el path: " + path);
+        String method = requestContext.getMethod();
+        LOGGER.info("Procesando petición: " + method + " " + path);
 
         // Verificar si es un endpoint público
         if (isPublicEndpoint(path)) {
-            LOGGER.info("Endpoint público detectado, permitiendo acceso sin autenticación");
             return;
         }
 
-        LOGGER.info("Endpoint requiere autenticación, procesando token JWT");
         // Procesar autenticación y autorización
         processAuthenticationAndAuthorization(requestContext, path);
     }
@@ -209,10 +208,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         // Verificar si es una modificación de usuario
         if (path.equals("/usuarios/modificar")) {
-            LOGGER.info("Verificando permisos para modificación de usuario");
             // Solo permitir que administradores modifiquen a otros administradores
             if (perfil.equals("Administrador")) {
-                LOGGER.info("Usuario con perfil Administrador intentando modificar - Permitiendo acceso");
                 return true;
             } else {
                 LOGGER.log(Level.WARNING, "Usuario con perfil {0} intentando modificar - Acceso denegado", perfil);
@@ -225,11 +222,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                     boolean pathMatches = path.startsWith(funcionalidad.getRuta());
                     boolean profileMatches = funcionalidad.getPerfiles().stream()
                             .anyMatch(perfilDto -> perfilDto.getNombrePerfil().equals(perfil));
-                    
-                    if (pathMatches) {
-                        LOGGER.info("Path coincide con funcionalidad: " + funcionalidad.getRuta());
-                        LOGGER.info("Perfiles permitidos: " + funcionalidad.getPerfiles());
-                    }
                     
                     return pathMatches && profileMatches;
                 });

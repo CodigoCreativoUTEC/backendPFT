@@ -54,6 +54,9 @@ public class IntervencionBean implements IntervencionRemote {
     @Override
     public IntervencionDto buscarId(Long id) throws ServiciosException {
         Intervencion intervencion = em.find(Intervencion.class, id);
+        if (intervencion == null) {
+            return null;
+        }
         return intervencionMapper.toDto(intervencion, new CycleAvoidingMappingContext());
     }
 

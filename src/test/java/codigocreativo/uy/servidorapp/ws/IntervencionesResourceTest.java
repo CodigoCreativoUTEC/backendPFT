@@ -94,9 +94,10 @@ class IntervencionesResourceTest {
         IntervencionDto expectedDto = new IntervencionDto();
         when(intervencionRemote.buscarId(id)).thenReturn(expectedDto);
         
-        IntervencionDto result = resource.buscarPorId(id);
+        Response response = resource.buscarPorId(id);
         
-        assertEquals(expectedDto, result);
+        assertEquals(200, response.getStatus());
+        assertEquals(expectedDto, response.getEntity());
         verify(intervencionRemote).buscarId(id);
     }
 
@@ -106,6 +107,18 @@ class IntervencionesResourceTest {
         when(intervencionRemote.buscarId(id)).thenThrow(new ServiciosException("No encontrado"));
         
         assertThrows(ServiciosException.class, () -> resource.buscarPorId(id));
+    }
+
+    @Test
+    void testBuscarPorIdNotFound() throws Exception {
+        Long id = 1L;
+        when(intervencionRemote.buscarId(id)).thenReturn(null);
+        
+        Response response = resource.buscarPorId(id);
+        
+        assertEquals(404, response.getStatus());
+        assertEquals("{\"error\":\"Intervención no encontrada\"}", response.getEntity());
+        verify(intervencionRemote).buscarId(id);
     }
 
     @Test

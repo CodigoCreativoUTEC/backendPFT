@@ -1,6 +1,7 @@
 package codigocreativo.uy.servidorapp.dtos;
 
 import codigocreativo.uy.servidorapp.entidades.Intervencion;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.Objects;
 public class IntervencionDto implements Serializable {
     private Long id;
     private String motivo;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHora;
     private String comentarios;
     private UsuarioDto idUsuario;

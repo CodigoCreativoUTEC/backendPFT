@@ -24,7 +24,6 @@ import java.util.List;
 @Tag(name = "Perfiles", description = "Gestión de perfiles de usuario")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@SecurityRequirement(name = "BearerAuth")
 public class PerfilResource {
     private static final String ERROR_JSON_FORMAT = "{\"error\":\"%s\"}";
     private static final String MSG_JSON_FORMAT = "{\"message\":\"%s\"}";
@@ -39,6 +38,7 @@ public class PerfilResource {
             @ApiResponse(responseCode = "201", description = "Perfil creado correctamente", content = @Content(schema = @Schema(implementation = PerfilDto.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "BearerAuth")
     public Response crearPerfil(PerfilDto perfil) {
         if (perfil == null) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -67,6 +67,7 @@ public class PerfilResource {
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Perfil no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "BearerAuth")
     public Response modificarPerfil(PerfilDto perfil) {
         if (perfil == null) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -92,6 +93,7 @@ public class PerfilResource {
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "404", description = "Perfil no encontrado", content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "BearerAuth")
     public Response eliminarPerfil(@Parameter(description = "ID del perfil a inactivar", required = true) @QueryParam("id") Long id) {
         // Validar que el ID no sea null
         if (id == null) {

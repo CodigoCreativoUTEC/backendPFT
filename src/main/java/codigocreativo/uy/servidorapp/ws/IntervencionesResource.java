@@ -74,12 +74,18 @@ public class IntervencionesResource {
             "Intervenciones" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Intervención encontrada", content = @Content(schema = @Schema(implementation = IntervencionDto.class))),
-            @ApiResponse(responseCode = "204", description = "Intervención no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "404", description = "Intervención no encontrada", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public IntervencionDto buscarPorId(
+    public Response buscarPorId(
             @Parameter(description = "ID de la intervención a buscar", required = true) @PathParam("id") Long id)
             throws ServiciosException {
-        return this.er.buscarId(id);
+        IntervencionDto intervencion = this.er.buscarId(id);
+        if (intervencion == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("{\"error\":\"Intervención no encontrada\"}")
+                    .build();
+        }
+        return Response.ok(intervencion).build();
     }
 
     @GET
