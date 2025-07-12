@@ -105,12 +105,12 @@ codigocreativo.uy.servidorapp/
 
 ### 6.2 Modelo de Datos
 El sistema gestiona las siguientes entidades principales:
-- **USUARIOS**: Gestión de usuarios con roles y perfiles
-- **EQUIPOS**: Equipos biomédicos con información completa
-- **INTERVENCIONES**: Mantenimientos y reparaciones
-- **UBICACIONES**: Ubicaciones físicas de los equipos
-- **INSTITUCIONES**: Instituciones médicas
-- **AUDITORIAS**: Trazabilidad de operaciones
+* **USUARIOS**: Gestión de usuarios con roles y perfiles
+* **EQUIPOS**: Equipos biomédicos con información completa
+* **INTERVENCIONES**: Mantenimientos y reparaciones
+* **UBICACIONES**: Ubicaciones físicas de los equipos
+* **INSTITUCIONES**: Instituciones médicas
+* **AUDITORIAS**: Trazabilidad de operaciones
 
 ### 6.3 Características Técnicas
 * **Transacciones:** Gestionadas automáticamente por el contenedor EJB
