@@ -21,12 +21,13 @@ public class JwtService {
             if (email == null || nombrePerfil == null) {
                 return null;  // Retornar null si email o perfil son nulos
             }
+            
             return Jwts.builder()
                     .setSubject(email)
                     .claim("perfil", nombrePerfil)
                     .claim("email", email)
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min de expiración
+                    .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 minutos de expiración
                     .signWith(secretKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (Exception e) {
@@ -35,10 +36,14 @@ public class JwtService {
     }
 
     public Claims parseToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw e;
+        }
     }
 }

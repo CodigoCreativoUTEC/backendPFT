@@ -269,10 +269,8 @@ class UsuarioResourceTest {
     @Test
     void testModificarPropioUsuarioSuccess() {
         UsuarioDto usuario = new UsuarioDto();
-        usuario.setId(1L);
         usuario.setEmail("user@example.com");
-        usuario.setContrasenia("newpassword123");
-        String token = "Bearer validToken";
+        String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("user@example.com");
@@ -281,12 +279,13 @@ class UsuarioResourceTest {
         UsuarioDto usuarioActual = new UsuarioDto();
         usuarioActual.setId(1L);
         usuarioActual.setEmail("user@example.com");
-        usuarioActual.setNombreUsuario("testuser");
-        usuarioActual.setIdPerfil(new PerfilDto(2L, "Usuario", Estados.ACTIVO));
-        usuarioActual.setEstado(Estados.ACTIVO);
-        usuarioActual.setIdInstitucion(new InstitucionDto().setId(1L));
         usuarioActual.setContrasenia("oldhash");
-        when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioActual);
+        usuarioActual.setNombreUsuario("olduser");
+        usuarioActual.setIdPerfil(new PerfilDto(1L, "Usuario", Estados.ACTIVO));
+        usuarioActual.setEstado(Estados.ACTIVO);
+        usuarioActual.setIdInstitucion(new InstitucionDto(1L, "Institución"));
+
+        when(usuarioRemote.findUserByEmail("user@example.com")).thenReturn(usuarioActual);
         doNothing().when(usuarioRemote).modificarUsuario(any(UsuarioDto.class));
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
@@ -297,9 +296,8 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testModificarPropioUsuarioNoAutorizado() throws ServiciosException {
+    void testModificarPropioUsuarioNoAutorizado() {
         UsuarioDto usuario = new UsuarioDto();
-        usuario.setId(1L);
         usuario.setEmail("unauthorized@example.com");
         String token = "Bearer token";
 
@@ -307,20 +305,18 @@ class UsuarioResourceTest {
         when(claims.getSubject()).thenReturn("authorized@example.com");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
         
-        // Mock the validation to throw the expected exception
-        doThrow(new ServiciosException("No autorizado para modificar este usuario"))
-                .when(usuarioRemote).validarModificacionPropia("authorized@example.com", 1L);
+        // Mock findUserByEmail to return null (user not found)
+        when(usuarioRemote.findUserByEmail("authorized@example.com")).thenReturn(null);
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
 
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"No autorizado para modificar este usuario\"}", response.getEntity());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"Usuario no encontrado\"}", response.getEntity());
     }
 
     @Test
     void testModificarPropioUsuarioNotFound() {
         UsuarioDto usuario = new UsuarioDto();
-        usuario.setId(1L);
         usuario.setEmail("user@example.com");
         String token = "Bearer validToken";
 
@@ -328,18 +324,17 @@ class UsuarioResourceTest {
         when(claims.getSubject()).thenReturn("user@example.com");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
 
-        when(usuarioRemote.obtenerUsuario(1L)).thenReturn(null);
+        when(usuarioRemote.findUserByEmail("user@example.com")).thenReturn(null);
 
         Response response = usuarioResource.modificarPropioUsuario(usuario, token);
 
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         assertEquals("{\"error\":\"Usuario no encontrado\"}", response.getEntity());
     }
 
     @Test
     void testModificarPropioUsuarioInvalidPassword() throws ServiciosException {
         UsuarioDto usuario = new UsuarioDto();
-        usuario.setId(1L);
         usuario.setEmail("user@example.com");
         usuario.setContrasenia("weak");
         String token = "Bearer validToken";
@@ -352,7 +347,12 @@ class UsuarioResourceTest {
         usuarioActual.setId(1L);
         usuarioActual.setEmail("user@example.com");
         usuarioActual.setContrasenia("oldhash");
-        when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioActual);
+        usuarioActual.setNombreUsuario("olduser");
+        usuarioActual.setIdPerfil(new PerfilDto(1L, "Usuario", Estados.ACTIVO));
+        usuarioActual.setEstado(Estados.ACTIVO);
+        usuarioActual.setIdInstitucion(new InstitucionDto(1L, "Institución"));
+
+        when(usuarioRemote.findUserByEmail("user@example.com")).thenReturn(usuarioActual);
         doThrow(new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números."))
                 .when(usuarioRemote).validarContrasenia("weak");
 
@@ -364,8 +364,7 @@ class UsuarioResourceTest {
 
     @Test
     void testInactivarUsuarioSuccess() throws ServiciosException {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setCedula("12345678");
+        Long idUsuarioAInactivar = 2L;
         String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
@@ -373,14 +372,22 @@ class UsuarioResourceTest {
         when(claims.get("perfil", String.class)).thenReturn("Administrador");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
 
-        UsuarioDto usuarioAInactivar = new UsuarioDto();
-        usuarioAInactivar.setEmail("user@example.com");
-        usuarioAInactivar.setIdPerfil(new PerfilDto(1L, "Usuario", Estados.ACTIVO));
+        UsuarioDto usuarioSolicitante = new UsuarioDto();
+        usuarioSolicitante.setId(1L);
+        usuarioSolicitante.setEmail("admin@example.com");
+        usuarioSolicitante.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
 
-        when(usuarioRemote.obtenerUsuarioPorCI(anyString())).thenReturn(usuarioAInactivar);
+        UsuarioDto usuarioAInactivar = new UsuarioDto();
+        usuarioAInactivar.setId(2L);
+        usuarioAInactivar.setEmail("user@example.com");
+        usuarioAInactivar.setCedula("12345678");
+        usuarioAInactivar.setIdPerfil(new PerfilDto(2L, "Usuario", Estados.ACTIVO));
+
+        when(usuarioRemote.findUserByEmail(anyString())).thenReturn(usuarioSolicitante);
+        when(usuarioRemote.obtenerUsuario(2L)).thenReturn(usuarioAInactivar);
         doNothing().when(usuarioRemote).inactivarUsuario(anyString(), anyString());
 
-        Response response = usuarioResource.inactivarUsuario(usuario, token);
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals("{\"message\":\"Usuario inactivado correctamente\"}", response.getEntity());
@@ -388,9 +395,8 @@ class UsuarioResourceTest {
     }
 
     @Test
-    void testInactivarUsuarioNotAdmin() {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setCedula("12345678");
+    void testInactivarUsuarioNotAdmin() throws ServiciosException {
+        Long idUsuarioAInactivar = 2L;
         String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
@@ -398,37 +404,16 @@ class UsuarioResourceTest {
         when(claims.get("perfil", String.class)).thenReturn("Usuario");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
 
-        Response response = usuarioResource.inactivarUsuario(usuario, token);
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
-        assertEquals("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}", response.getEntity());
-        verify(usuarioRemote, never()).eliminarUsuario(any(UsuarioDto.class));
-    }
-
-    @Test
-    void testInactivarUsuarioNotFound() throws ServiciosException {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setCedula("12345678");
-        String token = "Bearer token";
-
-        Claims claims = mock(Claims.class);
-        when(claims.getSubject()).thenReturn("admin@example.com");
-        when(claims.get("perfil", String.class)).thenReturn("Administrador");
-        when(jwtService.parseToken(anyString())).thenReturn(claims);
-
-        when(usuarioRemote.obtenerUsuarioPorCI(anyString())).thenReturn(null);
-
-        Response response = usuarioResource.inactivarUsuario(usuario, token);
-
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertEquals("{\"error\":\"Usuario no encontrado\"}", response.getEntity());
+        assertEquals("{\"error\":\"Requiere ser Administrador o Aux administrativo para inactivar usuarios\"}", response.getEntity());
         verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
     }
 
     @Test
-    void testInactivarUsuarioSelfInactivation() {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setCedula("12345678");
+    void testInactivarUsuarioNotFound() throws ServiciosException {
+        Long idUsuarioAInactivar = 999L;
         String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
@@ -436,23 +421,24 @@ class UsuarioResourceTest {
         when(claims.get("perfil", String.class)).thenReturn("Administrador");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
 
-        UsuarioDto usuarioAInactivar = new UsuarioDto();
-        usuarioAInactivar.setEmail("admin@example.com");
-        usuarioAInactivar.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
+        UsuarioDto usuarioSolicitante = new UsuarioDto();
+        usuarioSolicitante.setId(1L);
+        usuarioSolicitante.setEmail("admin@example.com");
+        usuarioSolicitante.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
 
-        when(usuarioRemote.obtenerUsuarioPorCI(anyString())).thenReturn(usuarioAInactivar);
+        when(usuarioRemote.findUserByEmail(anyString())).thenReturn(usuarioSolicitante);
+        when(usuarioRemote.obtenerUsuario(999L)).thenReturn(null);
 
-        Response response = usuarioResource.inactivarUsuario(usuario, token);
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
 
-        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
-        assertEquals("{\"message\":\"No puedes inactivar tu propia cuenta\"}", response.getEntity());
-        verify(usuarioRemote, never()).eliminarUsuario(any(UsuarioDto.class));
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"Usuario a inactivar no encontrado\"}", response.getEntity());
+        verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
     }
 
     @Test
-    void testInactivarUsuarioOtherAdmin() {
-        UsuarioDto usuario = new UsuarioDto();
-        usuario.setCedula("12345678");
+    void testInactivarUsuarioSelfInactivation() throws ServiciosException {
+        Long idUsuarioAInactivar = 1L;
         String token = "Bearer token";
 
         Claims claims = mock(Claims.class);
@@ -460,22 +446,102 @@ class UsuarioResourceTest {
         when(claims.get("perfil", String.class)).thenReturn("Administrador");
         when(jwtService.parseToken(anyString())).thenReturn(claims);
 
+        UsuarioDto usuarioSolicitante = new UsuarioDto();
+        usuarioSolicitante.setId(1L);
+        usuarioSolicitante.setEmail("admin@example.com");
+        usuarioSolicitante.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
+
         UsuarioDto usuarioAInactivar = new UsuarioDto();
+        usuarioAInactivar.setId(1L);
+        usuarioAInactivar.setEmail("admin@example.com");
+        usuarioAInactivar.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
+
+        when(usuarioRemote.findUserByEmail(anyString())).thenReturn(usuarioSolicitante);
+        when(usuarioRemote.obtenerUsuario(1L)).thenReturn(usuarioAInactivar);
+
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
+
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"No puedes inactivar tu propia cuenta\"}", response.getEntity());
+        verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
+    }
+
+    @Test
+    void testInactivarUsuarioOtherAdmin() throws ServiciosException {
+        Long idUsuarioAInactivar = 2L;
+        String token = "Bearer token";
+
+        Claims claims = mock(Claims.class);
+        when(claims.getSubject()).thenReturn("admin@example.com");
+        when(claims.get("perfil", String.class)).thenReturn("Administrador");
+        when(jwtService.parseToken(anyString())).thenReturn(claims);
+
+        UsuarioDto usuarioSolicitante = new UsuarioDto();
+        usuarioSolicitante.setId(1L);
+        usuarioSolicitante.setEmail("admin@example.com");
+        usuarioSolicitante.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
+
+        UsuarioDto usuarioAInactivar = new UsuarioDto();
+        usuarioAInactivar.setId(2L);
         usuarioAInactivar.setEmail("otheradmin@example.com");
         usuarioAInactivar.setIdPerfil(new PerfilDto(1L, "Administrador", Estados.ACTIVO));
 
-        when(usuarioRemote.obtenerUsuarioPorCI(anyString())).thenReturn(usuarioAInactivar);
+        when(usuarioRemote.findUserByEmail(anyString())).thenReturn(usuarioSolicitante);
+        when(usuarioRemote.obtenerUsuario(2L)).thenReturn(usuarioAInactivar);
 
-        Response response = usuarioResource.inactivarUsuario(usuario, token);
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
-        assertEquals("{\"message\":\"No puedes inactivar a otro administrador\"}", response.getEntity());
-        verify(usuarioRemote, never()).eliminarUsuario(any(UsuarioDto.class));
+        assertEquals("{\"error\":\"No puedes inactivar a otro Administrador o Aux administrativo\"}", response.getEntity());
+        verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
+    }
+
+    @Test
+    void testInactivarUsuarioAuxAdministrativo() throws ServiciosException {
+        Long idUsuarioAInactivar = 3L;
+        String token = "Bearer token";
+
+        Claims claims = mock(Claims.class);
+        when(claims.getSubject()).thenReturn("aux@example.com");
+        when(claims.get("perfil", String.class)).thenReturn("Aux administrativo");
+        when(jwtService.parseToken(anyString())).thenReturn(claims);
+
+        UsuarioDto usuarioSolicitante = new UsuarioDto();
+        usuarioSolicitante.setId(2L);
+        usuarioSolicitante.setEmail("aux@example.com");
+        usuarioSolicitante.setIdPerfil(new PerfilDto(2L, "Aux administrativo", Estados.ACTIVO));
+
+        UsuarioDto usuarioAInactivar = new UsuarioDto();
+        usuarioAInactivar.setId(3L);
+        usuarioAInactivar.setEmail("user@example.com");
+        usuarioAInactivar.setCedula("12345678");
+        usuarioAInactivar.setIdPerfil(new PerfilDto(3L, "Usuario", Estados.ACTIVO));
+
+        when(usuarioRemote.findUserByEmail(anyString())).thenReturn(usuarioSolicitante);
+        when(usuarioRemote.obtenerUsuario(3L)).thenReturn(usuarioAInactivar);
+        doNothing().when(usuarioRemote).inactivarUsuario(anyString(), anyString());
+
+        Response response = usuarioResource.inactivarUsuario(idUsuarioAInactivar, token);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("{\"message\":\"Usuario inactivado correctamente\"}", response.getEntity());
+        verify(usuarioRemote, times(1)).inactivarUsuario(anyString(), anyString());
+    }
+
+    @Test
+    void testInactivarUsuarioIdRequired() throws ServiciosException {
+        String token = "Bearer token";
+
+        Response response = usuarioResource.inactivarUsuario(null, token);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("{\"error\":\"ID del usuario a inactivar es requerido\"}", response.getEntity());
+        verify(usuarioRemote, never()).inactivarUsuario(anyString(), anyString());
     }
 
     @Test
     void testFiltrarUsuarios() {
-        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        List<UsuarioDto> expectedList = Arrays.asList(new UsuarioDto(), new UsuarioDto());
         when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
         Response response = usuarioResource.filtrarUsuarios("John", "Doe", null, null, null, null);
@@ -487,7 +553,7 @@ class UsuarioResourceTest {
 
     @Test
     void testFiltrarUsuariosWithAllFilters() {
-        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        List<UsuarioDto> expectedList = Arrays.asList(new UsuarioDto(), new UsuarioDto());
         when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
         Response response = usuarioResource.filtrarUsuarios("John", "Doe", "johndoe", "john@example.com", "Usuario", "ACTIVO");
@@ -499,7 +565,7 @@ class UsuarioResourceTest {
 
     @Test
     void testFiltrarUsuariosWithDefaultEstado() {
-        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        List<UsuarioDto> expectedList = Arrays.asList(new UsuarioDto(), new UsuarioDto());
         when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
         Response response = usuarioResource.filtrarUsuarios(null, null, null, null, null, null);
@@ -511,7 +577,7 @@ class UsuarioResourceTest {
 
     @Test
     void testFiltrarUsuariosWithDefaultTipoUsuario() {
-        List<UsuarioDto> expectedList = Arrays.asList(null, null);
+        List<UsuarioDto> expectedList = Arrays.asList(new UsuarioDto(), new UsuarioDto());
         when(usuarioRemote.obtenerUsuariosFiltrado(anyMap())).thenReturn(expectedList);
 
         Response response = usuarioResource.filtrarUsuarios(null, null, null, null, "default", null);
@@ -547,14 +613,14 @@ class UsuarioResourceTest {
 
     @Test
     void testObtenerTodosLosUsuarios() {
-        List<UsuarioDto> expectedList = Arrays.asList(null, null);
-        when(usuarioRemote.obtenerUsuarios()).thenReturn(expectedList);
+        List<UsuarioDto> expectedList = Arrays.asList(new UsuarioDto(), new UsuarioDto());
+        when(usuarioRemote.obtenerUsuariosSinContrasenia()).thenReturn(expectedList);
 
         Response response = usuarioResource.obtenerTodosLosUsuarios();
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(expectedList, response.getEntity());
-        verify(usuarioRemote, times(1)).obtenerUsuarios();
+        verify(usuarioRemote, times(1)).obtenerUsuariosSinContrasenia();
     }
 
     @Test

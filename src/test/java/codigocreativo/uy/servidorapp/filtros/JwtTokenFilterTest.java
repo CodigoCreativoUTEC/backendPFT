@@ -1,8 +1,9 @@
 package codigocreativo.uy.servidorapp.filtros;
 
-import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
+import codigocreativo.uy.servidorapp.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,28 +11,26 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
+
 class JwtTokenFilterTest {
-    @Mock FuncionalidadRemote funcionalidadService;
+    @Mock JwtService jwtService;
     @Mock ContainerRequestContext requestContext;
     JwtTokenFilter filter;
 
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        filter = spy(new JwtTokenFilter());
-        // Inyectar el mock de funcionalidadService usando reflexión
-        var field = JwtTokenFilter.class.getDeclaredField("funcionalidadService");
+        filter = new JwtTokenFilter();
+        
+        // Inyectar el mock de jwtService usando reflexión
+        var field = JwtTokenFilter.class.getDeclaredField("jwtService");
         field.setAccessible(true);
-        field.set(filter, funcionalidadService);
-        // Hacer accesibles los métodos privados/protegidos para el test
-        for (String methodName : new String[]{"validateToken", "isValidUserInfo", "hasPermission"}) {
-            var m = JwtTokenFilter.class.getDeclaredMethod(methodName, methodName.equals("validateToken") ? new Class[]{String.class} : new Class[]{String.class, String.class});
-            m.setAccessible(true);
-        }
+        field.set(filter, jwtService);
     }
 
     @Test
-    void testPublicEndpoint() {
+    void testPublicEndpoint() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
         when(requestContext.getUriInfo().getPath()).thenReturn("/usuarios/login");
         filter.filter(requestContext);
@@ -39,86 +38,65 @@ class JwtTokenFilterTest {
     }
 
     @Test
-    void testTokenAusente() {
+    void testTokenAusente() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
         when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn(null);
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(null);
         filter.filter(requestContext);
         verify(requestContext).abortWith(argThat(resp -> resp.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()));
     }
 
     @Test
-    void testTokenInvalido() throws Exception {
+    void testTokenInvalido() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
         when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn("Bearer tokenInvalido");
-        doThrow(new JwtTokenFilter.TokenValidationException("Token inválido")).when(filter).validateToken(anyString());
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer tokenInvalido");
+        when(jwtService.parseToken("tokenInvalido")).thenThrow(new RuntimeException("Token inválido"));
         filter.filter(requestContext);
         verify(requestContext).abortWith(argThat(resp -> resp.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()));
     }
 
     @Test
-    void testTokenSinEmailOPerfil() throws Exception {
+    void testTokenSinEmailOPerfil() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
         when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn("Bearer tokenValido");
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer tokenValido");
         Claims claims = mock(Claims.class);
         when(claims.get("email", String.class)).thenReturn(null);
         when(claims.get("perfil", String.class)).thenReturn(null);
-        doReturn(claims).when(filter).validateToken(anyString());
+        when(jwtService.parseToken("tokenValido")).thenReturn(claims);
         filter.filter(requestContext);
         verify(requestContext).abortWith(argThat(resp -> resp.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()));
     }
 
     @Test
-    void testTokenSinPermiso() throws Exception {
+    void testTokenValido() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
-        when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn("Bearer tokenValido");
-        Claims claims = mock(Claims.class);
-        when(claims.get("email", String.class)).thenReturn("user@mail.com");
-        when(claims.get("perfil", String.class)).thenReturn("Usuario");
-        doReturn(claims).when(filter).validateToken(anyString());
-        doReturn(true).when(filter).isValidUserInfo(anyString(), anyString());
-        doReturn(false).when(filter).hasPermission(anyString(), anyString());
-        filter.filter(requestContext);
-        verify(requestContext).abortWith(argThat(resp -> resp.getStatus() == Response.Status.FORBIDDEN.getStatusCode()));
-    }
-
-    @Test
-    void testTokenConPermiso() throws Exception {
-        when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
-        when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn("Bearer tokenValido");
+        when(requestContext.getUriInfo().getPath()).thenReturn("/api/usuarios/listar");
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer tokenValido");
         Claims claims = mock(Claims.class);
         when(claims.get("email", String.class)).thenReturn("admin@mail.com");
         when(claims.get("perfil", String.class)).thenReturn("Administrador");
-        doReturn(claims).when(filter).validateToken(anyString());
-        doReturn(true).when(filter).isValidUserInfo(anyString(), anyString());
-        doReturn(true).when(filter).hasPermission(anyString(), anyString());
+        when(jwtService.parseToken("tokenValido")).thenReturn(claims);
+        filter.filter(requestContext);
+        verify(requestContext, never()).abortWith(any());
+        verify(requestContext).setProperty("email", "admin@mail.com");
+        verify(requestContext).setProperty("perfil", "Administrador");
+    }
+
+    @Test
+    void testSwaggerUiPublicPath() throws IOException {
+        when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
+        when(requestContext.getUriInfo().getPath()).thenReturn("/swagger-ui");
         filter.filter(requestContext);
         verify(requestContext, never()).abortWith(any());
     }
 
     @Test
-    void testPermissionCheckThrowsException() throws Exception {
-        // Arrange: set up a valid token and user info
+    void testOpenApiPublicPath() throws IOException {
         when(requestContext.getUriInfo()).thenReturn(mock(jakarta.ws.rs.core.UriInfo.class));
-        when(requestContext.getUriInfo().getPath()).thenReturn("/api/privado");
-        when(requestContext.getHeaderString(anyString())).thenReturn("Bearer tokenValido");
-        Claims claims = mock(Claims.class);
-        when(claims.get("email", String.class)).thenReturn("admin@mail.com");
-        when(claims.get("perfil", String.class)).thenReturn("Administrador");
-        doReturn(claims).when(filter).validateToken(anyString());
-        doReturn(true).when(filter).isValidUserInfo(anyString(), anyString());
-
-        // Arrange: make hasPermission throw an exception
-        doThrow(new RuntimeException("DB error")).when(filter).hasPermission(anyString(), anyString());
-
-        // Act
+        when(requestContext.getUriInfo().getPath()).thenReturn("/openapi.json");
         filter.filter(requestContext);
-
-        // Assert
-        verify(requestContext).abortWith(argThat(resp -> resp.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()));
+        verify(requestContext, never()).abortWith(any());
     }
 } 

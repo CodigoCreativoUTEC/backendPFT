@@ -253,6 +253,11 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
+        // Si no hay filtros, devolver todos los usuarios
+        if (filtros == null || filtros.isEmpty()) {
+            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u", Usuario.class).getResultList(), new CycleAvoidingMappingContext());
+        }
+        
         StringBuilder queryBuilder = new StringBuilder("SELECT u FROM Usuario u WHERE 1=1");
         
         if (filtros.containsKey("nombre")) {
@@ -391,6 +396,10 @@ public class UsuarioBean implements UsuarioRemote {
      * Valida que un usuario pueda modificar sus propios datos
      */
     public void validarModificacionPropia(String emailToken, Long idUsuario) throws ServiciosException {
+        if (idUsuario == null) {
+            throw new ServiciosException("ID del usuario es requerido");
+        }
+        
         UsuarioDto usuario = obtenerUsuario(idUsuario);
         if (usuario == null) {
             throw new ServiciosException("Usuario no encontrado");

@@ -118,11 +118,11 @@ class EquipoResourceTest {
         when(requestContext.getProperty("email")).thenReturn("test@test.com");
         doNothing().when(bajaEquipoRemote).crearBajaEquipo(any(BajaEquipoDto.class), any(String.class));
 
-        Response response = equipoResource.eliminarEquipo(bajaEquipo, requestContext, headers);
+        Response response = equipoResource.inactivar(bajaEquipo, requestContext, headers);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
-        assertTrue(responseBody.contains("Equipo dado de baja correctamente"));
+        assertTrue(responseBody.contains("Equipo inactivado correctamente"));
         verify(bajaEquipoRemote, times(1)).crearBajaEquipo(bajaEquipo, "test@test.com");
     }
 
@@ -131,11 +131,11 @@ class EquipoResourceTest {
         ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
         HttpHeaders headers = mock(HttpHeaders.class);
         
-        Response response = equipoResource.eliminarEquipo(null, requestContext, headers);
+        Response response = equipoResource.inactivar(null, requestContext, headers);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
-        assertTrue(responseBody.contains("Los datos de la baja no pueden ser null"));
+        assertTrue(responseBody.contains("Los datos de baja son obligatorios"));
         verify(bajaEquipoRemote, never()).crearBajaEquipo(any(), any());
     }
 
@@ -147,7 +147,7 @@ class EquipoResourceTest {
         
         when(requestContext.getProperty("email")).thenReturn(null);
 
-        Response response = equipoResource.eliminarEquipo(bajaEquipo, requestContext, headers);
+        Response response = equipoResource.inactivar(bajaEquipo, requestContext, headers);
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -163,7 +163,7 @@ class EquipoResourceTest {
         
         when(requestContext.getProperty("email")).thenReturn("   ");
 
-        Response response = equipoResource.eliminarEquipo(bajaEquipo, requestContext, headers);
+        Response response = equipoResource.inactivar(bajaEquipo, requestContext, headers);
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -185,7 +185,7 @@ class EquipoResourceTest {
         when(requestContext.getProperty("email")).thenReturn("test@test.com");
         doThrow(new ServiciosException(errorMessage)).when(bajaEquipoRemote).crearBajaEquipo(any(BajaEquipoDto.class), any(String.class));
 
-        Response response = equipoResource.eliminarEquipo(bajaEquipo, requestContext, headers);
+        Response response = equipoResource.inactivar(bajaEquipo, requestContext, headers);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -203,11 +203,11 @@ class EquipoResourceTest {
         when(requestContext.getProperty("email")).thenReturn("test@test.com");
         doThrow(new RuntimeException(errorMessage)).when(bajaEquipoRemote).crearBajaEquipo(any(BajaEquipoDto.class), any(String.class));
 
-        Response response = equipoResource.eliminarEquipo(bajaEquipo, requestContext, headers);
+        Response response = equipoResource.inactivar(bajaEquipo, requestContext, headers);
 
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
-        assertTrue(responseBody.contains("Error al dar de baja el equipo"));
+        assertTrue(responseBody.contains("Error al inactivar el equipo"));
         verify(bajaEquipoRemote, times(1)).crearBajaEquipo(bajaEquipo, "test@test.com");
     }
 
