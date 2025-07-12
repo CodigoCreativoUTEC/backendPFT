@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "gns3 conection",
+        "projectKey": "CodigoCreativoUTEC_backendPFT_182e862c-b890-4f3f-8ad3-b0277c87bcc5"
+    },
+    "java.debug.settings.onBuildFailureProceed": true
+}

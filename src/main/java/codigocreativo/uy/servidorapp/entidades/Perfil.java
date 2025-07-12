@@ -15,7 +15,7 @@ public class Perfil implements Serializable {
     @Column(name = "ID_PERFIL", nullable = false)
     private Long id;
 
-    @Column(name = "NOMBRE_PERFIL", nullable = false, length = 20)
+    @Column(name = "NOMBRE_PERFIL", nullable = false, length = 70)
     private String nombrePerfil;
 
     @Enumerated(EnumType.STRING)

@@ -1,8 +1,11 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.InstitucionDto;
-import codigocreativo.uy.servidorapp.dtomappers.InstitucionMapper;
+import codigocreativo.uy.servidorapp.dtos.UbicacionDto;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.InstitucionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Institucion;
+import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -14,9 +17,14 @@ public class InstitucionBean implements InstitucionRemote{
 
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final InstitucionMapper institucionMapper;
+    private final UbicacionMapper ubicacionMapper;
 
     @Inject //Se inyecta el mapper
-    private InstitucionMapper institucionMapper;
+    public InstitucionBean(InstitucionMapper institucionMapper, UbicacionMapper ubicacionMapper) {
+        this.institucionMapper = institucionMapper;
+        this.ubicacionMapper = ubicacionMapper;
+    }
 
     @Override
     public void agregar(InstitucionDto i) {
@@ -41,8 +49,9 @@ public class InstitucionBean implements InstitucionRemote{
     }
 
     @Override
-    public List obtenerUbicaciones() {
-        return em.createQuery("SELECT Ubicacion FROM Institucion i, Institucion.class").getResultList();
+    public List<UbicacionDto> obtenerUbicaciones() {
+        List<Ubicacion> ubicaciones = em.createQuery("SELECT u FROM Ubicacion u", Ubicacion.class).getResultList();
+        return ubicacionMapper.toDto(ubicaciones);
     }
 
     @Override

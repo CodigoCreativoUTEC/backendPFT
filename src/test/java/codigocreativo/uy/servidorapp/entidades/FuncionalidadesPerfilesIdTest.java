@@ -42,4 +42,21 @@ import static org.junit.jupiter.api.Assertions.*;
         assertNotEquals(id1T, id3);  // Test inequality with different IDs
         assertNotEquals(id1T.hashCode(), id3.hashCode());  // Test hashcode inequality
     }
+
+    @Test
+    void testDefaultConstructor() {
+        FuncionalidadesPerfilesId id = new FuncionalidadesPerfilesId();
+        assertNull(id.getIdFuncionalidad());
+        assertNull(id.getIdPerfil());
+    }
+
+    @Test
+    void testEqualsWithNull() {
+        assertNotEquals(id1, null);
+    }
+
+    @Test
+    void testEqualsWithOtherClass() {
+        assertNotEquals(id1, "some string");
+    }
 }

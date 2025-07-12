@@ -1,16 +1,23 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.UsuarioMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
+import codigocreativo.uy.servidorapp.PasswordUtils;
+import com.fabdelgado.ciuy.Validator;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +25,135 @@ import java.util.Map;
 public class UsuarioBean implements UsuarioRemote {
     @PersistenceContext (unitName = "default")
     private EntityManager em;
+    private final UsuarioMapper usuarioMapper;
 
     @Inject
-    UsuarioMapper usuarioMapper;
+    public UsuarioBean(UsuarioMapper usuarioMapper) {
+        this.usuarioMapper = usuarioMapper;
+    }
 
     private static final String EMAIL = "email";
     private static final String ESTADO = "estado";
+    private static final int EDAD_MINIMA = 18;
+    private static final String QUERY_USUARIO_POR_EMAIL = "SELECT u FROM Usuario u WHERE u.email = :email";
+    private static final String ADMINISTRADOR = "Administrador";
 
     @Override
-    public void crearUsuario(UsuarioDto u) {
+    public void crearUsuario(UsuarioDto u) throws ServiciosException {
+        // Validar que el usuario no sea nulo
+        if (u == null) {
+            throw new ServiciosException("Usuario nulo");
+        }
+        
+        // Validar que el usuario sea mayor de edad
+        validarMayorDeEdad(u.getFechaNacimiento());
+        
+        // Validar que el email sea único
+        validarEmailUnico(u.getEmail());
+        
+        // Validar formato de cédula usando la librería CIUY
+        validarFormatoCedula(u.getCedula());
+        
+        // Validar que la cédula sea única
+        validarCedulaUnica(u.getCedula());
+        
+        // Validar y hashear la contraseña
+        if (u.getContrasenia() != null && !u.getContrasenia().trim().isEmpty()) {
+            validarContrasenia(u.getContrasenia());
+            try {
+                String hashedPassword = PasswordUtils.generateSaltedHash(u.getContrasenia());
+                u.setContrasenia(hashedPassword);
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                throw new ServiciosException("Error al procesar la contraseña: " + e.getMessage());
+            }
+        }
+        
         u.setEstado(Estados.SIN_VALIDAR);
         em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
+    }
+
+    /**
+     * Valida que el usuario sea mayor de edad
+     */
+    private void validarMayorDeEdad(LocalDate fechaNacimiento) throws ServiciosException {
+        if (fechaNacimiento == null) {
+            throw new ServiciosException("La fecha de nacimiento es obligatoria");
+        }
+        
+        LocalDate fechaActual = LocalDate.now();
+        Period edad = Period.between(fechaNacimiento, fechaActual);
+        
+        if (edad.getYears() < EDAD_MINIMA) {
+            throw new ServiciosException("El usuario debe ser mayor de edad (mínimo " + EDAD_MINIMA + " años)");
+        }
+    }
+
+    /**
+     * Valida que el email sea único en la base de datos
+     */
+    private void validarEmailUnico(String email) throws ServiciosException {
+        if (email == null || email.trim().isEmpty()) {
+            throw new ServiciosException("El email es obligatorio");
+        }
+        
+        try {
+            em.createQuery(QUERY_USUARIO_POR_EMAIL, Usuario.class)
+                    .setParameter(EMAIL, email.trim())
+                    .getSingleResult();
+            throw new ServiciosException("Ya existe un usuario con el email: " + email);
+        } catch (NoResultException e) {
+            // El email no existe, es válido
+        }
+    }
+
+    /**
+     * Valida el formato de la cédula uruguaya usando la librería CIUY
+     */
+    private void validarFormatoCedula(String cedula) throws ServiciosException {
+        if (cedula == null || cedula.trim().isEmpty()) {
+            throw new ServiciosException("La cédula es obligatoria");
+        }
+        
+        String cedulaLimpia = cedula.trim();
+        
+        // Validar que la cédula solo contenga dígitos
+        if (!cedulaLimpia.matches("\\d+")) {
+            throw new ServiciosException("La cédula debe contener solo números: " + cedula);
+        }
+        
+        // Validar que la cédula no exceda 8 dígitos
+        if (cedulaLimpia.length() > 8) {
+            throw new ServiciosException("La cédula no puede tener más de 8 dígitos: " + cedula);
+        }
+        
+        Validator validator = new Validator();
+        
+        try {
+            // Usar la librería CIUY para validar la cédula uruguaya
+            if (!validator.validateCi(cedulaLimpia)) {
+                throw new ServiciosException("La cédula no es válida: " + cedula);
+            }
+        } catch (StringIndexOutOfBoundsException e) {
+            // Capturar la excepción específica de la librería CIUY
+            throw new ServiciosException("La cédula tiene un formato inválido: " + cedula);
+        } catch (Exception e) {
+            // Capturar cualquier otra excepción de la librería
+            throw new ServiciosException("Error al validar la cédula: " + cedula);
+        }
+    }
+
+    /**
+     * Valida que la cédula sea única en la base de datos
+     */
+    private void validarCedulaUnica(String cedula) throws ServiciosException {
+        try {
+            em.createQuery("SELECT u FROM Usuario u WHERE u.cedula = :cedula", Usuario.class)
+                    .setParameter("cedula", cedula.trim())
+                    .getSingleResult();
+            throw new ServiciosException("Ya existe un usuario con la cédula: " + cedula);
+        } catch (NoResultException e) {
+            // La cédula no existe, es válida
+        }
     }
 
     @Override
@@ -86,11 +211,21 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public UsuarioDto login(String usuario, String password) {
         try {
-            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario AND u.contrasenia = :password", Usuario.class)
+            // Buscar usuario por email
+            Usuario user = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario", Usuario.class)
                     .setParameter("usuario", usuario)
-                    .setParameter("password", password)
-                    .getSingleResult(), new CycleAvoidingMappingContext());
-        } catch (NoResultException e) {
+                    .getSingleResult();
+            
+            // Verificar la contraseña
+            if (user.getContrasenia() != null && PasswordUtils.verifyPassword(password, user.getContrasenia())) {
+                UsuarioDto userDto = usuarioMapper.toDto(user, new CycleAvoidingMappingContext());
+                // Por seguridad, no devolver la contraseña hasheada
+                userDto.setContrasenia(null);
+                return userDto;
+            }
+            
+            return null;
+        } catch (NoResultException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             return null;
         }
     }
@@ -109,52 +244,183 @@ public class UsuarioBean implements UsuarioRemote {
     @Override
     public boolean hasPermission(String email, String requiredRole) {
         try {
-            UsuarioDto usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", UsuarioDto.class)
-                    .setParameter(EMAIL, email)
-                    .getSingleResult();
-            return usuario.getIdPerfil().getNombrePerfil().equals(requiredRole);
-        } catch (NoResultException e) {
+            UsuarioDto user = findUserByEmail(email);
+            return user != null && user.getIdPerfil().getNombrePerfil().equals(requiredRole);
+        } catch (Exception e) {
             return false;
         }
     }
 
     @Override
-public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
-    StringBuilder queryStr = new StringBuilder("SELECT u FROM Usuario u WHERE 1=1");
-
-    // Añadir condiciones de filtrado
-    if (filtros.containsKey("nombre")) {
-        queryStr.append(" AND LOWER(u.nombre) LIKE LOWER(:nombre)");
-    }
-    if (filtros.containsKey("apellido")) {
-        queryStr.append(" AND LOWER(u.apellido) LIKE LOWER(:apellido)");
-    }
-    if (filtros.containsKey("nombreUsuario")) {
-        queryStr.append(" AND LOWER(u.nombreUsuario) LIKE LOWER(:nombreUsuario)");
-    }
-    if (filtros.containsKey(EMAIL)) {
-        queryStr.append(" AND LOWER(u.email) LIKE LOWER(:email)");
-    }
-    if (filtros.containsKey("tipoUsuario")) {
-        queryStr.append(" AND LOWER(u.idPerfil.nombrePerfil) LIKE LOWER(:tipoUsuario)");
-    }
-    if (filtros.containsKey(ESTADO)) {
-        queryStr.append(" AND u.estado = :estado");
-    }
-
-    var query = em.createQuery(queryStr.toString(), Usuario.class);
-
-    // Establecer parámetros de la consulta
-    filtros.forEach((key, value) -> {
-        if (!value.isEmpty()) {
-            if (key.equals(ESTADO)) {
-                query.setParameter(key, Estados.valueOf(value));  // Si es el estado, usamos el enum
-            } else {
-                query.setParameter(key, "%" + value + "%");
+    public List<UsuarioDto> obtenerUsuariosFiltrado(Map<String, String> filtros) {
+        StringBuilder queryBuilder = new StringBuilder("SELECT u FROM Usuario u WHERE 1=1");
+        
+        if (filtros.containsKey("nombre")) {
+            queryBuilder.append(" AND LOWER(u.nombre) LIKE LOWER(:nombre)");
+        }
+        if (filtros.containsKey("apellido")) {
+            queryBuilder.append(" AND LOWER(u.apellido) LIKE LOWER(:apellido)");
+        }
+        if (filtros.containsKey("nombreUsuario")) {
+            queryBuilder.append(" AND LOWER(u.nombreUsuario) LIKE LOWER(:nombreUsuario)");
+        }
+        if (filtros.containsKey(EMAIL)) {
+            queryBuilder.append(" AND LOWER(u.email) LIKE LOWER(:email)");
+        }
+        
+        // Check if estado is valid before adding to query
+        boolean estadoValido = false;
+        Estados estadoEnum = null;
+        if (filtros.containsKey("estado")) {
+            try {
+                String estadoStr = filtros.get("estado");
+                estadoEnum = Estados.valueOf(estadoStr.toUpperCase());
+                queryBuilder.append(" AND u.estado = :estado");
+                estadoValido = true;
+            } catch (IllegalArgumentException e) {
+                // Invalid estado value, skip this filter
             }
         }
-    });
-    return usuarioMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
-}
-
+        
+        if (filtros.containsKey("tipoUsuario")) {
+            queryBuilder.append(" AND u.idPerfil.nombrePerfil = :tipoUsuario");
+        }
+        
+        var query = em.createQuery(queryBuilder.toString(), Usuario.class);
+        
+        if (filtros.containsKey("nombre")) {
+            query.setParameter("nombre", "%" + filtros.get("nombre") + "%");
+        }
+        if (filtros.containsKey("apellido")) {
+            query.setParameter("apellido", "%" + filtros.get("apellido") + "%");
+        }
+        if (filtros.containsKey("nombreUsuario")) {
+            query.setParameter("nombreUsuario", "%" + filtros.get("nombreUsuario") + "%");
+        }
+        if (filtros.containsKey(EMAIL)) {
+            query.setParameter(EMAIL, "%" + filtros.get(EMAIL) + "%");
+        }
+        if (estadoValido) {
+            query.setParameter("estado", estadoEnum);
+        }
+        if (filtros.containsKey("tipoUsuario")) {
+            query.setParameter("tipoUsuario", filtros.get("tipoUsuario"));
+        }
+        
+        return usuarioMapper.toDto(query.getResultList(), new CycleAvoidingMappingContext());
+    }
+    
+    /**
+     * Valida la contraseña según las reglas de negocio
+     */
+    public void validarContrasenia(String contrasenia) throws ServiciosException {
+        if (contrasenia == null || contrasenia.isEmpty()) {
+            throw new ServiciosException("La contraseña no puede ser nula ni vacía");
+        }
+        
+        if (!contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+            throw new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números");
+        }
+    }
+    
+    /**
+     * Valida que un usuario pueda ser inactivado por otro usuario
+     */
+    public void validarInactivacionUsuario(String emailSolicitante, String cedulaUsuarioAInactivar) throws ServiciosException {
+        // Obtener el usuario que solicita la inactivación
+        UsuarioDto solicitante = findUserByEmail(emailSolicitante);
+        if (solicitante == null) {
+            throw new ServiciosException("Usuario solicitante no encontrado");
+        }
+        
+        // Verificar que el solicitante sea administrador
+        if (!solicitante.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
+            throw new ServiciosException("Requiere ser Administrador para inactivar usuarios");
+        }
+        
+        // Obtener el usuario a inactivar
+        UsuarioDto usuarioAInactivar = obtenerUsuarioPorCI(cedulaUsuarioAInactivar);
+        if (usuarioAInactivar == null) {
+            throw new ServiciosException("Usuario a inactivar no encontrado");
+        }
+        
+        // Verificar que no se esté intentando inactivar a sí mismo
+        if (usuarioAInactivar.getEmail().equals(emailSolicitante)) {
+            throw new ServiciosException("No puedes inactivar tu propia cuenta");
+        }
+        
+        // Verificar que no se esté intentando inactivar a otro administrador
+        if (usuarioAInactivar.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
+            throw new ServiciosException("No puedes inactivar a otro administrador");
+        }
+    }
+    
+    /**
+     * Inactiva un usuario después de validar los permisos
+     */
+    public void inactivarUsuario(String emailSolicitante, String cedulaUsuarioAInactivar) throws ServiciosException {
+        validarInactivacionUsuario(emailSolicitante, cedulaUsuarioAInactivar);
+        
+        UsuarioDto usuarioAInactivar = obtenerUsuarioPorCI(cedulaUsuarioAInactivar);
+        eliminarUsuario(usuarioAInactivar);
+    }
+    
+    /**
+     * Obtiene usuarios sin contraseña para respuestas seguras
+     */
+    public List<UsuarioDto> obtenerUsuariosSinContrasenia() {
+        List<UsuarioDto> usuarios = obtenerUsuarios();
+        for (UsuarioDto usuario : usuarios) {
+            usuario.setContrasenia(null);
+        }
+        return usuarios;
+    }
+    
+    /**
+     * Filtra usuarios y devuelve la lista sin contraseñas
+     */
+    public List<UsuarioDto> filtrarUsuariosSinContrasenia(Map<String, String> filtros) {
+        List<UsuarioDto> usuarios = obtenerUsuariosFiltrado(filtros);
+        for (UsuarioDto usuario : usuarios) {
+            usuario.setContrasenia(null);
+        }
+        return usuarios;
+    }
+    
+    /**
+     * Valida que un usuario pueda modificar sus propios datos
+     */
+    public void validarModificacionPropia(String emailToken, Long idUsuario) throws ServiciosException {
+        UsuarioDto usuario = obtenerUsuario(idUsuario);
+        if (usuario == null) {
+            throw new ServiciosException("Usuario no encontrado");
+        }
+        
+        if (!usuario.getEmail().equals(emailToken)) {
+            throw new ServiciosException("No autorizado para modificar este usuario");
+        }
+    }
+    
+    /**
+     * Valida que un administrador pueda modificar usuarios
+     */
+    public void validarModificacionPorAdministrador(String emailSolicitante, Long idUsuario) throws ServiciosException {
+        UsuarioDto solicitante = findUserByEmail(emailSolicitante);
+        if (solicitante == null) {
+            throw new ServiciosException("Usuario solicitante no encontrado");
+        }
+        
+        if (!solicitante.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
+            throw new ServiciosException("Solo los administradores pueden modificar usuarios");
+        }
+        
+        UsuarioDto usuarioAModificar = obtenerUsuario(idUsuario);
+        if (usuarioAModificar == null) {
+            throw new ServiciosException("Usuario a modificar no encontrado");
+        }
+        
+        if (usuarioAModificar.getEmail().equals(emailSolicitante)) {
+            throw new ServiciosException("No puedes modificar tu propio usuario desde este endpoint. Usa el endpoint de modificación propia");
+        }
+    }
 }

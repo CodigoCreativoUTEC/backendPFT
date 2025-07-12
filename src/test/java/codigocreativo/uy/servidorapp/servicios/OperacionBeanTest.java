@@ -1,17 +1,19 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import static org.mockito.Mockito.*;
-import codigocreativo.uy.servidorapp.dtomappers.OperacionMapper;
 import codigocreativo.uy.servidorapp.dtos.OperacionDto;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.OperacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Operacion;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@ExtendWith(MockitoExtension.class) // Agregar esto para usar el MockitoExtension
+import java.lang.reflect.Field;
+
+import static org.mockito.Mockito.*;
+
 class OperacionBeanTest {
 
     @Mock
@@ -23,53 +25,54 @@ class OperacionBeanTest {
     @InjectMocks
     private OperacionBean operacionBean;
 
-    @Mock
-    private OperacionDto operacionDto;
-
     @BeforeEach
-    void setUp() {
-        // Inicialización de los mocks
-        MockitoAnnotations.openMocks(this); // Si no usas @ExtendWith(MockitoExtension.class)
+    void setUp() throws Exception {
+        MockitoAnnotations.openMocks(this);
+
+        operacionBean = new OperacionBean(operacionMapper);
+
+        // Inyectar el EntityManager usando reflexión
+        Field emField = OperacionBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(operacionBean, em);
     }
 
     @Test
     void testCrearOperacion() {
-        OperacionDto operacionDtoT = new OperacionDto();
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDtoT)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        operacionBean.crearOperacion(operacionDtoT);
+        operacionBean.crearOperacion(operacionDto);
 
-        verify(em, times(1)).persist(operacionEntity); // Verificar que persist fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em).persist(operacionEntity);
+        verify(em).flush();
     }
 
     @Test
     void testModificarOperacion() {
-        OperacionDto operacionDtoT = new OperacionDto();
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        when(operacionMapper.toEntity(operacionDtoT)).thenReturn(operacionEntity);
+        when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        operacionBean.modificarOperacion(operacionDtoT);
+        operacionBean.modificarOperacion(operacionDto);
 
-        verify(em, times(1)).merge(operacionEntity); // Verificar que merge fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em).merge(operacionEntity);
+        verify(em).flush();
     }
 
     @Test
     void testEliminarOperacion() {
+        OperacionDto operacionDto = new OperacionDto();
         Operacion operacionEntity = new Operacion();
 
-        // Mockear el comportamiento de 'operacionMapper.toEntity'
         when(operacionMapper.toEntity(operacionDto)).thenReturn(operacionEntity);
 
-        // Llamar al método de la clase OperacionBean
         operacionBean.eliminarOperacion(operacionDto);
 
-        // Verificar que las operaciones sobre el EntityManager se ejecuten
-        verify(em, times(1)).remove(operacionEntity); // Verificar que remove fue llamado
-        verify(em, times(1)).flush(); // Verificar que flush fue llamado
+        verify(em).remove(operacionEntity);
+        verify(em).flush();
     }
 }

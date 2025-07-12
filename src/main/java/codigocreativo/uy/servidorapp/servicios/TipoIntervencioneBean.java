@@ -1,7 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.TiposIntervencioneDto;
-import codigocreativo.uy.servidorapp.dtomappers.TiposIntervencioneMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.TiposIntervencioneMapper;
 import codigocreativo.uy.servidorapp.entidades.TiposIntervencione;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -14,9 +14,12 @@ import java.util.List;
 public class TipoIntervencioneBean implements TipoIntervencioneRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
+    private final TiposIntervencioneMapper tiposIntervencioneMapper;
 
     @Inject
-    private TiposIntervencioneMapper tiposIntervencioneMapper;
+    public TipoIntervencioneBean(TiposIntervencioneMapper tiposIntervencioneMapper) {
+        this.tiposIntervencioneMapper = tiposIntervencioneMapper;
+    }
 
     @Override
     public List<TiposIntervencioneDto> obtenerTiposIntervenciones() {

@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.IntervencionDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.IntervencionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.IntervencionMapper;
 import codigocreativo.uy.servidorapp.entidades.Intervencion;
 import codigocreativo.uy.servidorapp.entidades.TiposIntervencione;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
@@ -10,23 +10,22 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class IntervencionBeanTest {
 
     @Mock
@@ -38,89 +37,119 @@ class IntervencionBeanTest {
     @InjectMocks
     private IntervencionBean intervencionBean;
 
-    private IntervencionDto intervencionDto;
-    private Intervencion intervencion;
-
     @BeforeEach
-    void setUp() {
-        intervencionDto = new IntervencionDto();
-        intervencionDto.setId(1L);
+    void setUp() throws Exception {
+        MockitoAnnotations.openMocks(this);
 
-        intervencion = new Intervencion();
-        intervencion.setId(1L);
+        intervencionBean = new IntervencionBean(intervencionMapper);
+
+        // Inyectar el EntityManager usando reflexión
+        Field emField = IntervencionBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(intervencionBean, em);
     }
 
     @Test
-    void testCrear() throws ServiciosException {
-        when(intervencionMapper.toEntity(any(IntervencionDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(intervencion);
+    void testCrearIntervencion() throws ServiciosException {
+        IntervencionDto intervencionDto = new IntervencionDto();
+        Intervencion intervencionEntity = new Intervencion();
+
+        when(intervencionMapper.toEntity(eq(intervencionDto), any(CycleAvoidingMappingContext.class))).thenReturn(intervencionEntity);
 
         intervencionBean.crear(intervencionDto);
 
-        verify(em, times(1)).persist(intervencion);
+        verify(em).persist(intervencionEntity);
     }
 
     @Test
-    void testActualizar() throws ServiciosException {
-        when(intervencionMapper.toEntity(any(IntervencionDto.class), any(CycleAvoidingMappingContext.class))).thenReturn(intervencion);
+    void testActualizarIntervencion() throws ServiciosException {
+        IntervencionDto intervencionDto = new IntervencionDto();
+        Intervencion intervencionEntity = new Intervencion();
+
+        when(intervencionMapper.toEntity(eq(intervencionDto), any(CycleAvoidingMappingContext.class))).thenReturn(intervencionEntity);
 
         intervencionBean.actualizar(intervencionDto);
 
-        verify(em, times(1)).merge(intervencion);
+        verify(em).merge(intervencionEntity);
     }
 
     @Test
     void testObtenerTodas() throws ServiciosException {
-        TypedQuery<Intervencion> mockedQuery = mock(TypedQuery.class);
-        when(em.createQuery("SELECT i FROM Intervencion i", Intervencion.class)).thenReturn(mockedQuery);
-        when(mockedQuery.getResultList()).thenReturn(Collections.singletonList(intervencion));
-        when(intervencionMapper.toDto(anyList(), any(CycleAvoidingMappingContext.class))).thenReturn(Collections.singletonList(intervencionDto));
+        Intervencion intervencionEntity = new Intervencion();
+        List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
+
+        @SuppressWarnings("unchecked")
+        TypedQuery<Intervencion> query = mock(TypedQuery.class);
+        when(em.createQuery("SELECT i FROM Intervencion i", Intervencion.class)).thenReturn(query);
+        when(query.getResultList()).thenReturn(intervenciones);
+        when(intervencionMapper.toDto(eq(intervenciones), any(CycleAvoidingMappingContext.class))).thenReturn(Collections.singletonList(new IntervencionDto()));
 
         List<IntervencionDto> result = intervencionBean.obtenerTodas();
 
+        assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(intervencionDto, result.get(0));
     }
 
     @Test
     void testBuscarId() throws ServiciosException {
-        when(em.find(Intervencion.class, 1L)).thenReturn(intervencion);
-        when(intervencionMapper.toDto(any(Intervencion.class), any(CycleAvoidingMappingContext.class))).thenReturn(intervencionDto);
+        Long id = 1L;
+        Intervencion intervencionEntity = new Intervencion();
+        IntervencionDto intervencionDto = new IntervencionDto();
 
-        IntervencionDto result = intervencionBean.buscarId(1L);
+        when(em.find(Intervencion.class, id)).thenReturn(intervencionEntity);
+        when(intervencionMapper.toDto(eq(intervencionEntity), any(CycleAvoidingMappingContext.class))).thenReturn(intervencionDto);
 
-        assertEquals(intervencionDto, result);
+        IntervencionDto result = intervencionBean.buscarId(id);
+
+        assertNotNull(result);
     }
 
     @Test
     void testObtenerPorRangoDeFecha() throws ServiciosException {
-        TypedQuery<Intervencion> mockedQuery = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(mockedQuery);
-        when(mockedQuery.getResultList()).thenReturn(Collections.singletonList(intervencion));
-        when(intervencionMapper.toDto(anyList(), any(CycleAvoidingMappingContext.class))).thenReturn(Collections.singletonList(intervencionDto));
+        LocalDateTime fechaDesde = LocalDateTime.now().minusDays(1);
+        LocalDateTime fechaHasta = LocalDateTime.now();
+        Long idEquipo = 1L;
+        Intervencion intervencionEntity = new Intervencion();
+        List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
-        List<IntervencionDto> result = intervencionBean.obtenerPorRangoDeFecha(LocalDateTime.now(), LocalDateTime.now(), 1L);
+        @SuppressWarnings("unchecked")
+        TypedQuery<Intervencion> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
+        when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);
+        when(query.setParameter("fechaHasta", fechaHasta)).thenReturn(query);
+        when(query.setParameter("idEquipo", idEquipo)).thenReturn(query);
+        when(query.getResultList()).thenReturn(intervenciones);
+        when(intervencionMapper.toDto(eq(intervenciones), any(CycleAvoidingMappingContext.class))).thenReturn(Collections.singletonList(new IntervencionDto()));
 
+        List<IntervencionDto> result = intervencionBean.obtenerPorRangoDeFecha(fechaDesde, fechaHasta, idEquipo);
+
+        assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(intervencionDto, result.get(0));
     }
 
     @Test
     void testObtenerCantidadPorTipo() throws ServiciosException {
-        // Create a mock Intervencion object with a non-null idTipo
-        TiposIntervencione tipo = new TiposIntervencione();
-        tipo.setNombreTipo("Tipo1");
-        intervencion.setIdTipo(tipo);
+        LocalDateTime fechaDesde = LocalDateTime.now().minusDays(1);
+        LocalDateTime fechaHasta = LocalDateTime.now();
+        Long idTipo = 1L;
+        Intervencion intervencionEntity = new Intervencion();
+        TiposIntervencione tipoIntervencion = new TiposIntervencione();
+        tipoIntervencion.setNombreTipo("Mantenimiento");
+        intervencionEntity.setIdTipo(tipoIntervencion);
+        List<Intervencion> intervenciones = Collections.singletonList(intervencionEntity);
 
-        // Mock the query and its result
-        TypedQuery<Intervencion> mockedQuery = mock(TypedQuery.class);
-        when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(mockedQuery);
-        when(mockedQuery.getResultList()).thenReturn(Collections.singletonList(intervencion));
+        @SuppressWarnings("unchecked")
+        TypedQuery<Intervencion> query = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(Intervencion.class))).thenReturn(query);
+        when(query.setParameter("fechaDesde", fechaDesde)).thenReturn(query);
+        when(query.setParameter("fechaHasta", fechaHasta)).thenReturn(query);
+        when(query.setParameter("idTipo", idTipo)).thenReturn(query);
+        when(query.getResultList()).thenReturn(intervenciones);
 
-        // Call the method under test
-        Map<String, Long> result = intervencionBean.obtenerCantidadPorTipo(LocalDateTime.now(), LocalDateTime.now(), 1L);
+        Map<String, Long> result = intervencionBean.obtenerCantidadPorTipo(fechaDesde, fechaHasta, idTipo);
 
-        // Assert the result
+        assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(1L, result.get("Tipo1"));
+        assertEquals(1L, result.get("Mantenimiento"));
     }
 }

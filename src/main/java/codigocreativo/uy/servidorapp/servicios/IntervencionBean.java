@@ -1,8 +1,8 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.dtos.IntervencionDto;
-import codigocreativo.uy.servidorapp.dtomappers.CycleAvoidingMappingContext;
-import codigocreativo.uy.servidorapp.dtomappers.IntervencionMapper;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.IntervencionMapper;
 import codigocreativo.uy.servidorapp.entidades.*;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
@@ -20,16 +20,16 @@ import java.util.stream.Collectors;
 public class IntervencionBean implements IntervencionRemote {
     @PersistenceContext(unitName = "default")
     private EntityManager em;
+    private final IntervencionMapper intervencionMapper;
 
     @Inject //Se inyecta el mapper
-    private IntervencionMapper intervencionMapper;
+    public IntervencionBean(IntervencionMapper intervencionMapper) {
+        this.intervencionMapper = intervencionMapper;
+    }
 
     @Override
     public void crear(IntervencionDto intervencion) throws ServiciosException {
-        //Se "transforma" el DTO a una entidad
         Intervencion intervencionEntity = intervencionMapper.toEntity(intervencion, new CycleAvoidingMappingContext());
-
-        //Se persiste la entidad (no el DTO)
         em.persist(intervencionEntity);
     }
 
@@ -41,7 +41,6 @@ public class IntervencionBean implements IntervencionRemote {
         //Se actualiza la entidad (no el DTO)
         em.merge(intervencionEntity);
     }
-
 
     @Override
     public List<IntervencionDto> obtenerTodas() throws ServiciosException {
@@ -55,6 +54,9 @@ public class IntervencionBean implements IntervencionRemote {
     @Override
     public IntervencionDto buscarId(Long id) throws ServiciosException {
         Intervencion intervencion = em.find(Intervencion.class, id);
+        if (intervencion == null) {
+            return null;
+        }
         return intervencionMapper.toDto(intervencion, new CycleAvoidingMappingContext());
     }
 

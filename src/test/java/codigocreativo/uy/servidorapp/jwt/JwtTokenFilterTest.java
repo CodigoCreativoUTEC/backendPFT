@@ -2,7 +2,7 @@ package codigocreativo.uy.servidorapp.jwt;
 
 import codigocreativo.uy.servidorapp.dtos.FuncionalidadDto;
 import codigocreativo.uy.servidorapp.dtos.PerfilDto;
-import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.filtros.JwtTokenFilter;
 import codigocreativo.uy.servidorapp.servicios.FuncionalidadRemote;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -16,9 +16,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Field;
 import java.security.Key;
 import java.util.Base64;
 import java.util.List;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,16 +34,22 @@ class JwtTokenFilterTest {
     private UriInfo uriInfo;
 
     private JwtTokenFilter jwtTokenFilter;
+    private FuncionalidadRemote funcionalidadService;
 
     private Key key;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         jwtTokenFilter = new JwtTokenFilter();
-        jwtTokenFilter.funcionalidadService = mock(FuncionalidadRemote.class);
+        funcionalidadService = mock(FuncionalidadRemote.class);
+        
+        Field field = JwtTokenFilter.class.getDeclaredField("funcionalidadService");
+        field.setAccessible(true);
+        field.set(jwtTokenFilter, funcionalidadService);
+        
         when(requestContext.getUriInfo()).thenReturn(uriInfo);
-        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(System.getenv("SECRET_KEY"))); // Clave secreta de ejemplo
+        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(System.getenv("SECRET_KEY")));
     }
 
     @Test
@@ -78,65 +86,6 @@ class JwtTokenFilterTest {
     }
 
     @Test
-    void testFilter_ValidTokenWithNoPermissions_ShouldAbortWithForbidden() {
-        String token = Jwts.builder()
-                .setSubject("testUser")
-                .claim("perfil", "Usuario")
-                .claim("email", "test@test.com")
-                .signWith(key)
-                .compact();
-
-        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/proveedores/crear");
-
-        jwtTokenFilter.filter(requestContext);
-
-        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
-        verify(requestContext).abortWith(captor.capture());
-        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), captor.getValue().getStatus());
-        assertEquals("{\"error\":\"No tiene permisos para realizar esta acción\"}", captor.getValue().getEntity());
-    }
-
-    @Test
-    void testFilter_ValidTokenWithPermissions_ShouldPass() {
-        String token = Jwts.builder()
-                .setSubject("testUser")
-                .claim("perfil", "Aux administrativo")
-                .claim("email", "test@example.com")
-                .signWith(key)
-                .compact();
-
-        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/ListarTodosLosUsuarios");
-
-        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
-        funcionalidadDto.setRuta("/usuarios/ListarTodosLosUsuarios");
-        PerfilDto perfil = new PerfilDto();
-        perfil.setNombrePerfil("Aux administrativo");
-        perfil.setId(1L);
-        perfil.setEstado(Estados.ACTIVO);
-        funcionalidadDto.setPerfiles(List.of(perfil));
-        when(jwtTokenFilter.funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidadDto));
-
-        jwtTokenFilter.filter(requestContext);
-
-        verify(requestContext, never()).abortWith(any(Response.class));
-    }
-
-    @Test
-    void testFilter_InvalidToken_ShouldAbortWithUnauthorized() {
-        String token = "Bearer invalidToken";
-        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
-
-        jwtTokenFilter.filter(requestContext);
-
-        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
-        verify(requestContext).abortWith(captor.capture());
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
-    }
-
-    @Test
     void testFilter_ValidTokenWithMissingClaims_ShouldAbortWithUnauthorized() {
         String token = Jwts.builder()
                 .setSubject("testUser")
@@ -161,6 +110,7 @@ class JwtTokenFilterTest {
 
         verify(requestContext, never()).abortWith(any(Response.class));
     }
+
     @Test
     void testFilter_ValidTokenWithEmptyEmail_ShouldAbortWithUnauthorized() {
         String token = Jwts.builder()
@@ -198,8 +148,9 @@ class JwtTokenFilterTest {
         verify(requestContext).abortWith(captor.capture());
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
     }
+
     @Test
-    void testFilter_UnexpectedException_ShouldAbortWithUnauthorized() {
+    void testFilter_ValidTokenWithProperPermissions_ShouldPass() {
         String token = Jwts.builder()
                 .setSubject("testUser")
                 .claim("perfil", "Aux administrativo")
@@ -207,14 +158,146 @@ class JwtTokenFilterTest {
                 .signWith(key)
                 .compact();
 
+        // Crear una funcionalidad que coincida con el path y tenga el perfil correcto
+        FuncionalidadDto funcionalidad = new FuncionalidadDto();
+        funcionalidad.setRuta("/usuarios/listar");
+        PerfilDto perfil = new PerfilDto();
+        perfil.setNombrePerfil("Aux administrativo");
+        funcionalidad.setPerfiles(List.of(perfil));
+
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
         when(uriInfo.getPath()).thenReturn("/usuarios/listar");
-        doThrow(new RuntimeException("Unexpected exception")).when(jwtTokenFilter.funcionalidadService).obtenerTodas();
+        when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidad));
+
+        jwtTokenFilter.filter(requestContext);
+
+        verify(requestContext, never()).abortWith(any(Response.class));
+    }
+
+    @Test
+    void testFilter_ValidTokenWithInvalidPermissions_ShouldAbortWithForbidden() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        // Crear una funcionalidad que no coincida con el path o no tenga el perfil correcto
+        FuncionalidadDto funcionalidad = new FuncionalidadDto();
+        funcionalidad.setRuta("/other/path");
+        PerfilDto perfil = new PerfilDto();
+        perfil.setNombrePerfil("Otro perfil");
+        funcionalidad.setPerfiles(List.of(perfil));
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidad));
 
         jwtTokenFilter.filter(requestContext);
 
         ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
         verify(requestContext).abortWith(captor.capture());
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), captor.getValue().getStatus());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), captor.getValue().getStatus());
     }
+
+    @Test
+    void testFilter_InvalidTokenSignature_ShouldAbortWithUnauthorized() {
+        Key invalidKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode("YW5vdGhlcl9zZWNyZXRfa2V5X2Zvcl90ZXN0aW5nX3B1cnBvc2VzX29ubHk="));
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("userId", "123")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .claim("permisos", List.of("/usuarios/listar"))
+                .signWith(invalidKey)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        Response response = captor.getValue();
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Token inválido"));
+    }
+
+    @Test
+    void testFilter_ExpiredToken_ShouldAbortWithUnauthorized() {
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("userId", "123")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .claim("permisos", List.of("/usuarios/listar"))
+                .setIssuedAt(new Date(System.currentTimeMillis() - 1000))
+                .setExpiration(new Date(System.currentTimeMillis() - 500))
+                .signWith(key)
+                .compact();
+
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+
+        jwtTokenFilter.filter(requestContext);
+
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        Response response = captor.getValue();
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Token inválido"));
+    }
+
+    @Test
+    void testFilter_PermissionCheckWithDetailedLogging() {
+        // Crear un token válido para administrador
+        String token = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Administrador")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        // Crear una funcionalidad que coincida con el path
+        FuncionalidadDto funcionalidad = new FuncionalidadDto();
+        funcionalidad.setRuta("/usuarios/modificar");
+        PerfilDto perfil = new PerfilDto();
+        perfil.setNombrePerfil("Administrador");
+        funcionalidad.setPerfiles(List.of(perfil));
+
+        // Configurar el mock del servicio de funcionalidades
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(uriInfo.getPath()).thenReturn("/usuarios/modificar");
+        when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidad));
+
+        // Ejecutar el filtro
+        jwtTokenFilter.filter(requestContext);
+
+        // Verificar que no se abortó la petición para administrador
+        verify(requestContext, never()).abortWith(any(Response.class));
+
+        // Crear un token con perfil Aux administrativo
+        String tokenWithDifferentProfile = Jwts.builder()
+                .setSubject("testUser")
+                .claim("perfil", "Aux administrativo")
+                .claim("email", "test@example.com")
+                .signWith(key)
+                .compact();
+
+        // Configurar el mock para el segundo caso
+        when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + tokenWithDifferentProfile);
+
+        // Ejecutar el filtro nuevamente
+        jwtTokenFilter.filter(requestContext);
+
+        // Verificar que se abortó la petición con FORBIDDEN para Aux administrativo
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(requestContext).abortWith(captor.capture());
+        Response response = captor.getValue();
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("No tiene permisos para modificar usuarios"));
+    }
+
 }

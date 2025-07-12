@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.dtos;
 
 import java.io.Serializable;
 import java.util.Objects;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 
 /**
  * DTO for {@link codigocreativo.uy.servidorapp.entidades.Pais}
@@ -9,6 +10,7 @@ import java.util.Objects;
 public class PaisDto implements Serializable {
     private Long id;
     private String nombre;
+    private Estados estado;
 
     public PaisDto() {
     }
@@ -34,6 +36,14 @@ public class PaisDto implements Serializable {
     public PaisDto setNombre(String nombre) {
         this.nombre = nombre;
         return this;
+    }
+
+    public Estados getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Estados estado) {
+        this.estado = estado;
     }
 
     @Override

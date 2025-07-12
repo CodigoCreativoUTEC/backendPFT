@@ -1,26 +1,28 @@
 package codigocreativo.uy.servidorapp.servicios;
 
-import codigocreativo.uy.servidorapp.dtomappers.TiposIntervencioneMapper;
 import codigocreativo.uy.servidorapp.dtos.TiposIntervencioneDto;
+import codigocreativo.uy.servidorapp.dtos.dtomappers.TiposIntervencioneMapper;
 import codigocreativo.uy.servidorapp.entidades.TiposIntervencione;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
-
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
- class TipoIntervencioneBeanTest {
+@ExtendWith(MockitoExtension.class)
+class TipoIntervencioneBeanTest {
 
     @Mock
     private EntityManager em;
@@ -32,14 +34,22 @@ import static org.mockito.Mockito.*;
     private TipoIntervencioneBean tipoIntervencioneBean;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+        tipoIntervencioneBean = new TipoIntervencioneBean(tiposIntervencioneMapper);
+
+        // Use reflection to set the private EntityManager field
+        Field emField = TipoIntervencioneBean.class.getDeclaredField("em");
+        emField.setAccessible(true);
+        emField.set(tipoIntervencioneBean, em);
     }
 
     @Test
-     void testObtenerTiposIntervenciones() {
+    void testObtenerTiposIntervenciones() {
         List<TiposIntervencione> tiposIntervenciones = new ArrayList<>();
+        tiposIntervenciones.add(new TiposIntervencione()); // Add a mock entity to the list
         List<TiposIntervencioneDto> tiposIntervencionesDto = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         TypedQuery<TiposIntervencione> query = mock(TypedQuery.class);
 
         when(em.createQuery("SELECT t FROM TiposIntervencione t WHERE t.estado = 'ACTIVO'", TiposIntervencione.class)).thenReturn(query);
@@ -84,7 +94,7 @@ import static org.mockito.Mockito.*;
     }
 
     @Test
-     void testModificarTipoIntervencion() {
+    void testModificarTipoIntervencion() {
         TiposIntervencioneDto tipoIntervencionDto = new TiposIntervencioneDto();
         TiposIntervencione tipoIntervencionEntity = new TiposIntervencione();
 
@@ -97,7 +107,7 @@ import static org.mockito.Mockito.*;
     }
 
     @Test
-     void testEliminarTipoIntervencion() {
+    void testEliminarTipoIntervencion() {
         Long id = 1L;
         Query query = mock(Query.class);
 

@@ -12,9 +12,10 @@ import org.mockito.MockitoAnnotations;
 import jakarta.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ProveedoresResourceTest {
@@ -25,74 +26,175 @@ class ProveedoresResourceTest {
     @InjectMocks
     private ProveedoresResource resource;
 
+    private ProveedoresEquipoDto proveedorDto;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        proveedorDto = new ProveedoresEquipoDto();
+        proveedorDto.setNombre("Proveedor Test");
+        proveedorDto.setEstado(Estados.ACTIVO);
     }
 
     @Test
-    void testCrearProveedor() {
-        ProveedoresEquipoDto dto = new ProveedoresEquipoDto();
-        Response response = resource.crearProveedor(dto);
+    void testCrearProveedor_success() {
+        doNothing().when(er).crearProveedor(any(ProveedoresEquipoDto.class));
 
-        verify(er, times(1)).crearProveedor(dto);
-        assertEquals(201, response.getStatus());
+        Response response = resource.crearProveedor(proveedorDto);
+
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Proveedor creado correctamente", entity.get("message"));
+        verify(er, times(1)).crearProveedor(any(ProveedoresEquipoDto.class));
     }
 
     @Test
-    void testModificarProveedor() {
-        ProveedoresEquipoDto dto = new ProveedoresEquipoDto();
-        Response response = resource.modificarProveedor(dto);
+    void testCrearProveedor_error() {
+        doThrow(new IllegalArgumentException("Ya existe un proveedor con ese nombre")).when(er).crearProveedor(any(ProveedoresEquipoDto.class));
 
-        verify(er, times(1)).modificarProveedor(dto);
-        assertEquals(200, response.getStatus());
+        Response response = resource.crearProveedor(proveedorDto);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Ya existe un proveedor con ese nombre", entity.get("error"));
     }
 
     @Test
-    void testEliminarProveedor() {
-        Long id = 1L;
-        Response response = resource.eliminarProveedor(id);
+    void testModificarProveedor_success() {
+        doNothing().when(er).modificarProveedor(any(ProveedoresEquipoDto.class));
 
-        verify(er, times(1)).eliminarProveedor(id);
-        assertEquals(200, response.getStatus());
+        Response response = resource.modificarProveedor(proveedorDto);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Proveedor modificado correctamente", entity.get("message"));
+        verify(er, times(1)).modificarProveedor(any(ProveedoresEquipoDto.class));
+    }
+
+    @Test
+    void testModificarProveedor_error() {
+        doThrow(new IllegalArgumentException("Ya existe otro proveedor con ese nombre")).when(er).modificarProveedor(any(ProveedoresEquipoDto.class));
+
+        Response response = resource.modificarProveedor(proveedorDto);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Ya existe otro proveedor con ese nombre", entity.get("error"));
+    }
+
+    @Test
+    void testEliminarProveedor_success() {
+        doNothing().when(er).eliminarProveedor(1L);
+
+        Response response = resource.eliminarProveedor(1L);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Proveedor inactivado correctamente", entity.get("message"));
+        verify(er, times(1)).eliminarProveedor(1L);
+    }
+
+    @Test
+    void testEliminarProveedor_error() {
+        doThrow(new IllegalArgumentException("Proveedor no encontrado")).when(er).eliminarProveedor(1L);
+
+        Response response = resource.eliminarProveedor(1L);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Proveedor no encontrado", entity.get("error"));
     }
 
     @Test
     void testListarProveedores() {
-        List<ProveedoresEquipoDto> expectedList = Arrays.asList(new ProveedoresEquipoDto(), new ProveedoresEquipoDto());
+        List<ProveedoresEquipoDto> expectedList = Arrays.asList(proveedorDto);
         when(er.obtenerProveedores()).thenReturn(expectedList);
 
-        List<ProveedoresEquipoDto> actualList = resource.listarProveedores();
+        List<ProveedoresEquipoDto> result = resource.listarProveedores();
 
+        assertNotNull(result);
+        assertEquals(1, result.size());
         verify(er, times(1)).obtenerProveedores();
-        assertEquals(expectedList.size(), actualList.size());
-        assertEquals(expectedList, actualList);
     }
 
     @Test
-    void testBuscarPorId() {
-        Long id = 1L;
-        ProveedoresEquipoDto expectedDto = new ProveedoresEquipoDto();
-        when(er.obtenerProveedor(id)).thenReturn(expectedDto);
+    void testBuscarPorId_success() {
+        when(er.obtenerProveedor(1L)).thenReturn(proveedorDto);
 
-        ProveedoresEquipoDto actualDto = resource.buscarPorId(id);
+        Response response = resource.buscarPorId(1L);
 
-        verify(er, times(1)).obtenerProveedor(id);
-        assertNotNull(actualDto);
-        assertEquals(expectedDto, actualDto);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(proveedorDto, response.getEntity());
+        verify(er, times(1)).obtenerProveedor(1L);
     }
 
     @Test
-    void testBuscarProveedores() {
-        String nombre = "ProveedorX";
-        Estados estado = Estados.ACTIVO;
-        List<ProveedoresEquipoDto> expectedList = Arrays.asList(new ProveedoresEquipoDto(), new ProveedoresEquipoDto());
-        when(er.buscarProveedores(nombre, estado)).thenReturn(expectedList);
+    void testBuscarPorId_notFound() {
+        when(er.obtenerProveedor(1L)).thenReturn(null);
 
-        List<ProveedoresEquipoDto> actualList = resource.buscarProveedores(nombre, estado);
+        Response response = resource.buscarPorId(1L);
 
-        verify(er, times(1)).buscarProveedores(nombre, estado);
-        assertEquals(expectedList.size(), actualList.size());
-        assertEquals(expectedList, actualList);
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertEquals("Proveedor no encontrado", entity.get("error"));
+    }
+
+    @Test
+    void testFiltrarProveedores_soloNombre() {
+        List<ProveedoresEquipoDto> expectedList = Arrays.asList(proveedorDto);
+        when(er.filtrarProveedores("test", null)).thenReturn(expectedList);
+
+        Response response = resource.filtrarProveedores("test", null);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
+        verify(er, times(1)).filtrarProveedores("test", null);
+    }
+
+    @Test
+    void testFiltrarProveedores_soloEstado() {
+        List<ProveedoresEquipoDto> expectedList = Arrays.asList(proveedorDto);
+        when(er.filtrarProveedores(null, "ACTIVO")).thenReturn(expectedList);
+
+        Response response = resource.filtrarProveedores(null, "ACTIVO");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
+        verify(er, times(1)).filtrarProveedores(null, "ACTIVO");
+    }
+
+    @Test
+    void testFiltrarProveedores_nombreYEstado() {
+        List<ProveedoresEquipoDto> expectedList = Arrays.asList(proveedorDto);
+        when(er.filtrarProveedores("test", "ACTIVO")).thenReturn(expectedList);
+
+        Response response = resource.filtrarProveedores("test", "ACTIVO");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
+        verify(er, times(1)).filtrarProveedores("test", "ACTIVO");
+    }
+
+    @Test
+    void testFiltrarProveedores_sinFiltros() {
+        List<ProveedoresEquipoDto> expectedList = Arrays.asList(proveedorDto);
+        when(er.filtrarProveedores(null, null)).thenReturn(expectedList);
+
+        Response response = resource.filtrarProveedores(null, null);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(expectedList, response.getEntity());
+        verify(er, times(1)).filtrarProveedores(null, null);
+    }
+
+    @Test
+    void testFiltrarProveedores_estadoInvalido() {
+        when(er.filtrarProveedores(null, "ESTADO_INVALIDO")).thenThrow(new IllegalArgumentException("Estado inválido"));
+
+        Response response = resource.filtrarProveedores(null, "ESTADO_INVALIDO");
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertTrue(entity.get("error").contains("Estado inválido"));
     }
 }

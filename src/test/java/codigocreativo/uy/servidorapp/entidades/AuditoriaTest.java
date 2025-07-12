@@ -14,7 +14,7 @@ import java.time.LocalDate;
     private LocalDate fechaHora;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         usuario = Mockito.mock(Usuario.class);
         operacion = Mockito.mock(Operacion.class);
         fechaHora = LocalDate.now();

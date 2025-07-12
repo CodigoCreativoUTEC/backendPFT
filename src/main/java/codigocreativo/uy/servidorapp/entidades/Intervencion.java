@@ -3,6 +3,7 @@ package codigocreativo.uy.servidorapp.entidades;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ public class Intervencion implements Serializable {
     private String motivo;
 
     @Column(name = "FECHA_HORA", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHora;
 
     @Column(name = "COMENTARIOS")
