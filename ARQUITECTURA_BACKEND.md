@@ -53,7 +53,7 @@
 
 ## 4. Patrones de Diseño Implementados
 
-* **Patrón 1: Enterprise Java Beans (EJB)**
+* **Patrón 1: Enterprise JavaBeans (EJB)**
     * **Propósito:** Manejo de la lógica de negocio mediante componentes empresariales con gestión automática de transacciones, inyección de dependencias y ciclo de vida.
     * **Implementación:** Cada entidad tiene su Bean de servicio (`@Stateless`) con interfaz Remote correspondiente en `src/main/java/codigocreativo/uy/servidorapp/servicios/`.
 
@@ -61,17 +61,30 @@
     * **Propósito:** Transferir datos entre capas sin exponer entidades JPA directamente, optimizando el tráfico de red y proporcionando una capa de abstracción.
     * **Implementación:** DTOs definidos en `src/main/java/codigocreativo/uy/servidorapp/dtos/` con mappers automáticos usando MapStruct.
 
-* **Patrón 3: Repository/Service**
-    * **Propósito:** Separación clara entre la lógica de acceso a datos (EJB Beans) y la exposición de servicios REST (Resources).
-    * **Implementación:** Resources en `src/main/java/codigocreativo/uy/servidorapp/ws/` utilizan beans de servicio mediante inyección `@EJB`.
+* **Patrón 3: Service Layer**
+    * **Propósito:** Centralizar la lógica de negocio del dominio en una capa de servicios reutilizable, desacoplando los controladores REST de la lógica.
+    * **Implementación:** `EquipoBean` y otros servicios EJB encapsulan reglas de negocio, y son consumidos desde `src/main/java/codigocreativo/uy/servidorapp/ws/`.
 
-* **Patrón 4: Interceptor/Filter**
-    * **Propósito:** Implementar aspectos transversales como autenticación, autorización, CORS y auditoría.
-    * **Implementación:** Filtros en `src/main/java/codigocreativo/uy/servidorapp/filtros/` incluyendo `JwtTokenFilter` para seguridad.
+* **Patrón 4: DAO (Data Access Object)**
+    * **Propósito:** Encapsular el acceso a la base de datos y aislarlo del resto del sistema.
+    * **Implementación:** Las clases EJB utilizan `EntityManager` para acceder a la base de datos, siguiendo el patrón DAO aunque sin clases separadas explícitas.
 
-* **Patrón 5: Mapper**
-    * **Propósito:** Conversión automática entre entidades JPA y DTOs evitando código repetitivo y errores de mapeo manual.
-    * **Implementación:** Uso de MapStruct 1.5.5.Final para generar mappers automáticos con manejo de ciclos de referencia.
+* **Patrón 5: Inyección de Dependencias (Dependency Injection)**
+    * **Propósito:** Desacoplar las dependencias entre clases y facilitar el testeo, mantenimiento y extensibilidad.
+    * **Implementación:** Uso de `@Inject`, `@EJB` y `@PersistenceContext` para inyección automática de dependencias por parte del contenedor.
+
+* **Patrón 6: Mapper**
+    * **Propósito:** Convertir objetos entre diferentes modelos (por ejemplo, de entidad JPA a DTO) evitando código repetitivo.
+    * **Implementación:** MapStruct se encarga de generar automáticamente las clases que convierten entidades a DTOs y viceversa.
+
+* **Patrón 7: Interceptor / Filter**
+    * **Propósito:** Aplicar lógica transversal como seguridad, auditoría o CORS sin acoplarla a la lógica de negocio.
+    * **Implementación:** Filtros definidos en `src/main/java/codigocreativo/uy/servidorapp/filtros/`, como `JwtTokenFilter`, interceptan y validan los requests entrantes.
+
+* **Patrón 8: RESTful Resource**
+    * **Propósito:** Exponer operaciones sobre recursos del dominio a través de una interfaz uniforme basada en HTTP.
+    * **Implementación:** Los recursos definidos en `src/main/java/codigocreativo/uy/servidorapp/ws/` siguen las convenciones REST usando JAX-RS (`@Path`, `@GET`, `@POST`, etc.).
+
 
 ## 5. Seguridad
 
