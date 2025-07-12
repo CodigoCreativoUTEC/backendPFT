@@ -85,7 +85,7 @@
     * Algoritmo: HS256 (HMAC-SHA256)
     * Claims incluyen: email, perfil, fecha de emisión y expiración
 
-* **Integración con Active Directory:** No se encontró implementación de Active Directory/LDAP en el código fuente actual. La autenticación se realiza contra la base de datos local y Google OAuth2.
+* **Integración con Active Directory:** TODO: documentar.
 
 ## 6. Arquitectura de Componentes
 
