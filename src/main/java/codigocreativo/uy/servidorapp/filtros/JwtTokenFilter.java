@@ -37,15 +37,37 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/usuarios/login",
+        "/usuarios/seleccionar",
         "/usuarios/google-login",
+        "/usuarios/listar",
+        "/usuarios/filtrar",
+        "/usuarios/modificar-propio-usuario",
         "/perfiles/listar",
-        "/swagger-ui",
-        "/usuarios/crear",
-        "/menu",
-        "/api/login",
+        "/equipos/listar",
+        "/equipos/filtrar",
+        "/equipos/listarBajas",
+        "/intervenciones/listar",
+        "/intervenciones/filtrar",
+        "/tipos-equipo/listar",
+        "/tipos-equipo/filtrar",
+        "/marcas/listar",
+        "/marcas/filtrar",
+        "/ubicaciones/listar",
+        "/ubicaciones/filtrar",
+        "/modelos/listar",
+        "/modelos/filtrar",
+        "/proveedores/listar",
+        "/proveedores/filtrar",
+        "/paises/listar",
+        "/paises/filtrar",
+        "/funcionalidades/listar",
+        "/funcionalidades/filtrar",
+        "/tipoIntervenciones/listar",
+        "/tipoIntervenciones/filtrar",
         "/api/openapi.json",
         "/api/swagger-ui",
         "/openapi.json",
+        "/swagger-ui",
         "/swagger-ui/index.html"
     );
 
@@ -77,9 +99,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         try {
             // Validar token y extraer claims
             Claims claims = validateToken(token);
-            if (claims == null) {
-                return;
-            }
 
             // Procesar información del usuario
             processUserInfo(requestContext, claims, path);
@@ -90,6 +109,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                 .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
                 .build());
+            return; // Asegurar que el método termina aquí después de abortar
         }
     }
 

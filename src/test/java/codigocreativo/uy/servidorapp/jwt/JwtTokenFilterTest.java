@@ -93,7 +93,7 @@ class JwtTokenFilterTest {
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
 
         jwtTokenFilter.filter(requestContext);
 
@@ -121,7 +121,7 @@ class JwtTokenFilterTest {
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
 
         jwtTokenFilter.filter(requestContext);
 
@@ -140,7 +140,7 @@ class JwtTokenFilterTest {
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
 
         jwtTokenFilter.filter(requestContext);
 
@@ -160,13 +160,13 @@ class JwtTokenFilterTest {
 
         // Crear una funcionalidad que coincida con el path y tenga el perfil correcto
         FuncionalidadDto funcionalidad = new FuncionalidadDto();
-        funcionalidad.setRuta("/usuarios/listar");
+        funcionalidad.setRuta("/usuarios/crear");
         PerfilDto perfil = new PerfilDto();
         perfil.setNombrePerfil("Aux administrativo");
         funcionalidad.setPerfiles(List.of(perfil));
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
         when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidad));
 
         jwtTokenFilter.filter(requestContext);
@@ -191,7 +191,7 @@ class JwtTokenFilterTest {
         funcionalidad.setPerfiles(List.of(perfil));
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
         when(funcionalidadService.obtenerTodas()).thenReturn(List.of(funcionalidad));
 
         jwtTokenFilter.filter(requestContext);
@@ -209,12 +209,12 @@ class JwtTokenFilterTest {
                 .claim("userId", "123")
                 .claim("perfil", "Aux administrativo")
                 .claim("email", "test@example.com")
-                .claim("permisos", List.of("/usuarios/listar"))
+                .claim("permisos", List.of("/usuarios/crear"))
                 .signWith(invalidKey)
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
 
         jwtTokenFilter.filter(requestContext);
 
@@ -232,14 +232,14 @@ class JwtTokenFilterTest {
                 .claim("userId", "123")
                 .claim("perfil", "Aux administrativo")
                 .claim("email", "test@example.com")
-                .claim("permisos", List.of("/usuarios/listar"))
+                .claim("permisos", List.of("/usuarios/crear"))
                 .setIssuedAt(new Date(System.currentTimeMillis() - 1000))
                 .setExpiration(new Date(System.currentTimeMillis() - 500))
                 .signWith(key)
                 .compact();
 
         when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(uriInfo.getPath()).thenReturn("/usuarios/listar");
+        when(uriInfo.getPath()).thenReturn("/usuarios/crear");
 
         jwtTokenFilter.filter(requestContext);
 

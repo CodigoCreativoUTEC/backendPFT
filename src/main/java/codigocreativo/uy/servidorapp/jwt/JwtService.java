@@ -26,7 +26,7 @@ public class JwtService {
                     .claim("perfil", nombrePerfil)
                     .claim("email", email)
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min de expiración
+                    .setExpiration(new Date(System.currentTimeMillis() + 10 * 60 * 1000)) // 5 min de expiración
                     .signWith(secretKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (Exception e) {
