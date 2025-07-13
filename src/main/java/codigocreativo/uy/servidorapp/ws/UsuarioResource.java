@@ -268,6 +268,7 @@ public class UsuarioResource {
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
+            Long idUsuarioAInactivar = usuario.getId();
             // Validar que el ID del usuario no sea null
             if (idUsuarioAInactivar == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
