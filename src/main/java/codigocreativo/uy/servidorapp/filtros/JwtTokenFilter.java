@@ -40,30 +40,19 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         "/usuarios/seleccionar",
         "/usuarios/google-login",
         "/usuarios/listar",
-        "/usuarios/filtrar",
         "/usuarios/modificar-propio-usuario",
         "/perfiles/listar",
         "/equipos/listar",
-        "/equipos/filtrar",
         "/equipos/listarBajas",
         "/intervenciones/listar",
-        "/intervenciones/filtrar",
         "/tipos-equipo/listar",
-        "/tipos-equipo/filtrar",
         "/marcas/listar",
-        "/marcas/filtrar",
         "/ubicaciones/listar",
-        "/ubicaciones/filtrar",
         "/modelos/listar",
-        "/modelos/filtrar",
         "/proveedores/listar",
-        "/proveedores/filtrar",
         "/paises/listar",
-        "/paises/filtrar",
         "/funcionalidades/listar",
-        "/funcionalidades/filtrar",
         "/tipoIntervenciones/listar",
-        "/tipoIntervenciones/filtrar",
         "/api/openapi.json",
         "/api/swagger-ui",
         "/openapi.json",
@@ -162,6 +151,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private String getPermissionErrorMessage(String path, String email, String perfil) {
         if (path.equals("/usuarios/modificar")) {
             return "No tiene permisos para modificar usuarios. Solo los administradores pueden realizar esta acción.";
+        } else if (path.equals("/usuarios/inactivar")) {
+            return "No tiene permisos para inactivar usuarios. Solo los administradores y aux administrativos pueden realizar esta acción.";
         } else {
             LOGGER.log(Level.WARNING, "Acceso denegado - Usuario: {0}, Perfil: {1}, Path: {2} - No tiene los permisos necesarios", 
                     new Object[]{email, perfil, path});
