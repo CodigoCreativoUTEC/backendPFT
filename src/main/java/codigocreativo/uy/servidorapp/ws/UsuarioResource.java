@@ -6,6 +6,7 @@ import codigocreativo.uy.servidorapp.dtos.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.jwt.JwtService;
+import codigocreativo.uy.servidorapp.jwt.LdapService;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
@@ -436,6 +437,46 @@ public class UsuarioResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\":\"Error al buscar el usuario: " + e.getMessage() + "\"}")
                     .build();
+        }
+    }
+
+    @POST
+    @Path("/loginLdap")
+    @Operation(summary = "Login con AD", description = "Permite autenticar usuarios contra el Active Directory usando LDAP", tags = { "Usuarios" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login exitoso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno", content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response loginLdap(LoginRequest loginRequest) {
+        if (loginRequest == null || loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Solicitud incompleta\"}").build();
+        }
+
+        try {
+            LdapService ldapService = new LdapService();
+            boolean enAd = ldapService.usuarioExistePorPrincipal(loginRequest.getEmail());
+            if (!enAd) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\":\"Usuario no pertenece al AD\"}").build();
+            }
+
+            // Validación tradicional contra base de datos
+            UsuarioDto user = er.login(loginRequest.getEmail(), loginRequest.getPassword());
+            if (user == null || !user.getEstado().equals(Estados.ACTIVO)) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\":\"Credenciales incorrectas o cuenta inactiva\"}").build();
+            }
+
+            user.setContrasenia(null);
+            String token = jwtService.generateToken(user.getEmail(), user.getIdPerfil().getNombrePerfil());
+            return Response.ok(new LoginResponse(token, user)).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"Error en login-ldap: " + e.getMessage() + "\"}").build();
         }
     }
 

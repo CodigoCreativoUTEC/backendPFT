@@ -39,6 +39,8 @@ public class MiApp extends Application {
         resources.add(JwtTokenFilter.class);
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
+
+        resources.add(LdapTestResource.class);
         
         return resources;
     }
