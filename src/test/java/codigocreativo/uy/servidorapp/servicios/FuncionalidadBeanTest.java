@@ -120,14 +120,14 @@ class FuncionalidadBeanTest {
 
         assertDoesNotThrow(() -> funcionalidadBean.eliminar(funcionalidad.getId()));
 
-        verify(em).remove(funcionalidad);
+        verify(em).merge(funcionalidad);
         verify(em).flush();
     }
 
     @Test
     void testEliminar_WithNullId() {
         assertThrows(ServiciosException.class, () -> funcionalidadBean.eliminar(null));
-        verify(em, never()).remove(any());
+        verify(em, never()).merge(any());
         verify(em, never()).flush();
     }
 
@@ -137,7 +137,7 @@ class FuncionalidadBeanTest {
         when(em.find(Funcionalidad.class, id)).thenReturn(null);
 
         assertThrows(ServiciosException.class, () -> funcionalidadBean.eliminar(id));
-        verify(em, never()).remove(any());
+        verify(em, never()).merge(any());
         verify(em, never()).flush();
     }
 
@@ -152,12 +152,12 @@ class FuncionalidadBeanTest {
 
         when(em.find(Funcionalidad.class, funcionalidad.getId())).thenReturn(funcionalidad);
 
-        ServiciosException exception = assertThrows(ServiciosException.class, 
-            () -> funcionalidadBean.eliminar(funcionalidad.getId()));
+        // Ahora el método eliminar debería funcionar incluso con perfiles asociados
+        // porque solo cambia el estado a INACTIVO
+        assertDoesNotThrow(() -> funcionalidadBean.eliminar(funcionalidad.getId()));
         
-        assertEquals("No se puede eliminar la funcionalidad porque tiene perfiles asociados", exception.getMessage());
-        verify(em, never()).remove(any());
-        verify(em, never()).flush();
+        verify(em).merge(funcionalidad);
+        verify(em).flush();
     }
 
     @Test

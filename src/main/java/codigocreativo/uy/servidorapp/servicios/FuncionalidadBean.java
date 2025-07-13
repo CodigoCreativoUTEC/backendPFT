@@ -8,6 +8,7 @@ import codigocreativo.uy.servidorapp.entidades.Funcionalidad;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfiles;
 import codigocreativo.uy.servidorapp.entidades.FuncionalidadesPerfilesId;
 import codigocreativo.uy.servidorapp.entidades.Perfil;
+import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -97,13 +98,9 @@ public class FuncionalidadBean implements FuncionalidadRemote {
             throw new ServiciosException(ERROR_FUNCIONALIDAD_NO_ENCONTRADA + id);
         }
 
-        // Verificar si tiene perfiles asociados
-        if (funcionalidad.getFuncionalidadesPerfiles() != null && !funcionalidad.getFuncionalidadesPerfiles().isEmpty()) {
-            throw new ServiciosException(ERROR_FUNCIONALIDAD_CON_PERFILES);
-        }
-
-        // Si no tiene perfiles asociados, proceder con la eliminación
-        em.remove(funcionalidad);
+        // Cambiar el estado a INACTIVO en lugar de eliminar físicamente
+        funcionalidad.setEstado(Estados.INACTIVO);
+        em.merge(funcionalidad);
         em.flush();
     }
 

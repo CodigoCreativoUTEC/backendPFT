@@ -131,7 +131,10 @@ public class UsuarioResource {
             if (usuario.getIdPerfil() == null) {
                 usuario.setIdPerfil(usuarioActual.getIdPerfil());
             }
-            usuario.setEstado(usuarioActual.getEstado());
+            // El estado puede ser modificado por administradores
+            if (usuario.getEstado() == null) {
+                usuario.setEstado(usuarioActual.getEstado());
+            }
             usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
 
             er.modificarUsuario(usuario);
