@@ -127,7 +127,10 @@ public class UsuarioResource {
 
             // Mantener campos que no deberían modificarse
             usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
-            usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            // El perfil puede ser modificado por administradores
+            if (usuario.getIdPerfil() == null) {
+                usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            }
             usuario.setEstado(usuarioActual.getEstado());
             usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
 
@@ -196,6 +199,7 @@ public class UsuarioResource {
                 String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
                 usuario.setContrasenia(saltedHash);
             } else {
+                // Si no se proporciona contraseña, mantener la actual
                 usuario.setContrasenia(usuarioActual.getContrasenia());
             }
 
@@ -268,11 +272,17 @@ public class UsuarioResource {
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
-            Long idUsuarioAInactivar = usuario.getId();
-            // Validar que el ID del usuario no sea null
-            if (idUsuarioAInactivar == null) {
+            // Validar que el usuario no sea null
+            if (usuario == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"El ID del usuario es requerido\"}")
+                        .entity("{\"error\":\"Los datos del usuario son requeridos\"}")
+                        .build();
+            }
+
+            // Validar que la cédula del usuario no sea null o vacía
+            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"La cédula del usuario es requerida\"}")
                         .build();
             }
 
