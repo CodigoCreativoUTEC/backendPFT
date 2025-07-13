@@ -23,13 +23,7 @@ class AuditoriaFilterTest {
         AuditoriaFilter filter = new AuditoriaFilter();
         ContainerRequestContext reqCtx = mock(ContainerRequestContext.class);
         ContainerResponseContext respCtx = mock(ContainerResponseContext.class);
-        
-        jakarta.ws.rs.core.UriInfo uriInfo = mock(jakarta.ws.rs.core.UriInfo.class);
-        when(reqCtx.getMethod()).thenReturn("GET");
-        when(reqCtx.getUriInfo()).thenReturn(uriInfo);
-        when(uriInfo.getPath()).thenReturn("/api/test");
         when(respCtx.getStatus()).thenReturn(200);
-        
         assertDoesNotThrow(() -> filter.filter(reqCtx, respCtx));
     }
 } 

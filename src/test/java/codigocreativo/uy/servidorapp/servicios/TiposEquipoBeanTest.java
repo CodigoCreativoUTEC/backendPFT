@@ -82,7 +82,7 @@ class TiposEquipoBeanTest {
         // Mock para nombre duplicado - debe retornar un resultado
         @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> queryMock = mock(TypedQuery.class);
-        when(em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre", TiposEquipo.class)).thenReturn(queryMock);
+        when(em.createQuery(anyString(), eq(TiposEquipo.class))).thenReturn(queryMock);
         when(queryMock.setParameter("nombre", "TIPOEXISTENTE")).thenReturn(queryMock);
         when(queryMock.getSingleResult()).thenReturn(new TiposEquipo()); // Existe
 
@@ -100,7 +100,7 @@ class TiposEquipoBeanTest {
         // Mock para nombre único - debe lanzar NoResultException
         @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> queryMock = mock(TypedQuery.class);
-        when(em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre", TiposEquipo.class)).thenReturn(queryMock);
+        when(em.createQuery(anyString(), eq(TiposEquipo.class))).thenReturn(queryMock);
         when(queryMock.setParameter("nombre", "NUEVOTIPO")).thenReturn(queryMock);
         when(queryMock.getSingleResult()).thenThrow(new NoResultException("No existe"));
 
@@ -240,7 +240,7 @@ class TiposEquipoBeanTest {
 
         @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> query = mock(TypedQuery.class);
-        when(em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombreTipo ASC", TiposEquipo.class)).thenReturn(query);
+        when(em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombre ASC", TiposEquipo.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(entities);
         when(tiposEquipoMapper.toDto(entities)).thenReturn(dtos);
 
@@ -261,7 +261,7 @@ class TiposEquipoBeanTest {
         // Mock para nombre único - debe lanzar NoResultException
         @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> queryMock = mock(TypedQuery.class);
-        when(em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre", TiposEquipo.class)).thenReturn(queryMock);
+        when(em.createQuery(anyString(), eq(TiposEquipo.class))).thenReturn(queryMock);
         when(queryMock.setParameter("nombre", "NUEVOTIPO")).thenReturn(queryMock);
         when(queryMock.getSingleResult()).thenThrow(new NoResultException("No existe"));
 

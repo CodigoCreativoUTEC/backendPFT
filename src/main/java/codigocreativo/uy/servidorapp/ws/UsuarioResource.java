@@ -169,27 +169,26 @@ public class UsuarioResource {
     @SecurityRequirement(name = "BearerAuth")
     public Response modificarPropioUsuario(@Parameter(description = "Datos del usuario a modificar", required = true) UsuarioDto usuario, @HeaderParam("Authorization") String authorizationHeader) {
         try {
-            // Validar que el header de autorización no sea nulo
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("{\"error\":\"Token de autorización requerido\"}")
-                        .build();
-            }
-
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String correoDelToken = claims.getSubject();
 
-            // Obtener el usuario actual por email del token
-            UsuarioDto usuarioActual = er.findUserByEmail(correoDelToken);
-            if (usuarioActual == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("{\"error\":\"Usuario no encontrado\"}")
+            if (usuario.getId() == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"El id del usuario es obligatorio para modificar sus datos\"}")
                         .build();
             }
 
-            // Establecer el ID del usuario actual en el DTO recibido
-            usuario.setId(usuarioActual.getId());
+            // Validar que el usuario puede modificar sus propios datos
+            er.validarModificacionPropia(correoDelToken, usuario.getId());
+
+            // Obtener el usuario actual
+            UsuarioDto usuarioActual = er.obtenerUsuario(usuario.getId());
+            if (usuarioActual == null) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
+                        .build();
+            }
 
             // Solo procesar la contraseña si se proporciona una nueva
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
@@ -236,7 +235,7 @@ public class UsuarioResource {
     @Path("/inactivar")
     @Operation(
             summary = "Inactivar un usuario",
-            description = "Permite inactivar un usuario en el sistema. Solo Administradores y Aux administrativos pueden inactivar usuarios de otros roles.",
+            description = "Permite inactivar un usuario en el sistema. Requiere permisos de Administrador.",
             tags = { "Usuarios" }
     )
     @ApiResponses(value = {
@@ -263,8 +262,8 @@ public class UsuarioResource {
     })
     @SecurityRequirement(name = "BearerAuth")
     public Response inactivarUsuario(
-            @Parameter(description = "ID del usuario a inactivar", required = true)
-            @QueryParam("id") Long idUsuarioAInactivar,
+            @Parameter(description = "Datos del usuario a inactivar", required = true)
+            UsuarioDto usuario,
             @Parameter(description = "Token Bearer de autorización", required = true)
             @HeaderParam("Authorization") String authorizationHeader
     ) {
@@ -281,47 +280,36 @@ public class UsuarioResource {
             String emailSolicitante = claims.getSubject();
             String perfilSolicitante = claims.get(PERFIL, String.class);
 
-            // Verificar que el usuario solicitante tiene permisos (Administrador o Aux administrativo)
-            if (!ADMINISTRADOR.equals(perfilSolicitante) && !"Aux administrativo".equals(perfilSolicitante)) {
+            // Verificar que el usuario es administrador
+            if (!ADMINISTRADOR.equals(perfilSolicitante)) {
                 return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"Requiere ser Administrador o Aux administrativo para inactivar usuarios\"}")
+                        .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}")
                         .build();
             }
 
-            // Obtener el usuario solicitante
-            UsuarioDto usuarioSolicitante = er.findUserByEmail(emailSolicitante);
-            if (usuarioSolicitante == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("{\"error\":\"Usuario solicitante no encontrado\"}")
-                        .build();
-            }
-
-            // Obtener el usuario a inactivar por ID
-            UsuarioDto usuarioAInactivar = er.obtenerUsuario(idUsuarioAInactivar);
+            // Verificar que el usuario existe
+            UsuarioDto usuarioAInactivar = er.obtenerUsuarioPorCI(usuario.getCedula());
             if (usuarioAInactivar == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .entity("{\"error\":\"Usuario a inactivar no encontrado\"}")
+                        .entity("{\"error\":\"Usuario no encontrado\"}")
                         .build();
             }
 
             // Verificar que no se está inactivando a sí mismo
-            if (usuarioSolicitante.getId().equals(idUsuarioAInactivar)) {
+            if (emailSolicitante.equals(usuarioAInactivar.getEmail())) {
                 return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"No puedes inactivar tu propia cuenta\"}")
+                        .entity("{\"message\":\"No puedes inactivar tu propia cuenta\"}")
                         .build();
             }
 
-            String perfilUsuarioAInactivar = usuarioAInactivar.getIdPerfil().getNombrePerfil();
-
-            // Verificar que no se está inactivando a otro administrador o aux administrativo
-            if (ADMINISTRADOR.equals(perfilUsuarioAInactivar) || "Aux administrativo".equals(perfilUsuarioAInactivar)) {
+            // Verificar que no se está inactivando a otro administrador
+            if (ADMINISTRADOR.equals(usuarioAInactivar.getIdPerfil().getNombrePerfil())) {
                 return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"error\":\"No puedes inactivar a otro Administrador o Aux administrativo\"}")
+                        .entity("{\"message\":\"No puedes inactivar a otro administrador\"}")
                         .build();
             }
 
-            // Inactivar el usuario
-            er.inactivarUsuario(emailSolicitante, usuarioAInactivar.getCedula());
+            er.inactivarUsuario(emailSolicitante, usuario.getCedula());
             return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
         } catch (ServiciosException e) {
             if (e.getMessage().contains("No autorizado") || e.getMessage().contains("no tiene permisos")) {
@@ -346,7 +334,7 @@ public class UsuarioResource {
 
     @GET
     @Path("/filtrar")
-    @Operation(summary = "Filtrar usuarios", description = "Filtra los usuarios según los criterios proporcionados. Por defecto muestra todos los usuarios.", tags = { "Usuarios" })
+    @Operation(summary = "Filtrar usuarios", description = "Filtra los usuarios según los criterios proporcionados", tags = { "Usuarios" })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios filtrada correctamente", content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
             @ApiResponse(responseCode = "500", description = "Error al filtrar los usuarios", content = @Content(schema = @Schema(implementation = String.class)))
@@ -360,27 +348,21 @@ public class UsuarioResource {
 
         try {
             Map<String, String> filtros = new HashMap<>();
-            if (nombre != null && !nombre.trim().isEmpty()) filtros.put("nombre", nombre);
-            if (apellido != null && !apellido.trim().isEmpty()) filtros.put("apellido", apellido);
-            if (nombreUsuario != null && !nombreUsuario.trim().isEmpty()) filtros.put("nombreUsuario", nombreUsuario);
-            if (email != null && !email.trim().isEmpty()) filtros.put(EMAIL, email);
+            if (nombre != null) filtros.put("nombre", nombre);
+            if (apellido != null) filtros.put("apellido", apellido);
+            if (nombreUsuario != null) filtros.put("nombreUsuario", nombreUsuario);
+            if (email != null) filtros.put(EMAIL, email);
 
-            // Solo agregar filtro de estado si se especifica explícitamente
-            if (estado != null && !estado.trim().isEmpty() && !estado.equals("default")) {
+            if (estado == null || estado.isEmpty()) {
+                filtros.put("estado", "ACTIVO");
+            } else if (!estado.equals("default")) {
                 filtros.put("estado", estado);
             }
-            
-            if (tipoUsuario != null && !tipoUsuario.trim().isEmpty() && !tipoUsuario.equals("default")) {
+            if (tipoUsuario != null && !tipoUsuario.isEmpty() && !tipoUsuario.equals("default")) {
                 filtros.put("tipoUsuario", tipoUsuario);
             }
 
             List<UsuarioDto> usuarios = er.obtenerUsuariosFiltrado(filtros);
-            
-            // Eliminar contraseñas de todos los usuarios antes de enviar la respuesta
-            for (UsuarioDto usuario : usuarios) {
-                usuario.setContrasenia(null);
-            }
-            
             return Response.ok(usuarios).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -422,7 +404,7 @@ public class UsuarioResource {
     })
     public Response obtenerTodosLosUsuarios() {
         try {
-            List<UsuarioDto> usuarios = er.obtenerUsuariosSinContrasenia();
+            List<UsuarioDto> usuarios = er.obtenerUsuarios();
             return Response.ok(usuarios).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

@@ -26,7 +26,6 @@ import io.jsonwebtoken.Claims;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.servlet.http.HttpServletRequest;
 
 @Path("/equipos")
 @Tag(name = "Equipos", description = "Gestión de equipos")
@@ -85,72 +84,101 @@ public class EquipoResource {
         return Response.status(200).build();
     }
 
-    @DELETE
+    @PUT
     @Path("/inactivar")
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Inactivar un equipo", description = "Inactiva un equipo en la base de datos", tags = { "Equipos" })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Equipo inactivado correctamente", 
-                content = @Content(schema = @Schema(example = "{\"message\": \"Equipo inactivado correctamente\"}"))),
-            @ApiResponse(responseCode = "400", description = "Error al inactivar el equipo", 
-                content = @Content(schema = @Schema(example = "{\"error\": \"Error al inactivar el equipo\"}"))),
-            @ApiResponse(responseCode = "401", description = "No autorizado", 
-                content = @Content(schema = @Schema(example = "{\"error\": \"No se pudo obtener el usuario de la sesión\"}")))
+            @ApiResponse(responseCode = "200", description = "Equipo inactivado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida - Campos obligatorios faltantes", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Equipo no encontrado", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public Response inactivar(@Parameter(description = "Datos de la baja del equipo", required = true) BajaEquipoDto bajaEquipo,
-                             @Context ContainerRequestContext requestContext,
-                             @Context HttpHeaders headers) {
-        try {
-            if (bajaEquipo == null) {
-                return Response.status(400)
-                    .entity("{\"error\": \"Los datos de baja son obligatorios\"}")
+    public Response eliminarEquipo(
+            @Parameter(description = "Datos de la baja del equipo", required = true) BajaEquipoDto bajaEquipo,
+            @Context ContainerRequestContext requestContext,
+            @Context HttpHeaders headers) {
+        
+        System.out.println("=== INICIO ENDPOINT INACTIVAR ===");
+        System.out.println("BajaEquipo recibido: " + (bajaEquipo != null ? "NO NULL" : "NULL"));
+        if (bajaEquipo != null && bajaEquipo.getIdEquipo() != null) {
+            System.out.println("ID Equipo: " + bajaEquipo.getIdEquipo().getId());
+            System.out.println("Razón: " + bajaEquipo.getRazon());
+        }
+        
+        if (bajaEquipo == null) {
+            System.out.println("ERROR: BajaEquipo es null");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"Los datos de la baja no pueden ser null\"}")
                     .build();
+        }
+        
+        // Obtener el email del usuario desde el token JWT
+        String emailUsuario = null;
+        
+        // Intentar obtener del contexto primero
+        if (requestContext != null) {
+            try {
+                emailUsuario = (String) requestContext.getProperty("email");
+                System.out.println("Email obtenido del contexto: " + emailUsuario);
+            } catch (Exception e) {
+                System.out.println("Error obteniendo email del contexto: " + e.getMessage());
+                // Continuar con el método alternativo
             }
-
-            String emailUsuario = null;
-            
-            // Intentar obtener email del contexto
-            if (requestContext != null) {
-                try {
-                    emailUsuario = (String) requestContext.getProperty("email");
-                } catch (Exception e) {
-                    // Continuar con el método alternativo
+        }
+        
+        // Si no se pudo obtener del contexto, intentar extraer del token JWT directamente
+        if (emailUsuario == null || emailUsuario.trim().isEmpty()) {
+            try {
+                String authorizationHeader = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
+                System.out.println("Authorization header: " + (authorizationHeader != null ? "PRESENTE" : "AUSENTE"));
+                if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                    String token = authorizationHeader.substring("Bearer ".length()).trim();
+                    Claims claims = jwtService.parseToken(token);
+                    emailUsuario = claims.get("email", String.class);
+                    System.out.println("Email obtenido del token: " + emailUsuario);
                 }
-            }
-            
-            // Si no se pudo obtener del contexto, intentar del token JWT
-            if (emailUsuario == null) {
-                try {
-                    String authorizationHeader = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
-                    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                        String token = authorizationHeader.substring("Bearer ".length()).trim();
-                        Claims claims = jwtService.parseToken(token);
-                        emailUsuario = claims.get("email", String.class);
-                    }
-                } catch (Exception e) {
-                    return Response.status(401)
+            } catch (Exception e) {
+                System.out.println("Error parseando token: " + e.getMessage());
+                return Response.status(Response.Status.UNAUTHORIZED)
                         .entity("{\"error\": \"Token JWT inválido o no proporcionado\"}")
                         .build();
-                }
             }
-            
-            // Validar que el email no sea null o vacío
-            if (emailUsuario == null || emailUsuario.trim().isEmpty()) {
-                return Response.status(401)
-                    .entity("{\"error\": \"No se pudo obtener el usuario de la sesión\"}")
+        }
+        
+        if (emailUsuario == null || emailUsuario.trim().isEmpty()) {
+            System.out.println("ERROR: No se pudo obtener email del usuario");
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\": \"No se pudo obtener el usuario de la sesión. Verifique que el token JWT sea válido.\"}")
                     .build();
-            }
-
+        }
+        
+        System.out.println("Llamando a crearBajaEquipo con email: " + emailUsuario);
+        try {
             this.ber.crearBajaEquipo(bajaEquipo, emailUsuario);
-            return Response.ok("{\"message\": \"Equipo inactivado correctamente\"}").build();
-            
+            System.out.println("Baja creada exitosamente");
+            return Response.status(Response.Status.OK)
+                    .entity("{\"message\": \"Equipo dado de baja correctamente\"}")
+                    .build();
         } catch (ServiciosException e) {
-            return Response.status(400)
-                .entity("{\"error\": \"" + e.getMessage() + "\"}")
-                .build();
+            System.out.println("ServiciosException: " + e.getMessage());
+            // Manejar específicamente el caso de duplicados
+            if (e.getMessage().contains("ya ha sido dado de baja")) {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                        .build();
+            }
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
         } catch (Exception e) {
-            return Response.status(400)
-                .entity("{\"error\": \"Error al inactivar el equipo\"}")
-                .build();
+            System.out.println("Exception general: " + e.getMessage());
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\": \"Error al dar de baja el equipo: " + e.getMessage() + "\"}")
+                    .build();
+        } finally {
+            System.out.println("=== FIN ENDPOINT INACTIVAR ===");
         }
     }
 
