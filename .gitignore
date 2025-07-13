@@ -7,3 +7,5 @@ funcionalidades_perfiles_insert.sql
 .idea/dataSources.xml
 .idea/sonarlint.xml
 .gitignore
+.env
+.properties
