@@ -315,7 +315,7 @@ public class UsuarioBean implements UsuarioRemote {
             throw new ServiciosException("La contraseña no puede ser nula ni vacía");
         }
         
-        boolean matches = contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?]{8,}$");
+        boolean matches = contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?!]{8,}$\n");
         System.out.println("DEBUG - ¿Cumple regex?: " + matches);
         
         if (!matches) {

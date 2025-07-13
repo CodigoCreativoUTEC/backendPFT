@@ -2,3 +2,5 @@
 /deployments/*
 !/deployments/.gitkeep
 /deployments/
+
+.env
