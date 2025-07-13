@@ -266,23 +266,16 @@ public class UsuarioResource {
     })
     @SecurityRequirement(name = "BearerAuth")
     public Response inactivarUsuario(
-            @Parameter(description = "Datos del usuario a inactivar", required = true)
-            UsuarioDto usuario,
+            @Parameter(description = "ID del usuario a inactivar", required = true)
+            @QueryParam("id") Long idUsuarioAInactivar,
             @Parameter(description = "Token Bearer de autorización", required = true)
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
-            // Validar que el usuario no sea null
-            if (usuario == null) {
+            // Validar que el ID del usuario no sea null
+            if (idUsuarioAInactivar == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"Los datos del usuario son requeridos\"}")
-                        .build();
-            }
-
-            // Validar que la cédula del usuario no sea null o vacía
-            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"La cédula del usuario es requerida\"}")
+                        .entity("{\"error\":\"ID del usuario a inactivar es requerido\"}")
                         .build();
             }
 
@@ -299,7 +292,7 @@ public class UsuarioResource {
             }
 
             // Verificar que el usuario existe
-            UsuarioDto usuarioAInactivar = er.obtenerUsuarioPorCI(usuario.getCedula());
+            UsuarioDto usuarioAInactivar = er.obtenerUsuario(idUsuarioAInactivar);
             if (usuarioAInactivar == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("{\"error\":\"Usuario no encontrado\"}")
@@ -320,7 +313,7 @@ public class UsuarioResource {
                         .build();
             }
 
-            er.inactivarUsuario(emailSolicitante, usuario.getCedula());
+            er.inactivarUsuario(emailSolicitante, usuarioAInactivar.getCedula());
             return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
         } catch (ServiciosException e) {
             if (e.getMessage().contains("No autorizado") || e.getMessage().contains("no tiene permisos")) {
