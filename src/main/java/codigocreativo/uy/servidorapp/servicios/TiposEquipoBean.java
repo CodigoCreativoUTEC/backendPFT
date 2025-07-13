@@ -154,7 +154,7 @@ public class TiposEquipoBean implements TiposEquipoRemote{
      */
     private void validarNombreUnicoParaModificacion(String nombre, Long idActual) throws ServiciosException {
         try {
-            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre AND t.id != :id", TiposEquipo.class);
+            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombreTipo AND t.id != :id", TiposEquipo.class);
             if (query != null) {
                 query.setParameter("nombre", nombre.toUpperCase());
                 query.setParameter("id", idActual);

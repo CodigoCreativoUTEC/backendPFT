@@ -57,15 +57,9 @@ public class UsuarioBean implements UsuarioRemote {
         // Validar que la cédula sea única
         validarCedulaUnica(u.getCedula());
         
-        // Validar y hashear la contraseña
-        if (u.getContrasenia() != null && !u.getContrasenia().trim().isEmpty()) {
-            validarContrasenia(u.getContrasenia());
-            try {
-                String hashedPassword = PasswordUtils.generateSaltedHash(u.getContrasenia());
-                u.setContrasenia(hashedPassword);
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new ServiciosException("Error al procesar la contraseña: " + e.getMessage());
-            }
+        // La contraseña ya debe estar validada y hasheada antes de llegar aquí
+        if (u.getContrasenia() == null || u.getContrasenia().trim().isEmpty()) {
+            throw new ServiciosException("La contraseña es obligatoria");
         }
         
         u.setEstado(Estados.SIN_VALIDAR);
@@ -319,13 +313,21 @@ public class UsuarioBean implements UsuarioRemote {
      * Valida la contraseña según las reglas de negocio
      */
     public void validarContrasenia(String contrasenia) throws ServiciosException {
+        System.out.println("DEBUG - Validando contraseña: " + contrasenia);
+        System.out.println("DEBUG - Longitud: " + (contrasenia != null ? contrasenia.length() : "null"));
+        
         if (contrasenia == null || contrasenia.isEmpty()) {
             throw new ServiciosException("La contraseña no puede ser nula ni vacía");
         }
         
-        if (!contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+        boolean matches = contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?]{8,}$");
+        System.out.println("DEBUG - ¿Cumple regex?: " + matches);
+        
+        if (!matches) {
             throw new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números");
         }
+        
+        System.out.println("DEBUG - Contraseña válida");
     }
     
     /**

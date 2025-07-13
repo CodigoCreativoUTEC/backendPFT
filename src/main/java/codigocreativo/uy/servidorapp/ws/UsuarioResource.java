@@ -61,6 +61,12 @@ public class UsuarioResource {
                     .build();
         }
         try {
+            // Debug: mostrar la contraseña antes de validar
+            System.out.println("DEBUG - Contraseña recibida: " + usuario.getContrasenia());
+            
+            // Validar la contraseña antes de hashearla
+            er.validarContrasenia(usuario.getContrasenia());
+            
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
             usuario.setContrasenia(saltedHash);
             InstitucionDto institucion = new InstitucionDto();
@@ -263,9 +269,17 @@ public class UsuarioResource {
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
-            if (idUsuarioAInactivar == null) {
+            // Validar que el usuario no sea null
+            if (usuario == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"ID del usuario a inactivar es requerido\"}")
+                        .entity("{\"error\":\"Los datos del usuario son requeridos\"}")
+                        .build();
+            }
+
+            // Validar que la cédula no sea null o vacía
+            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"La cédula del usuario es requerida\"}")
                         .build();
             }
 
