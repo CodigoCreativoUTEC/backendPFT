@@ -269,17 +269,10 @@ public class UsuarioResource {
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
-            // Validar que el usuario no sea null
-            if (usuario == null) {
+            // Validar que el ID del usuario no sea null
+            if (idUsuarioAInactivar == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"Los datos del usuario son requeridos\"}")
-                        .build();
-            }
-
-            // Validar que la cédula no sea null o vacía
-            if (usuario.getCedula() == null || usuario.getCedula().trim().isEmpty()) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"La cédula del usuario es requerida\"}")
+                        .entity("{\"error\":\"El ID del usuario es requerido\"}")
                         .build();
             }
 
