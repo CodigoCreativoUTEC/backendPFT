@@ -18,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -308,23 +309,41 @@ public class UsuarioBean implements UsuarioRemote {
      * Valida la contraseña según las reglas de negocio
      */
     public void validarContrasenia(String contrasenia) throws ServiciosException {
-        System.out.println("DEBUG - Validando contraseña: " + contrasenia);
-        System.out.println("DEBUG - Longitud: " + (contrasenia != null ? contrasenia.length() : "null"));
-        
-        if (contrasenia == null || contrasenia.isEmpty()) {
-            throw new ServiciosException("La contraseña no puede ser nula ni vacía");
+        List<String> errores = new ArrayList<>();
+
+        if (contrasenia == null || contrasenia.trim().isEmpty()) {
+            throw new ServiciosException("La contraseña no puede estar vacía");
         }
-        
-        boolean matches = contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?!]{8,}$\n");
-        System.out.println("DEBUG - ¿Cumple regex?: " + matches);
-        
-        if (!matches) {
-            throw new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números");
+
+        if (contrasenia.length() < 8) {
+            errores.add("Debe tener al menos 8 caracteres");
         }
-        
-        System.out.println("DEBUG - Contraseña válida");
+
+        if (!contrasenia.matches(".*[A-Z].*")) {
+            errores.add("Debe tener al menos una letra mayúscula");
+        }
+
+        if (!contrasenia.matches(".*[a-z].*")) {
+            errores.add("Debe tener al menos una letra minúscula");
+        }
+
+        if (!contrasenia.matches(".*\\d.*")) {
+            errores.add("Debe tener al menos un número");
+        }
+
+        if (!contrasenia.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+            errores.add("Debe tener al menos un carácter especial (como ! @ # $ etc)");
+        }
+
+        if (!errores.isEmpty()) {
+            String mensaje = "La contraseña no es válida:\n - " + String.join("\n - ", errores);
+            throw new ServiciosException(mensaje);
+        }
+
+        System.out.println("✅ Contraseña válida: " + contrasenia);
     }
-    
+
+
     /**
      * Valida que un usuario pueda ser inactivado por otro usuario
      */
