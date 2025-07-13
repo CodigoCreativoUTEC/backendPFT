@@ -176,12 +176,6 @@ public class UsuarioResource {
             Claims claims = jwtService.parseToken(token);
             String correoDelToken = claims.getSubject();
 
-            if (usuario.getId() == null) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"El id del usuario es obligatorio para modificar sus datos\"}")
-                        .build();
-            }
-
             // Validar que el usuario puede modificar sus propios datos
             er.validarModificacionPropia(correoDelToken, usuario.getId());
 

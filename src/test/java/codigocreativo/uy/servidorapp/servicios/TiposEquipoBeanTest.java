@@ -240,7 +240,7 @@ class TiposEquipoBeanTest {
 
         @SuppressWarnings("unchecked")
         TypedQuery<TiposEquipo> query = mock(TypedQuery.class);
-        when(em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombre ASC", TiposEquipo.class)).thenReturn(query);
+        when(em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombreTipo ASC", TiposEquipo.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(entities);
         when(tiposEquipoMapper.toDto(entities)).thenReturn(dtos);
 
