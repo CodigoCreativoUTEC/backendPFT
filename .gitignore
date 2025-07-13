@@ -2,3 +2,8 @@
 /deployments/*
 !/deployments/.gitkeep
 /deployments/
+funcionalidades_insert.sql
+funcionalidades_perfiles_insert.sql
+.idea/dataSources.xml
+.idea/sonarlint.xml
+.gitignore
