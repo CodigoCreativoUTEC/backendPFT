@@ -37,15 +37,26 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/usuarios/login",
+        "/usuarios/seleccionar",
         "/usuarios/google-login",
+        "/usuarios/listar",
+        "/usuarios/modificar-propio-usuario",
         "/perfiles/listar",
-        "/swagger-ui",
-        "/usuarios/crear",
-        "/menu",
-        "/api/login",
+        "/equipos/listar",
+        "/equipos/listarBajas",
+        "/intervenciones/listar",
+        "/tipos-equipo/listar",
+        "/marcas/listar",
+        "/ubicaciones/listar",
+        "/modelos/listar",
+        "/proveedores/listar",
+        "/paises/listar",
+        "/funcionalidades/listar",
+        "/tipoIntervenciones/listar",
         "/api/openapi.json",
         "/api/swagger-ui",
         "/openapi.json",
+        "/swagger-ui",
         "/swagger-ui/index.html"
     );
 
@@ -77,9 +88,6 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         try {
             // Validar token y extraer claims
             Claims claims = validateToken(token);
-            if (claims == null) {
-                return;
-            }
 
             // Procesar información del usuario
             processUserInfo(requestContext, claims, path);
@@ -90,6 +98,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                 .entity(String.format(ERROR_JSON_FORMAT, errorMsg))
                 .build());
+            return; // Asegurar que el método termina aquí después de abortar
         }
     }
 
@@ -142,6 +151,8 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private String getPermissionErrorMessage(String path, String email, String perfil) {
         if (path.equals("/usuarios/modificar")) {
             return "No tiene permisos para modificar usuarios. Solo los administradores pueden realizar esta acción.";
+        } else if (path.equals("/usuarios/inactivar")) {
+            return "No tiene permisos para inactivar usuarios. Solo los administradores y aux administrativos pueden realizar esta acción.";
         } else {
             LOGGER.log(Level.WARNING, "Acceso denegado - Usuario: {0}, Perfil: {1}, Path: {2} - No tiene los permisos necesarios", 
                     new Object[]{email, perfil, path});

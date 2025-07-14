@@ -61,6 +61,12 @@ public class UsuarioResource {
                     .build();
         }
         try {
+            // Debug: mostrar la contraseña antes de validar
+            System.out.println("DEBUG - Contraseña recibida: " + usuario.getContrasenia());
+            
+            // Validar la contraseña antes de hashearla
+            er.validarContrasenia(usuario.getContrasenia());
+            
             String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
             usuario.setContrasenia(saltedHash);
             InstitucionDto institucion = new InstitucionDto();
@@ -121,8 +127,14 @@ public class UsuarioResource {
 
             // Mantener campos que no deberían modificarse
             usuario.setNombreUsuario(usuarioActual.getNombreUsuario());
-            usuario.setIdPerfil(usuarioActual.getIdPerfil());
-            usuario.setEstado(usuarioActual.getEstado());
+            // El perfil puede ser modificado por administradores
+            if (usuario.getIdPerfil() == null) {
+                usuario.setIdPerfil(usuarioActual.getIdPerfil());
+            }
+            // El estado puede ser modificado por administradores
+            if (usuario.getEstado() == null) {
+                usuario.setEstado(usuarioActual.getEstado());
+            }
             usuario.setIdInstitucion(usuarioActual.getIdInstitucion());
 
             er.modificarUsuario(usuario);
@@ -167,12 +179,6 @@ public class UsuarioResource {
             Claims claims = jwtService.parseToken(token);
             String correoDelToken = claims.getSubject();
 
-            if (usuario.getId() == null) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("{\"error\":\"El id del usuario es obligatorio para modificar sus datos\"}")
-                        .build();
-            }
-
             // Validar que el usuario puede modificar sus propios datos
             er.validarModificacionPropia(correoDelToken, usuario.getId());
 
@@ -190,6 +196,7 @@ public class UsuarioResource {
                 String saltedHash = PasswordUtils.generateSaltedHash(usuario.getContrasenia());
                 usuario.setContrasenia(saltedHash);
             } else {
+                // Si no se proporciona contraseña, mantener la actual
                 usuario.setContrasenia(usuarioActual.getContrasenia());
             }
 
@@ -256,26 +263,33 @@ public class UsuarioResource {
     })
     @SecurityRequirement(name = "BearerAuth")
     public Response inactivarUsuario(
-            @Parameter(description = "Datos del usuario a inactivar", required = true)
-            UsuarioDto usuario,
+            @Parameter(description = "ID del usuario a inactivar", required = true)
+            @QueryParam("id") Long idUsuarioAInactivar,
             @Parameter(description = "Token Bearer de autorización", required = true)
             @HeaderParam("Authorization") String authorizationHeader
     ) {
         try {
+            // Validar que el ID del usuario no sea null
+            if (idUsuarioAInactivar == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"ID del usuario a inactivar es requerido\"}")
+                        .build();
+            }
+
             String token = authorizationHeader.substring(BEARER.length()).trim();
             Claims claims = jwtService.parseToken(token);
             String emailSolicitante = claims.getSubject();
             String perfilSolicitante = claims.get(PERFIL, String.class);
 
-            // Verificar que el usuario es administrador
-            if (!ADMINISTRADOR.equals(perfilSolicitante)) {
+            // Verificar que el usuario es administrador o aux administrativo
+            if (!ADMINISTRADOR.equals(perfilSolicitante) && !"Aux administrativo".equals(perfilSolicitante)) {
                 return Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"message\":\"Requiere ser Administrador para inactivar usuarios\"}")
+                        .entity("{\"message\":\"Requiere ser Administrador o Aux administrativo para inactivar usuarios\"}")
                         .build();
             }
 
             // Verificar que el usuario existe
-            UsuarioDto usuarioAInactivar = er.obtenerUsuarioPorCI(usuario.getCedula());
+            UsuarioDto usuarioAInactivar = er.obtenerUsuario(idUsuarioAInactivar);
             if (usuarioAInactivar == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("{\"error\":\"Usuario no encontrado\"}")
@@ -296,7 +310,7 @@ public class UsuarioResource {
                         .build();
             }
 
-            er.inactivarUsuario(emailSolicitante, usuario.getCedula());
+            er.inactivarUsuario(emailSolicitante, usuarioAInactivar.getCedula());
             return Response.status(200).entity("{\"message\":\"Usuario inactivado correctamente\"}").build();
         } catch (ServiciosException e) {
             if (e.getMessage().contains("No autorizado") || e.getMessage().contains("no tiene permisos")) {

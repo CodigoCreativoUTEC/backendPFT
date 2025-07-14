@@ -123,7 +123,7 @@ public class TiposEquipoBean implements TiposEquipoRemote{
 
     @Override
     public List<TiposEquipoDto> listarTiposEquipo() {
-        List<TiposEquipo> tiposEquipos = em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombre ASC", TiposEquipo.class).getResultList();
+        List<TiposEquipo> tiposEquipos = em.createQuery("SELECT t FROM TiposEquipo t ORDER BY t.nombreTipo ASC", TiposEquipo.class).getResultList();
         return tiposEquipoMapper.toDto(tiposEquipos);
     }
     
@@ -132,7 +132,7 @@ public class TiposEquipoBean implements TiposEquipoRemote{
      */
     private void validarNombreUnico(String nombre) throws ServiciosException {
         try {
-            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombre) = :nombre", TiposEquipo.class);
+            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre", TiposEquipo.class);
             if (query != null) {
                 query.setParameter("nombre", nombre.toUpperCase());
                 query.getSingleResult();
@@ -154,7 +154,7 @@ public class TiposEquipoBean implements TiposEquipoRemote{
      */
     private void validarNombreUnicoParaModificacion(String nombre, Long idActual) throws ServiciosException {
         try {
-            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombre) = :nombre AND t.id != :id", TiposEquipo.class);
+            jakarta.persistence.TypedQuery<TiposEquipo> query = em.createQuery("SELECT t FROM TiposEquipo t WHERE UPPER(t.nombreTipo) = :nombre AND t.id != :id", TiposEquipo.class);
             if (query != null) {
                 query.setParameter("nombre", nombre.toUpperCase());
                 query.setParameter("id", idActual);

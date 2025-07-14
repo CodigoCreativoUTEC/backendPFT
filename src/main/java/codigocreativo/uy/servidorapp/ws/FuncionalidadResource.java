@@ -73,9 +73,15 @@ public class FuncionalidadResource {
             @ApiResponse(responseCode = "404", description = "Funcionalidad no encontrada", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "400", description = "Error al eliminar", content = @Content(schema = @Schema(implementation = String.class)))
     })
-    public Response eliminar(@Parameter(description = "ID de la funcionalidad a eliminar", required = true) @QueryParam("id") Long id) {
+    public Response eliminar(@Parameter(description = "Datos de la funcionalidad a eliminar", required = true) FuncionalidadDto funcionalidad) {
         try {
-            this.funcionalidadRemote.eliminar(id);
+            if (funcionalidad == null || funcionalidad.getId() == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"message\": \"El ID de la funcionalidad es obligatorio para la eliminación\"}")
+                        .build();
+            }
+            
+            this.funcionalidadRemote.eliminar(funcionalidad.getId());
             return Response.status(Response.Status.OK)
                     .entity("{\"message\": \"Funcionalidad eliminada correctamente\"}")
                     .build();

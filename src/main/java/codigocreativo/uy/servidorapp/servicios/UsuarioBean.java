@@ -18,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -57,15 +58,9 @@ public class UsuarioBean implements UsuarioRemote {
         // Validar que la cédula sea única
         validarCedulaUnica(u.getCedula());
         
-        // Validar y hashear la contraseña
-        if (u.getContrasenia() != null && !u.getContrasenia().trim().isEmpty()) {
-            validarContrasenia(u.getContrasenia());
-            try {
-                String hashedPassword = PasswordUtils.generateSaltedHash(u.getContrasenia());
-                u.setContrasenia(hashedPassword);
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new ServiciosException("Error al procesar la contraseña: " + e.getMessage());
-            }
+        // La contraseña ya debe estar validada y hasheada antes de llegar aquí
+        if (u.getContrasenia() == null || u.getContrasenia().trim().isEmpty()) {
+            throw new ServiciosException("La contraseña es obligatoria");
         }
         
         u.setEstado(Estados.SIN_VALIDAR);
@@ -314,15 +309,41 @@ public class UsuarioBean implements UsuarioRemote {
      * Valida la contraseña según las reglas de negocio
      */
     public void validarContrasenia(String contrasenia) throws ServiciosException {
-        if (contrasenia == null || contrasenia.isEmpty()) {
-            throw new ServiciosException("La contraseña no puede ser nula ni vacía");
+        List<String> errores = new ArrayList<>();
+
+        if (contrasenia == null || contrasenia.trim().isEmpty()) {
+            throw new ServiciosException("La contraseña no puede estar vacía");
         }
-        
-        if (!contrasenia.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
-            throw new ServiciosException("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números");
+
+        if (contrasenia.length() < 8) {
+            errores.add("Debe tener al menos 8 caracteres");
         }
+
+        if (!contrasenia.matches(".*[A-Z].*")) {
+            errores.add("Debe tener al menos una letra mayúscula");
+        }
+
+        if (!contrasenia.matches(".*[a-z].*")) {
+            errores.add("Debe tener al menos una letra minúscula");
+        }
+
+        if (!contrasenia.matches(".*\\d.*")) {
+            errores.add("Debe tener al menos un número");
+        }
+
+        if (!contrasenia.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+            errores.add("Debe tener al menos un carácter especial (como ! @ # $ etc)");
+        }
+
+        if (!errores.isEmpty()) {
+            String mensaje = "La contraseña no es válida:\n - " + String.join("\n - ", errores);
+            throw new ServiciosException(mensaje);
+        }
+
+        System.out.println("✅ Contraseña válida: " + contrasenia);
     }
-    
+
+
     /**
      * Valida que un usuario pueda ser inactivado por otro usuario
      */
@@ -333,9 +354,10 @@ public class UsuarioBean implements UsuarioRemote {
             throw new ServiciosException("Usuario solicitante no encontrado");
         }
         
-        // Verificar que el solicitante sea administrador
-        if (!solicitante.getIdPerfil().getNombrePerfil().equals(ADMINISTRADOR)) {
-            throw new ServiciosException("Requiere ser Administrador para inactivar usuarios");
+        // Verificar que el solicitante sea administrador o aux administrativo
+        String perfilSolicitante = solicitante.getIdPerfil().getNombrePerfil();
+        if (!perfilSolicitante.equals(ADMINISTRADOR) && !perfilSolicitante.equals("Aux administrativo")) {
+            throw new ServiciosException("Requiere ser Administrador o Aux administrativo para inactivar usuarios");
         }
         
         // Obtener el usuario a inactivar

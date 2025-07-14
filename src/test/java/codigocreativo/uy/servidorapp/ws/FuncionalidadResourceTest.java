@@ -81,9 +81,12 @@ class FuncionalidadResourceTest {
 
     @Test
     void testEliminarFuncionalidad() throws ServiciosException {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(1L);
+        
         doNothing().when(funcionalidadRemote).eliminar(anyLong());
 
-        Response response = funcionalidadResource.eliminar(1L);
+        Response response = funcionalidadResource.eliminar(funcionalidadDto);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -93,10 +96,13 @@ class FuncionalidadResourceTest {
 
     @Test
     void testEliminarFuncionalidadConPerfilesAsociados() throws ServiciosException {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(1L);
+        
         doThrow(new ServiciosException("No se puede eliminar la funcionalidad porque tiene perfiles asociados"))
                 .when(funcionalidadRemote).eliminar(anyLong());
 
-        Response response = funcionalidadResource.eliminar(1L);
+        Response response = funcionalidadResource.eliminar(funcionalidadDto);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -106,10 +112,13 @@ class FuncionalidadResourceTest {
 
     @Test
     void testEliminarFuncionalidadNoEncontrada() throws ServiciosException {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(1L);
+        
         doThrow(new ServiciosException("Funcionalidad no encontrada con ID: 999"))
                 .when(funcionalidadRemote).eliminar(anyLong());
 
-        Response response = funcionalidadResource.eliminar(1L);
+        Response response = funcionalidadResource.eliminar(funcionalidadDto);
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -119,9 +128,12 @@ class FuncionalidadResourceTest {
 
     @Test
     void testEliminarFuncionalidadConErrorInterno() throws ServiciosException {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        funcionalidadDto.setId(1L);
+        
         doThrow(new RuntimeException("Error de base de datos")).when(funcionalidadRemote).eliminar(anyLong());
 
-        Response response = funcionalidadResource.eliminar(1L);
+        Response response = funcionalidadResource.eliminar(funcionalidadDto);
 
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
         String responseBody = (String) response.getEntity();
@@ -166,5 +178,28 @@ class FuncionalidadResourceTest {
         String responseBody = (String) response.getEntity();
         assertTrue(responseBody.contains("Funcionalidad no encontrada"));
         verify(funcionalidadRemote, times(1)).buscarPorId(anyLong());
+    }
+
+    @Test
+    void testEliminarFuncionalidadConDtoNull() throws ServiciosException {
+        Response response = funcionalidadResource.eliminar(null);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("El ID de la funcionalidad es obligatorio para la eliminación"));
+        verify(funcionalidadRemote, never()).eliminar(anyLong());
+    }
+
+    @Test
+    void testEliminarFuncionalidadConIdNull() throws ServiciosException {
+        FuncionalidadDto funcionalidadDto = new FuncionalidadDto();
+        // No establecer el ID, dejarlo null
+
+        Response response = funcionalidadResource.eliminar(funcionalidadDto);
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        String responseBody = (String) response.getEntity();
+        assertTrue(responseBody.contains("El ID de la funcionalidad es obligatorio para la eliminación"));
+        verify(funcionalidadRemote, never()).eliminar(anyLong());
     }
 }

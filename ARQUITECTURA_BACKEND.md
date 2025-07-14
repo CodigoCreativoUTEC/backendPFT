@@ -85,6 +85,10 @@
     * **Propósito:** Exponer operaciones sobre recursos del dominio a través de una interfaz uniforme basada en HTTP.
     * **Implementación:** Los recursos definidos en `src/main/java/codigocreativo/uy/servidorapp/ws/` siguen las convenciones REST usando JAX-RS (`@Path`, `@GET`, `@POST`, etc.).
 
+* **Patrón 9: Data Mapper**
+    * **Propósito:** Separar el modelo de dominio de la lógica de acceso a datos, mapeando objetos a tablas de base de datos sin que las entidades gestionen directamente la persistencia.
+    * **Implementación:** Hibernate actúa como Data Mapper, traduciendo entre objetos Java y la base de datos relacional, manteniendo a las entidades independientes de SQL y operaciones de almacenamiento.
+
 
 ## 5. Seguridad
 
